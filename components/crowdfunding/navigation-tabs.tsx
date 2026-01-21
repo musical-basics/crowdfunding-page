@@ -3,7 +3,13 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 
-export function NavigationTabs({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
+// Define the interface for props to ensure type safety
+interface NavigationTabsProps {
+  activeTab: string
+  onTabChange: (tab: string) => void
+}
+
+export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const tabs = [
@@ -22,9 +28,9 @@ export function NavigationTabs({ activeTab, onTabChange }: { activeTab: string; 
   }
 
   return (
-    <div className="mt-8 border-t border-border">
+    <div className="mt-8 border-t border-border bg-background"> {/* Added bg-background for sticky overlap */}
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex flex-wrap gap-x-6 gap-y-2 pt-4">
+      <nav className="hidden md:flex flex-wrap gap-x-6 gap-y-2 pt-4 pb-2"> {/* Added pb-2 */}
         {tabs.map((tab) => (
           <TabItem
             key={tab.id}
@@ -38,7 +44,7 @@ export function NavigationTabs({ activeTab, onTabChange }: { activeTab: string; 
       </nav>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden pt-4">
+      <div className="md:hidden pt-4 pb-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-foreground">
             {tabs.find(t => t.id === activeTab)?.label || "Menu"}
@@ -60,11 +66,10 @@ export function NavigationTabs({ activeTab, onTabChange }: { activeTab: string; 
                 <button
                   key={tab.id}
                   onClick={() => handleMobileTabClick(tab.id)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                    activeTab === tab.id
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${activeTab === tab.id
                       ? "bg-muted text-foreground font-medium"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                   {tab.count !== undefined && (
@@ -84,11 +89,10 @@ function TabItem({ label, count, id, active, onClick }: { label: string; count?:
   return (
     <button
       onClick={onClick}
-      className={`text-sm py-2 border-b-2 transition-colors ${
-        active
+      className={`text-sm py-2 border-b-2 transition-colors ${active
           ? "border-foreground text-foreground font-medium"
           : "border-transparent text-muted-foreground hover:text-foreground"
-      }`}
+        }`}
     >
       {label}
       {count !== undefined && (
