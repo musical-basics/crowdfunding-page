@@ -58,7 +58,7 @@ export function CampaignPage() {
 
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-      {/* Left Sidebar - Sticky Navigation */}
+      {/* Desktop Sidebar */}
       <aside className="hidden md:block md:col-span-1">
         <div className="sticky top-32 space-y-1 border-l-2 border-border pl-4">
           {sections.map((section) => (
@@ -75,6 +75,22 @@ export function CampaignPage() {
           ))}
         </div>
       </aside>
+
+      {/* Mobile Horizontal Nav */}
+      <div className="md:hidden sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border -mx-4 px-4 py-2 overflow-x-auto flex gap-4 no-scrollbar">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => scrollToSection(section.id)}
+            className={`whitespace-nowrap text-sm px-3 py-1 rounded-full transition-colors ${activeSection === section.id
+                ? "bg-emerald-100 text-emerald-800 font-medium"
+                : "text-muted-foreground bg-muted/50"
+              }`}
+          >
+            {section.label}
+          </button>
+        ))}
+      </div>
 
       {/* Main Content */}
       <main className="md:col-span-3 space-y-16">

@@ -14,6 +14,7 @@ import { FAQPage } from "./crowdfunding/faq-page"
 import { SectionPlaceholder } from "./crowdfunding/section-placeholder"
 
 import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
+import { MobilePledgeBar } from "./crowdfunding/mobile-pledge-bar"
 
 // We split the logic into a sub-component because useSearchParams requires Suspense boundary
 function CrowdfundingContent() {
@@ -57,7 +58,11 @@ function CrowdfundingContent() {
       </div>
 
       {/* Dynamic Content Section */}
-      <div id="content-section">
+      <div id="content-section" className="mb-24 md:mb-0">
+
+        {/* Add this Anchor div for the scroll target */}
+        <div id="rewards-section-anchor" className="scroll-mt-24" />
+
         <section className="mt-8 pt-8 border-t border-border min-h-[500px]">
           {activeTab === "campaign" && <CampaignPage />}
           {activeTab === "rewards" && <RewardsPage />}
@@ -69,6 +74,7 @@ function CrowdfundingContent() {
         </section>
       </div>
 
+      <MobilePledgeBar />
       <CheckoutDialog />
     </main>
   )
