@@ -13,6 +13,8 @@ import { CreatorPage } from "./crowdfunding/creator-page"
 import { FAQPage } from "./crowdfunding/faq-page"
 import { SectionPlaceholder } from "./crowdfunding/section-placeholder"
 
+import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
+
 // We split the logic into a sub-component because useSearchParams requires Suspense boundary
 function CrowdfundingContent() {
   const searchParams = useSearchParams()
@@ -66,6 +68,8 @@ function CrowdfundingContent() {
           {activeTab === "community" && <SectionPlaceholder title="Community" />}
         </section>
       </div>
+
+      <CheckoutDialog />
     </main>
   )
 }
