@@ -2,6 +2,6 @@
 
 import { CrowdfundingPage } from "@/components/crowdfunding-page"
 
-export default function Home() {
+export default function Page() {
   return <CrowdfundingPage />
 }

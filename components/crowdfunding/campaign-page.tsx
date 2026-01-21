@@ -63,11 +63,10 @@ export function CampaignPage() {
                   }
                 }, 0)
               }}
-              className={`block text-left text-sm transition-colors ${
-                activeSection === section.id
+              className={`block text-left text-sm transition-colors ${activeSection === section.id
                   ? "font-medium text-foreground"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               {section.label}
             </button>
@@ -83,15 +82,15 @@ export function CampaignPage() {
             <h2 className="text-4xl font-bold">Story</h2>
             <p className="text-base leading-relaxed text-foreground">
               I’ve been a concert pianist for years, performing at Carnegie Hall, Lincoln Center,
-and venues around the world. But there’s something most people never saw: I was
-constantly fighting against the piano.
-My hands span just under 8.5 inches. That meant many traditional pieces were
-difficult, sometimes impossible, for me to play comfortably. No matter how much I
-practiced, I felt like the instrument wasn’t built for me.
-So I asked myself:
-“What if the piano could be designed to fit the pianist, instead of the other way
-around?”
-That’s where DreamPlay was born.
+              and venues around the world. But there’s something most people never saw: I was
+              constantly fighting against the piano.
+              My hands span just under 8.5 inches. That meant many traditional pieces were
+              difficult, sometimes impossible, for me to play comfortably. No matter how much I
+              practiced, I felt like the instrument wasn’t built for me.
+              So I asked myself:
+              “What if the piano could be designed to fit the pianist, instead of the other way
+              around?”
+              That’s where DreamPlay was born.
             </p>
           </section>
 
@@ -253,7 +252,7 @@ That’s where DreamPlay was born.
               <button
                 onClick={() => {
                   const navTabs = document.querySelector('[data-tab="faq"]')
-                  if (navTabs) navTabs.click()
+                  if (navTabs) (navTabs as HTMLElement).click()
                 }}
                 className="text-primary hover:underline font-medium"
               >
