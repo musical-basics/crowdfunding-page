@@ -1,7 +1,8 @@
 "use client"
 
-import { useRef, useEffect, Suspense } from "react"
+import { useRef, Suspense } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import { useCampaign } from "@/context/campaign-context" // <--- Import Hook
 import { SuccessBanner } from "./crowdfunding/success-banner"
 import { ProjectHeader } from "./crowdfunding/project-header"
 import { HeroSection } from "./crowdfunding/hero-section"
@@ -12,28 +13,46 @@ import { RewardsPage } from "./crowdfunding/rewards-page"
 import { CreatorPage } from "./crowdfunding/creator-page"
 import { FAQPage } from "./crowdfunding/faq-page"
 import { SectionPlaceholder } from "./crowdfunding/section-placeholder"
-
-import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
 import { MobilePledgeBar } from "./crowdfunding/mobile-pledge-bar"
+import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
+import { Skeleton } from "@/components/ui/skeleton" // <--- Import Skeleton
 
-// We split the logic into a sub-component because useSearchParams requires Suspense boundary
 function CrowdfundingContent() {
+  const { campaign, isLoading, error } = useCampaign() // <--- Access loading state
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
   const navRef = useRef<HTMLDivElement>(null)
 
-  // Default to 'campaign' if no tab is in the URL
   const activeTab = searchParams.get("tab") || "campaign"
 
+  // 1. Loading State
+  if (isLoading) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+        <Skeleton className="h-12 w-3/4 mx-auto" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Skeleton className="h-[400px] lg:col-span-2 rounded-xl" />
+          <Skeleton className="h-[400px] lg:col-span-1 rounded-xl" />
+        </div>
+      </main>
+    )
+  }
+
+  // 2. Error State
+  if (error || !campaign) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        Failed to load campaign: {error}
+      </div>
+    )
+  }
+
+  // 3. Success State (The normal page)
   const handleTabChange = (tabId: string) => {
-    // 1. Update the URL without reloading the page
     const params = new URLSearchParams(searchParams.toString())
     params.set("tab", tabId)
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
-
-    // 2. Scroll logic (optional: only scroll if nav is out of view)
-    // We use a small timeout to ensure the UI updates first
     setTimeout(() => {
       navRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     }, 50)
@@ -52,17 +71,12 @@ function CrowdfundingContent() {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
       <div ref={navRef} className="scroll-mt-4 sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
 
-      {/* Dynamic Content Section */}
       <div id="content-section" className="mb-24 md:mb-0">
-
-        {/* Add this Anchor div for the scroll target */}
         <div id="rewards-section-anchor" className="scroll-mt-24" />
-
         <section className="mt-8 pt-8 border-t border-border min-h-[500px]">
           {activeTab === "campaign" && <CampaignPage />}
           {activeTab === "rewards" && <RewardsPage />}

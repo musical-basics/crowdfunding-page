@@ -41,6 +41,9 @@ The content is organized as follows:
 
 <directory_structure>
 app/
+  api/
+    campaign/
+      route.ts
   campaign/
     page.tsx
   globals.css
@@ -49,9 +52,11 @@ app/
 components/
   crowdfunding/
     campaign-page.tsx
+    checkout-dialog.tsx
     creator-page.tsx
     faq-page.tsx
     hero-section.tsx
+    mobile-pledge-bar.tsx
     navigation-tabs.tsx
     project-header.tsx
     rewards-page.tsx
@@ -118,10 +123,13 @@ components/
     use-toast.ts
   crowdfunding-page.tsx
   theme-provider.tsx
+context/
+  campaign-context.tsx
 hooks/
   use-mobile.ts
   use-toast.ts
 lib/
+  mock-data.ts
   utils.ts
 public/
   images/
@@ -137,6 +145,8 @@ public/
   placeholder.svg
 styles/
   globals.css
+types/
+  campaign.ts
 .gitignore
 components.json
 next.config.mjs
@@ -148,25 +158,15 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="app/campaign/page.tsx">
-import { SuccessBanner } from "@/components/crowdfunding/success-banner"
-import { ProjectHeader } from "@/components/crowdfunding/project-header"
-import { NavigationTabs } from "@/components/crowdfunding/navigation-tabs"
-import { CampaignPage } from "@/components/crowdfunding/campaign-page"
+<file path="app/api/campaign/route.ts">
+import { NextResponse } from 'next/server'
+import { CAMPAIGN_DATA } from '@/lib/mock-data'
 
-export default function Campaign() {
-  return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <SuccessBanner />
-        <ProjectHeader />
-        <NavigationTabs />
-        <div className="mt-8">
-          <CampaignPage />
-        </div>
-      </div>
-    </main>
-  )
+export async function GET() {
+    // Simulate a realistic database delay (e.g., 500ms)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
+    return NextResponse.json(CAMPAIGN_DATA)
 }
 </file>
 
@@ -298,427 +298,126 @@ export default function Campaign() {
 }
 </file>
 
-<file path="app/layout.tsx">
-import React from "react"
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
-
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: 'DreamPlay One - Crowdfunding Campaign',
-  description: 'Back the DreamPlay One keyboard with narrower keys designed for your handspan. Stop over-stretching.',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return (
-    <html lang="en">
-      <body className={`font-sans antialiased`}>
-        {children}
-        <Analytics />
-      </body>
-    </html>
-  )
-}
-</file>
-
-<file path="app/page.tsx">
+<file path="components/crowdfunding/checkout-dialog.tsx">
 "use client"
 
-import { CrowdfundingPage } from "@/components/crowdfunding-page"
-
-export default function Home() {
-  return <CrowdfundingPage />
-}
-</file>
-
-<file path="components/crowdfunding/campaign-page.tsx">
-"use client"
-
-import { useState } from "react"
-import { Heart, MessageCircle, Share2, Mail } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useCampaign } from "@/context/campaign-context"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 
-export function CampaignPage() {
-  const [pledgeAmount, setPledgeAmount] = useState("")
-  const [activeSection, setActiveSection] = useState("meet-partystudio")
+export function CheckoutDialog() {
+    const { campaign, selectedRewardId, selectReward, pledge } = useCampaign()
+    const [isOpen, setIsOpen] = useState(false)
+    const [bonusAmount, setBonusAmount] = useState(0)
 
-  const sections = [
-    { id: "meet-partystudio", label: "Meet PartyStudio" },
-    { id: "first-hand", label: "First Hand Experiences" },
-    { id: "features", label: "Features" },
-    { id: "meet-partykeys", label: "Meet PartyKeys" },
-    { id: "technical", label: "Technical Specifications" },
-    { id: "rewards", label: "Rewards" },
-    { id: "production", label: "Production" },
-    { id: "popumusic-team", label: "Popumusic Team" },
-    { id: "shipping-fee", label: "Shipping Fee Specification" },
-    { id: "risks", label: "Risks" },
-  ]
+    // Find the actual reward object from the ID
+    const reward = campaign.rewards.find(r => r.id === selectedRewardId)
 
-  return (
-    <div id="campaign" className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-4">
-      {/* Left Sidebar - Anchor Navigation */}
-      <aside className="md:col-span-1">
-        {/* Campaign Image Placeholder */}
-        <div className="mb-6 aspect-video w-full overflow-hidden rounded-sm border border-border bg-muted">
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <span className="text-sm">Campaign Image</span>
-          </div>
-        </div>
+    // Sync internal state with Context state
+    useEffect(() => {
+        if (selectedRewardId) {
+            setIsOpen(true)
+            setBonusAmount(0) // Reset bonus on new open
+        } else {
+            setIsOpen(false)
+        }
+    }, [selectedRewardId])
 
-        {/* Project Info */}
-        <div className="mb-6 space-y-2 text-sm">
-          <button className="flex items-center gap-2 text-primary hover:underline">
-            <span className="h-5 w-5 rounded-full bg-primary" />
-            <span>Project We Love</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="h-4 w-4 rounded-full bg-muted-foreground" />
-            <span>Delaware City, DE</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-4 w-4 rounded-full bg-muted-foreground" />
-            <span>Gadgets</span>
-          </div>
-        </div>
+    const handleClose = (open: boolean) => {
+        if (!open) {
+            selectReward(null!) // Clear selection in context (using ! to bypass null check for now)
+            setIsOpen(false)
+        }
+    }
 
-        {/* Anchor Navigation */}
-        <nav className="space-y-1 border-l-4 border-primary pl-4">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => {
-                setActiveSection(section.id)
-                // Scroll to the section
-                setTimeout(() => {
-                  const element = document.getElementById(section.id)
-                  if (element) {
-                    element.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }
-                }, 0)
-              }}
-              className={`block text-left text-sm transition-colors ${
-                activeSection === section.id
-                  ? "font-medium text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {section.label}
-            </button>
-          ))}
-        </nav>
-      </aside>
+    const handleConfirm = () => {
+        if (!reward) return
 
-      {/* Main Content */}
-      <main className="md:col-span-2">
-        <div className="space-y-12">
-          {/* Story Section */}
-          <section id="meet-partystudio" className="space-y-6">
-            <h2 className="text-4xl font-bold">Story</h2>
-            <p className="text-base leading-relaxed text-foreground">
-              I’ve been a concert pianist for years, performing at Carnegie Hall, Lincoln Center,
-and venues around the world. But there’s something most people never saw: I was
-constantly fighting against the piano.
-My hands span just under 8.5 inches. That meant many traditional pieces were
-difficult, sometimes impossible, for me to play comfortably. No matter how much I
-practiced, I felt like the instrument wasn’t built for me.
-So I asked myself:
-“What if the piano could be designed to fit the pianist, instead of the other way
-around?”
-That’s where DreamPlay was born.
-            </p>
-          </section>
+        // Calculate total (Base Price + Bonus)
+        const total = reward.price + Number(bonusAmount)
 
-          {/* Features Section */}
-          <section id="features" className="space-y-8">
-            <h3 className="text-2xl font-bold">Key Features</h3>
-            <div className="grid grid-cols-2 gap-6">
-              {[
-                { icon: "📦", title: "Shipping Starts in February", description: "Timeline" },
-                { icon: "🛡️", title: "1-Year Warranty", description: "Included" },
-                { icon: "🌍", title: "Shipping Globally", description: "Worldwide" },
-                { icon: "💰", title: "Taxes Included", description: "No surprises" },
-              ].map((feature, idx) => (
-                <div key={idx} className="rounded-sm border border-border bg-muted p-6 text-center">
-                  <div className="mb-3 text-3xl">{feature.icon}</div>
-                  <h4 className="mb-2 font-semibold">{feature.title}</h4>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+        // Execute the pledge
+        pledge(total)
+
+        // Close the modal
+        handleClose(false)
+
+        // Optional: Trigger a success toast here via sonner/toast hook
+        alert(`Woohoo! You successfully pledged $${total}!`)
+    }
+
+    if (!reward) return null
+
+    return (
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>Confirm your pledge</DialogTitle>
+                    <DialogDescription>
+                        You chose <strong>{reward.title}</strong>
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-6 py-4">
+                    {/* Reward Summary */}
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium">Reward Base Price</p>
+                            <p className="text-xs text-muted-foreground">{reward.itemsIncluded.join(", ")}</p>
+                        </div>
+                        <span className="font-semibold">${reward.price}</span>
+                    </div>
+
+                    <Separator />
+
+                    {/* Bonus Support Input */}
+                    <div className="space-y-2">
+                        <Label htmlFor="bonus">Bonus Support (Optional)</Label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">$</span>
+                            <Input
+                                id="bonus"
+                                type="number"
+                                min="0"
+                                value={bonusAmount}
+                                onChange={(e) => setBonusAmount(Number(e.target.value))}
+                                className="max-w-[120px]"
+                            />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Add a little extra to help the creator reach their stretch goals!
+                        </p>
+                    </div>
+
+                    {/* Total Calculation */}
+                    <div className="bg-muted/50 p-4 rounded-lg flex justify-between items-center">
+                        <span className="font-medium">Total Pledge</span>
+                        <span className="text-xl font-bold text-emerald-600">
+                            ${reward.price + Number(bonusAmount)}
+                        </span>
+                    </div>
                 </div>
-              ))}
-            </div>
-          </section>
 
-          {/* Customer Service Section */}
-          <section className="space-y-4 border-t border-border pt-8">
-            <p className="text-base">
-              <span className="font-semibold">Official Customer Service:</span>{" "}
-              <a href="mailto:Support@popumusic.com" className="text-primary hover:underline">
-                Support@popumusic.com
-              </a>
-            </p>
-          </section>
-
-          {/* First Hand Experiences */}
-          <section id="first-hand" className="space-y-4 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">First Hand Experiences</h3>
-            <p className="text-base leading-relaxed text-foreground">
-              Share customer testimonials and experiences here.
-            </p>
-          </section>
-
-          {/* Meet PartyKeys */}
-          <section id="meet-partykeys" className="space-y-4 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">Meet PartyKeys</h3>
-            <p className="text-base leading-relaxed text-foreground">
-              Introduce the PartyKeys technology and innovation.
-            </p>
-          </section>
-
-          {/* Technical Specifications */}
-          <section id="technical" className="space-y-4 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">Technical Specifications</h3>
-            <div className="space-y-2 text-sm text-foreground">
-              <p>• Add your technical specs here</p>
-              <p>• Include dimensions, weight, materials</p>
-              <p>• List compatibility and features</p>
-            </div>
-          </section>
-
-          {/* Production */}
-          <section id="production" className="space-y-4 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">Production</h3>
-            <p className="text-base leading-relaxed text-foreground">
-              Describe your production process and timeline.
-            </p>
-          </section>
-
-          {/* Team */}
-          <section id="popumusic-team" className="space-y-4 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">Popumusic Team</h3>
-            <p className="text-base leading-relaxed text-foreground">
-              Introduce your team and their expertise.
-            </p>
-          </section>
-
-          {/* Shipping */}
-          <section id="shipping-fee" className="space-y-4 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">Shipping Fee Specification</h3>
-            <p className="text-base leading-relaxed text-foreground">
-              Detail shipping costs by region and estimated delivery times.
-            </p>
-          </section>
-
-          {/* Risks */}
-          <section id="risks" className="space-y-6 border-t border-border pt-8">
-            <h3 className="text-2xl font-bold">Risks & Challenges</h3>
-            <p className="text-base leading-relaxed text-foreground">
-              Every crowdfunding campaign comes with risks, and I want to be fully transparent with you. Here are the main challenges we face and how I plan to overcome them:
-            </p>
-
-            {/* Risk 1 */}
-            <div className="space-y-2">
-              <h4 className="text-lg font-semibold">1. Manufacturing & Production Delays</h4>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                Bringing a new musical instrument to life requires precision. Delays in manufacturing or supply chains can sometimes happen.
-              </p>
-              <p className="text-base leading-relaxed text-foreground">
-                <span className="font-medium">My plan:</span> I've already partnered with experienced manufacturers who specialize in digital instruments, and we've accounted for buffer time in the production schedule.
-              </p>
-            </div>
-
-            {/* Risk 2 */}
-            <div className="space-y-2">
-              <h4 className="text-lg font-semibold">2. Shipping & Logistics</h4>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                Global shipping can face unexpected issues such as customs delays or increased costs.
-              </p>
-              <p className="text-base leading-relaxed text-foreground">
-                <span className="font-medium">My plan:</span> I'll be working with logistics partners who have handled international campaigns before. Shipping costs will be clearly calculated before you pledge, and I'll communicate any changes immediately.
-              </p>
-            </div>
-
-            {/* Risk 3 */}
-            <div className="space-y-2">
-              <h4 className="text-lg font-semibold">3. Product Development & Quality</h4>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                The DS5.5 and DS6.0 prototypes are tested and working, but scaling production always carries the challenge of maintaining quality.
-              </p>
-              <p className="text-base leading-relaxed text-foreground">
-                <span className="font-medium">My plan:</span> Every unit will go through strict quality control before shipping. I'll personally oversee this process to ensure DreamPlay meets the professional standards I demand as a pianist.
-              </p>
-            </div>
-
-            {/* Risk 4 */}
-            <div className="space-y-2">
-              <h4 className="text-lg font-semibold">4. Stretch Goal Features</h4>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                Some stretch goals (like the DS6.5 model or premium finishes) will require additional development.
-              </p>
-              <p className="text-base leading-relaxed text-foreground">
-                <span className="font-medium">My plan:</span> These features will only be unlocked if funding allows. This ensures I can deliver the promised products without overextending resources.
-              </p>
-            </div>
-
-            {/* Risk 5 */}
-            <div className="space-y-2">
-              <h4 className="text-lg font-semibold">5. Communication</h4>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                Crowdfunding projects sometimes fail when creators go silent. That won't happen here.
-              </p>
-              <p className="text-base leading-relaxed text-foreground">
-                <span className="font-medium">My plan:</span> I will post regular updates and send emails throughout production, so you always know where things stand.
-              </p>
-            </div>
-
-            {/* Final Note */}
-            <div className="mt-8 rounded-lg border border-border bg-muted/30 p-6">
-              <h4 className="text-lg font-semibold mb-3">Final Note</h4>
-              <p className="text-base leading-relaxed text-foreground">
-                I've poured my heart into DreamPlay because I know what it feels like to struggle against the piano. My commitment to you is simple: I'll deliver the instrument I always wished I had, and I'll keep you updated every step of the way.
-              </p>
-              <p className="mt-4 text-base leading-relaxed text-foreground">
-                Thank you for trusting me and being part of this journey.
-              </p>
-            </div>
-
-            {/* FAQ Link */}
-            <p className="text-base pt-4">
-              Questions about this project? Check out the{" "}
-              <button
-                onClick={() => {
-                  const navTabs = document.querySelector('[data-tab="faq"]')
-                  if (navTabs) navTabs.click()
-                }}
-                className="text-primary hover:underline font-medium"
-              >
-                FAQ
-              </button>
-            </p>
-          </section>
-        </div>
-      </main>
-
-      {/* Right Sidebar - Support & Rewards */}
-      <aside className="md:col-span-1">
-        {/* Creator Info */}
-        <div className="mb-8 space-y-4 rounded-sm border border-border p-4">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary" />
-            <div>
-              <h4 className="font-semibold">PopuMusic</h4>
-              <p className="text-xs text-muted-foreground">First created • 0 backed</p>
-            </div>
-          </div>
-          <p className="text-sm leading-relaxed text-foreground">
-            Founded on April 1, 2015, PopuMusic is a dynamic team revolutionizing music interaction. Our mission is to make music accessible and engaging.
-          </p>
-          <a href="#" className="inline-block text-sm text-primary hover:underline">
-            See more
-          </a>
-        </div>
-
-        {/* Support Section */}
-        <div className="mb-8 space-y-4">
-          <h3 className="text-lg font-semibold">Support</h3>
-          <div className="rounded-sm border border-border p-4">
-            <p className="mb-4 text-sm font-semibold">Make a pledge without a reward</p>
-            <div className="mb-4">
-              <label className="mb-2 block text-xs font-medium text-muted-foreground">Pledge amount</label>
-              <div className="flex gap-2">
-                <span className="flex items-center px-3 text-muted-foreground">$</span>
-                <input
-                  type="number"
-                  value={pledgeAmount}
-                  onChange={(e) => setPledgeAmount(e.target.value)}
-                  placeholder="1"
-                  className="flex-1 rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none"
-                />
-              </div>
-            </div>
-            <Button className="w-full">Back it because you believe in it.</Button>
-            <p className="mt-3 text-xs text-muted-foreground">Support the project for no reward, just because it speaks to you.</p>
-          </div>
-        </div>
-
-        {/* Available Rewards */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Available rewards</h3>
-          <div className="space-y-4">
-            {/* Reward 1 */}
-            <div className="rounded-sm border border-border overflow-hidden">
-              <div className="aspect-square w-full overflow-hidden bg-muted">
-                <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                  Reward Image 1
-                </div>
-              </div>
-              <div className="space-y-2 p-3">
-                <p className="text-xs font-semibold text-primary">LOWEST PRICE</p>
-                <h4 className="font-semibold">Just The Cool Keyboard</h4>
-                <p className="text-xl font-bold">
-                  $199 <span className="text-xs text-muted-foreground line-through">$300</span>
-                </p>
-                <p className="text-xs text-muted-foreground">Edit reward description here</p>
-              </div>
-            </div>
-
-            {/* Reward 2 */}
-            <div className="rounded-sm border border-border overflow-hidden">
-              <div className="aspect-square w-full overflow-hidden bg-muted">
-                <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                  Reward Image 2
-                </div>
-              </div>
-              <div className="space-y-2 p-3">
-                <h4 className="font-semibold">Premium Bundle</h4>
-                <p className="text-xl font-bold">$399</p>
-                <p className="text-xs text-muted-foreground">Edit reward description here</p>
-              </div>
-            </div>
-
-            {/* Reward 3 */}
-            <div className="rounded-sm border border-border overflow-hidden">
-              <div className="aspect-square w-full overflow-hidden bg-muted">
-                <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                  Reward Image 3
-                </div>
-              </div>
-              <div className="space-y-2 p-3">
-                <h4 className="font-semibold">Deluxe Edition</h4>
-                <p className="text-xl font-bold">$599</p>
-                <p className="text-xs text-muted-foreground">Edit reward description here</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </div>
-  )
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+                    <Button onClick={handleConfirm} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                        Confirm Payment
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
 }
 </file>
 
@@ -1070,581 +769,49 @@ export function FAQPage() {
 }
 </file>
 
-<file path="components/crowdfunding/hero-section.tsx">
+<file path="components/crowdfunding/mobile-pledge-bar.tsx">
 "use client"
 
-import Image from "next/image"
-import { Heart, AtSign, MapPin } from "lucide-react"
-
-export function HeroSection() {
-  return (
-    <div className="space-y-4">
-      {/* Hero Image */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-border">
-        <Image
-          src="/images/hero-piano.png"
-          alt="DreamPlay One - Standard Piano Keys Are Too Wide"
-          fill
-          className="object-cover px-[0] py-[0] my-[0]"
-          priority
-        />
-      </div>
-
-      {/* Project Badges */}
-      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <Heart className="h-4 w-4 text-rose-500 fill-rose-500" />
-          <span>Project We Love</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <AtSign className="h-4 w-4" />
-          <span>Gadgets</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <MapPin className="h-4 w-4" />
-          <span>Las Vegas, NV</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-</file>
-
-<file path="components/crowdfunding/navigation-tabs.tsx">
-"use client"
-
-import { useState } from "react"
-import { Menu, X } from "lucide-react"
-
-export function NavigationTabs({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  const tabs = [
-    { id: "campaign", label: "Campaign" },
-    { id: "rewards", label: "Rewards" },
-    { id: "creator", label: "Creator" },
-    { id: "faq", label: "FAQ", count: 36 },
-    { id: "updates", label: "Updates", count: 2 },
-    { id: "comments", label: "Comments", count: 65 },
-    { id: "community", label: "Community" },
-  ]
-
-  const handleMobileTabClick = (tabId: string) => {
-    onTabChange(tabId)
-    setMobileMenuOpen(false)
-  }
-
-  return (
-    <div className="mt-8 border-t border-border">
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex flex-wrap gap-x-6 gap-y-2 pt-4">
-        {tabs.map((tab) => (
-          <TabItem
-            key={tab.id}
-            label={tab.label}
-            count={tab.count}
-            id={tab.id}
-            active={activeTab === tab.id}
-            onClick={() => onTabChange(tab.id)}
-          />
-        ))}
-      </nav>
-
-      {/* Mobile Navigation */}
-      <div className="md:hidden pt-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">
-            {tabs.find(t => t.id === activeTab)?.label || "Menu"}
-          </span>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-md hover:bg-muted transition-colors"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="absolute right-4 mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
-            <div className="py-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleMobileTabClick(tab.id)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-muted text-foreground font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count !== undefined && (
-                    <sup className="ml-1 text-xs text-muted-foreground">{tab.count}</sup>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function TabItem({ label, count, id, active, onClick }: { label: string; count?: number; id: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`text-sm py-2 border-b-2 transition-colors ${
-        active
-          ? "border-foreground text-foreground font-medium"
-          : "border-transparent text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {label}
-      {count !== undefined && (
-        <sup className="ml-0.5 text-xs text-muted-foreground">{count}</sup>
-      )}
-    </button>
-  )
-}
-</file>
-
-<file path="components/crowdfunding/project-header.tsx">
-"use client"
-
-export function ProjectHeader() {
-  return (
-    <div className="text-center">
-      <h1 className="text-xl md:text-2xl font-bold text-foreground text-balance">
-        DreamPlay Piano: The World's First Full-Sized Narrow Keyboard
-      </h1>
-      <p className="text-sm text-muted-foreground mt-2">
-        All MIDI-Keyboard Compatible | 128 Instrument Tones | Built-in Drum Machine | 70W Output | Sound Chip Embedded
-      </p>
-    </div>
-  )
-}
-</file>
-
-<file path="components/crowdfunding/rewards-page.tsx">
-"use client"
-
-import { useState } from "react"
+import { useCampaign } from "@/context/campaign-context"
 import { Button } from "@/components/ui/button"
+import { useIsMobile } from "@/hooks/use-mobile"
 
-const rewards = [
-  {
-    id: "vip-founder",
-    title: "VIP Founder Access",
-    price: 1,
-    description: "Early updates + lowest price guarantee",
-    itemsIncluded: 1,
-    backers: 127,
-    estimatedDelivery: "Immediate",
-    shipsTo: "Digital Reward",
-    limited: false,
-    soldOut: false,
-  },
-  {
-    id: "supporter-pack",
-    title: "Supporter Pack",
-    price: 15,
-    description: "Thank-you email + Backer Badge + name on Founders Wall",
-    itemsIncluded: 3,
-    backers: 89,
-    estimatedDelivery: "Mar 2026",
-    shipsTo: "Digital Reward",
-    limited: false,
-    soldOut: false,
-  },
-  {
-    id: "super-early-bird",
-    title: "Super Early Bird",
-    price: 199,
-    originalPrice: 399,
-    description: "DS5.5 or DS6.0 at the deepest discount",
-    itemsIncluded: 1,
-    backers: 50,
-    estimatedDelivery: "Feb 2026",
-    shipsTo: "Anywhere in the world",
-    limited: true,
-    limitedCount: 50,
-    soldOut: true,
-    discount: "50% OFF",
-  },
-  {
-    id: "early-bird",
-    title: "Early Bird",
-    price: 249,
-    originalPrice: 349,
-    description: "DS5.5 or DS6.0 at a special price",
-    itemsIncluded: 1,
-    backers: 34,
-    estimatedDelivery: "Feb 2026",
-    shipsTo: "Anywhere in the world",
-    limited: true,
-    limitedCount: 100,
-    soldOut: false,
-    discount: "29% OFF",
-  },
-  {
-    id: "standard",
-    title: "Standard Campaign Price",
-    price: 299,
-    description: "DS5.5 or DS6.0 with warranty",
-    itemsIncluded: 1,
-    backers: 45,
-    estimatedDelivery: "Mar 2026",
-    shipsTo: "Anywhere in the world",
-    limited: false,
-    soldOut: false,
-  },
-  {
-    id: "bundle",
-    title: "DreamPlay Bundle",
-    price: 349,
-    originalPrice: 499,
-    description: "Keyboard + stand + sustain pedal + carrying case",
-    itemsIncluded: 4,
-    backers: 28,
-    estimatedDelivery: "Mar 2026",
-    shipsTo: "Anywhere in the world",
-    limited: false,
-    soldOut: false,
-    discount: "30% OFF",
-  },
-  {
-    id: "collectors",
-    title: "Collector's Edition",
-    price: 499,
-    description: "Signed by me, limited to 30",
-    itemsIncluded: 1,
-    backers: 12,
-    estimatedDelivery: "Mar 2026",
-    shipsTo: "Anywhere in the world",
-    limited: true,
-    limitedCount: 30,
-    soldOut: false,
-  },
-  {
-    id: "masterclass",
-    title: "Masterclass Experience",
-    price: 799,
-    originalPrice: 1199,
-    description: "Keyboard + bundle + 90-min private masterclass with me",
-    itemsIncluded: 5,
-    backers: 5,
-    estimatedDelivery: "Apr 2026",
-    shipsTo: "Anywhere in the world",
-    limited: true,
-    limitedCount: 10,
-    soldOut: false,
-    discount: "33% OFF",
-  },
-]
+export function MobilePledgeBar() {
+    const { pledge, campaign } = useCampaign()
+    const isMobile = useIsMobile()
 
-const optionalAddons = [
-  { id: "stand", title: "DreamPlay Stand", price: 79, description: "DreamPlay Stand*1" },
-  { id: "pedal", title: "Sustain Pedal", price: 29, description: "Sustain Pedal*1" },
-  { id: "case", title: "Carrying Case", price: 49, description: "Carrying Case*1" },
-  { id: "bench", title: "Piano Bench", price: 89, description: "Piano Bench*1" },
-]
+    // Only show on mobile
+    if (!isMobile) return null
 
-export function RewardsPage() {
-  const [selectedReward, setSelectedReward] = useState(rewards[3]) // Early Bird as default
-
-  const availableRewards = rewards.filter((r) => !r.soldOut)
-  const soldOutRewards = rewards.filter((r) => r.soldOut)
-
-  return (
-    <div className="space-y-8">
-      {/* Main 3-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Sidebar - Available Rewards List */}
-        <div className="lg:col-span-3 space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Available rewards</h2>
-            <div className="space-y-1">
-              {availableRewards.map((reward) => (
-                <button
-                  key={reward.id}
-                  onClick={() => setSelectedReward(reward)}
-                  className={`w-full text-left p-3 rounded-md transition-colors ${
-                    selectedReward.id === reward.id
-                      ? "border-l-4 border-emerald-600 bg-muted/50"
-                      : "hover:bg-muted/30"
-                  }`}
-                >
-                  <p className="font-medium text-sm">{reward.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    ${reward.price} · {reward.itemsIncluded} item{reward.itemsIncluded > 1 ? "s" : ""} included
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {soldOutRewards.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-muted-foreground">All gone</h3>
-              <div className="space-y-1">
-                {soldOutRewards.map((reward) => (
-                  <div key={reward.id} className="p-3 opacity-60">
-                    <p className="font-medium text-sm">{reward.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      ${reward.price} · {reward.itemsIncluded} item included
+    return (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-50 md:hidden pb-safe">
+            <div className="flex gap-4 items-center max-w-6xl mx-auto">
+                <div className="flex-1">
+                    <p className="text-sm font-semibold truncate">{campaign.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {campaign.stats.daysLeft} days left
                     </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Center - Featured Reward Card */}
-        <div className="lg:col-span-5">
-          <div className="border border-border rounded-lg overflow-hidden">
-            {/* Discount Badge */}
-            {selectedReward.discount && (
-              <div className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 inline-block rounded-br-lg">
-                {selectedReward.discount}
-              </div>
-            )}
-
-            {/* Product Display */}
-            <div className="p-6">
-              <h3 className="text-2xl font-serif italic mb-4">{selectedReward.title}</h3>
-
-              {/* Product Image Placeholder */}
-              <div className="aspect-video bg-muted/30 rounded-lg border border-dashed border-border flex items-center justify-center mb-4">
-                <p className="text-muted-foreground text-sm">Product Image Placeholder</p>
-              </div>
-
-              {/* Pricing */}
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-3xl font-bold">${selectedReward.price}</span>
-                {selectedReward.originalPrice && (
-                  <span className="text-lg text-muted-foreground line-through">
-                    ${selectedReward.originalPrice}
-                  </span>
-                )}
-                {selectedReward.limited && (
-                  <span className="ml-auto bg-rose-100 text-rose-700 text-xs px-2 py-1 rounded">
-                    Limited: {selectedReward.limitedCount}
-                  </span>
-                )}
-              </div>
-
-              {/* Reward Info */}
-              <div className="border-t border-border pt-4 mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">{selectedReward.title}</span>
-                  <span className="font-semibold">${selectedReward.price}</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{selectedReward.description}</p>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div>
-                  <p className="text-muted-foreground">Backers</p>
-                  <p className="font-medium">{selectedReward.backers}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Ships to</p>
-                  <p className="font-medium">{selectedReward.shipsTo}</p>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-muted-foreground text-sm">Estimated delivery</p>
-                <p className="font-medium">{selectedReward.estimatedDelivery}</p>
-              </div>
-
-              {/* Pledge Button */}
-              <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg"
-                disabled={selectedReward.soldOut}
-              >
-                {selectedReward.soldOut ? "Sold Out" : `Pledge $${selectedReward.price}`}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Sidebar - Included Items & Add-ons */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Selected Reward Info */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">{selectedReward.title}</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {selectedReward.itemsIncluded} item{selectedReward.itemsIncluded > 1 ? "s" : ""} included
-            </p>
-
-            {/* Included Item Card */}
-            <div className="border border-border rounded-lg p-4 flex items-center gap-4">
-              <div className="flex-1">
-                <p className="font-medium">DreamPlay Keyboard</p>
-                <p className="text-sm text-muted-foreground">Quantity: 1</p>
-              </div>
-              <div className="w-20 h-16 bg-muted/30 rounded border border-dashed border-border flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">Image</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Optional Add-ons */}
-          <div>
-            <h4 className="text-sm text-muted-foreground mb-4">Optional add-ons</h4>
-            <div className="space-y-3">
-              {optionalAddons.map((addon) => (
-                <div
-                  key={addon.id}
-                  className="border border-border rounded-lg p-4 flex items-center gap-4 hover:bg-muted/30 cursor-pointer transition-colors"
+                <Button
+                    onClick={() => {
+                        // Scroll to rewards section
+                        const rewardsSection = document.getElementById("rewards-section-anchor") // We will add this ID shortly
+                        if (rewardsSection) {
+                            rewardsSection.scrollIntoView({ behavior: "smooth" })
+                        } else {
+                            // Fallback if we are on a different tab
+                            const params = new URLSearchParams(window.location.search)
+                            params.set("tab", "rewards")
+                            window.location.search = params.toString()
+                        }
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{addon.title}</p>
-                    <p className="text-sm text-emerald-600">+${addon.price}</p>
-                    <p className="text-sm text-muted-foreground">{addon.description}</p>
-                  </div>
-                  <div className="w-20 h-16 bg-muted/30 rounded border border-dashed border-border flex items-center justify-center">
-                    <span className="text-xs text-muted-foreground">Image</span>
-                  </div>
-                </div>
-              ))}
+                    Back this project
+                </Button>
             </div>
-          </div>
         </div>
-      </div>
-
-      {/* Rewards Chart Section */}
-      <div className="border-t border-border pt-8">
-        <h2 className="text-2xl font-bold mb-6">Rewards Pricing Chart</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-4 font-semibold">Tier</th>
-                <th className="text-left py-3 px-4 font-semibold">Price</th>
-                <th className="text-left py-3 px-4 font-semibold">What You Get</th>
-                <th className="text-left py-3 px-4 font-semibold">Availability</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rewards.map((reward) => (
-                <tr key={reward.id} className="border-b border-border hover:bg-muted/30">
-                  <td className="py-3 px-4 font-medium">{reward.title}</td>
-                  <td className="py-3 px-4">
-                    <span className="font-semibold">${reward.price}</span>
-                    {reward.originalPrice && (
-                      <span className="ml-2 text-sm text-muted-foreground line-through">
-                        ${reward.originalPrice}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-muted-foreground">{reward.description}</td>
-                  <td className="py-3 px-4">
-                    {reward.soldOut ? (
-                      <span className="text-rose-600 font-medium">Sold Out</span>
-                    ) : reward.limited ? (
-                      <span className="text-amber-600">Limited ({reward.limitedCount})</span>
-                    ) : (
-                      <span className="text-emerald-600">Available</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {/* Stretch Goals Section */}
-      <div className="border-t border-border pt-8 space-y-8">
-        <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold mb-3">Unlock More Together</h2>
-          <p className="text-lg text-muted-foreground">
-            Our goal is <span className="font-semibold text-foreground">$35,000</span> to fund the first production run. 
-            The more support we get, the more exclusive features we unlock for everyone!
-          </p>
-        </div>
-
-        {/* Visual Progress Bar */}
-        <div className="relative bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full h-16 p-2 shadow-inner">
-          <div className="absolute inset-0 flex items-center justify-between px-8 text-xs font-bold z-10">
-            <span className="text-white drop-shadow-md">$35K</span>
-            <span className="text-slate-700 dark:text-slate-300">$50K</span>
-            <span className="text-slate-700 dark:text-slate-300">$100K</span>
-          </div>
-          <div className="relative h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full w-1/3 shadow-lg flex items-center justify-end pr-3">
-            <div className="absolute -right-1 w-6 h-6 bg-white rounded-full shadow-md border-4 border-emerald-500 animate-pulse" />
-          </div>
-        </div>
-
-        {/* Stretch Goals Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Base Goal */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
-            <div className="relative z-10">
-              <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-semibold mb-3">
-                FUNDED
-              </div>
-              <h3 className="text-4xl font-bold mb-2">$35K</h3>
-              <p className="text-xl font-semibold mb-3">Production Unlocked</p>
-              <p className="text-emerald-50 text-sm leading-relaxed">
-                First production run of DreamPlay keyboards. Make the narrower keys a reality!
-              </p>
-            </div>
-          </div>
-
-          {/* Stretch Goal 1 */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-white shadow-xl border-2 border-slate-700 hover:border-slate-500 transition-all hover:scale-105">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12" />
-            <div className="relative z-10">
-              <div className="inline-block px-3 py-1 bg-slate-700 rounded-full text-xs font-semibold mb-3">
-                STRETCH GOAL
-              </div>
-              <h3 className="text-4xl font-bold mb-2">$50K</h3>
-              <p className="text-xl font-semibold mb-3">White Edition</p>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Limited-edition matte black finish. Sleek, professional, and exclusive to backers.
-              </p>
-            </div>
-          </div>
-
-          {/* Stretch Goal 2 */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-700 dark:to-slate-800 p-6 shadow-xl border-2 border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-all hover:scale-105">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-300/20 dark:bg-white/5 rounded-full -mr-16 -mt-16" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-slate-300/20 dark:bg-white/5 rounded-full -ml-12 -mb-12" />
-            <div className="relative z-10">
-              <div className="inline-block px-3 py-1 bg-slate-300 dark:bg-slate-600 rounded-full text-xs font-semibold mb-3 text-slate-800 dark:text-white">
-                ULTIMATE GOAL
-              </div>
-              <h3 className="text-4xl font-bold mb-2 text-slate-900 dark:text-white">$100K</h3>
-              <p className="text-xl font-semibold mb-3 text-slate-900 dark:text-white">Premium Bundle</p>
-              <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
-                White Edition + Premium accessories package with advanced pedals, cables, and limited swag.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-slate-800 dark:to-slate-900 rounded-xl p-8 border border-emerald-200 dark:border-emerald-900">
-          <p className="text-lg font-semibold mb-2">Every pledge brings us closer!</p>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Back at any level to help unlock premium finishes and accessories for the entire community. 
-            Together we can make DreamPlay even better.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+    )
 }
 </file>
 
@@ -1693,74 +860,6 @@ export function SectionPlaceholder({ title }: { title: string }) {
           <div className="aspect-video bg-muted/50 rounded-lg border border-dashed border-border flex items-center justify-center">
             <p className="text-muted-foreground text-sm">Image Placeholder</p>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-</file>
-
-<file path="components/crowdfunding/stats-panel.tsx">
-"use client"
-
-import { Button } from "@/components/ui/button"
-import { Bookmark, Facebook, Twitter } from "lucide-react"
-
-export function StatsPanel() {
-  return (
-    <div className="space-y-6">
-      {/* Progress Bar */}
-      <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-        <div className="h-full bg-emerald-600 rounded-full" style={{ width: "100%" }} />
-      </div>
-
-      {/* Funding Amount */}
-      <div>
-        <p className="text-3xl font-bold text-foreground">$88,808</p>
-        <p className="text-sm text-muted-foreground">pledged of $5,000 goal</p>
-      </div>
-
-      {/* Backers */}
-      <div>
-        <p className="text-2xl font-semibold text-foreground">224</p>
-        <p className="text-sm text-muted-foreground">backers</p>
-      </div>
-
-      {/* CTA Button */}
-      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6">
-        Back this project
-      </Button>
-
-      {/* Secondary Actions */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" className="flex-1 gap-2 bg-transparent">
-          <Bookmark className="h-4 w-4" />
-          Save
-        </Button>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <Facebook className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <Twitter className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-            </svg>
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="none" stroke="currentColor" strokeWidth="2"/>
-              <polyline points="22,6 12,13 2,6" fill="none" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </Button>
         </div>
       </div>
     </div>
@@ -8403,70 +7502,6 @@ function useToast() {
 export { useToast, toast }
 </file>
 
-<file path="components/crowdfunding-page.tsx">
-"use client"
-
-import { useState, useRef, useEffect } from "react"
-import { SuccessBanner } from "./crowdfunding/success-banner"
-import { ProjectHeader } from "./crowdfunding/project-header"
-import { HeroSection } from "./crowdfunding/hero-section"
-import { StatsPanel } from "./crowdfunding/stats-panel"
-import { NavigationTabs } from "./crowdfunding/navigation-tabs"
-import { CampaignPage } from "./crowdfunding/campaign-page"
-import { RewardsPage } from "./crowdfunding/rewards-page"
-import { CreatorPage } from "./crowdfunding/creator-page"
-import { FAQPage } from "./crowdfunding/faq-page"
-import { SectionPlaceholder } from "./crowdfunding/section-placeholder"
-
-export function CrowdfundingPage() {
-  const [activeTab, setActiveTab] = useState("campaign")
-  const navRef = useRef<HTMLDivElement>(null)
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    // Scroll to nav section so nav bar stays at top
-    setTimeout(() => {
-      navRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    }, 50)
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <SuccessBanner />
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        <ProjectHeader />
-        {/* Section 1: Always visible - Hero Image and Stats */}
-        <div id="section-1" className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          <div className="lg:col-span-2">
-            <HeroSection />
-          </div>
-          <div className="lg:col-span-1">
-            <StatsPanel />
-          </div>
-        </div>
-        {/* Navigation Tabs - Always visible */}
-        <div ref={navRef} className="scroll-mt-4">
-          <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
-        </div>
-        
-        {/* Content Area - Changes based on active tab */}
-        <div id="content-section">
-          <section className="mt-8 pt-8 border-t border-border">
-            {activeTab === "campaign" && <CampaignPage />}
-            {activeTab === "rewards" && <RewardsPage />}
-            {activeTab === "creator" && <CreatorPage />}
-            {activeTab === "faq" && <FAQPage />}
-            {activeTab === "updates" && <SectionPlaceholder title="Updates" />}
-            {activeTab === "comments" && <SectionPlaceholder title="Comments" />}
-            {activeTab === "community" && <SectionPlaceholder title="Community" />}
-          </section>
-        </div>
-      </main>
-    </div>
-  )
-}
-</file>
-
 <file path="components/theme-provider.tsx">
 'use client'
 
@@ -8478,6 +7513,96 @@ import {
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+}
+</file>
+
+<file path="context/campaign-context.tsx">
+"use client"
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { Campaign } from '@/types/campaign'
+
+interface CampaignContextType {
+    campaign: Campaign | null
+    isLoading: boolean
+    error: string | null
+    totalPledged: number
+    backersCount: number
+    selectedRewardId: string | null
+    selectReward: (rewardId: string) => void
+    pledge: (amount: number) => void
+}
+
+const CampaignContext = createContext<CampaignContextType | undefined>(undefined)
+
+export function CampaignProvider({ children }: { children: ReactNode }) {
+    const [campaign, setCampaign] = useState<Campaign | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    // Stats state
+    const [totalPledged, setTotalPledged] = useState(0)
+    const [backersCount, setBackersCount] = useState(0)
+    const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null)
+
+    // Fetch data on mount
+    useEffect(() => {
+        async function fetchCampaign() {
+            try {
+                setIsLoading(true)
+                const res = await fetch('/api/campaign')
+
+                if (!res.ok) throw new Error('Failed to fetch campaign')
+
+                const data = await res.json()
+                setCampaign(data)
+
+                // Initialize stats from the fetched data
+                setTotalPledged(data.stats.totalPledged)
+                setBackersCount(data.stats.totalBackers)
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred')
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchCampaign()
+    }, [])
+
+    const selectReward = (rewardId: string) => {
+        setSelectedRewardId(rewardId)
+    }
+
+    const pledge = (amount: number) => {
+        setTotalPledged((prev) => prev + amount)
+        setBackersCount((prev) => prev + 1)
+    }
+
+    return (
+        <CampaignContext.Provider
+            value={{
+                campaign,
+                isLoading,
+                error,
+                totalPledged,
+                backersCount,
+                selectedRewardId,
+                selectReward,
+                pledge
+            }}
+        >
+            {children}
+        </CampaignContext.Provider>
+    )
+}
+
+export function useCampaign() {
+    const context = useContext(CampaignContext)
+    if (context === undefined) {
+        throw new Error('useCampaign must be used within a CampaignProvider')
+    }
+    return context
 }
 </file>
 
@@ -8697,6 +7822,178 @@ function useToast() {
 export { useToast, toast }
 </file>
 
+<file path="lib/mock-data.ts">
+import { Campaign } from "@/types/campaign";
+
+export const CAMPAIGN_DATA: Campaign = {
+    id: "dreamplay-one",
+    title: "DreamPlay One - Crowdfunding Campaign",
+    subtitle: "Back the DreamPlay One keyboard with narrower keys designed for your handspan. Stop over-stretching.",
+    story: `
+    <h2 class="text-4xl font-bold">Story</h2>
+    <p class="text-base leading-relaxed text-foreground">
+      I’ve been a concert pianist for years, performing at Carnegie Hall, Lincoln Center,
+      and venues around the world. But there’s something most people never saw: I was
+      constantly fighting against the piano.
+    </p>
+    <p class="text-base leading-relaxed text-foreground">
+      My hands span just under 8.5 inches. That meant many traditional pieces were
+      difficult, sometimes impossible, for me to play comfortably. No matter how much I
+      practiced, I felt like the instrument wasn’t built for me.
+    </p>
+    <p class="text-base leading-relaxed text-foreground">
+      So I asked myself:
+      “What if the piano could be designed to fit the pianist, instead of the other way
+      around?”
+    </p>
+    <p class="text-base leading-relaxed text-foreground">
+      That’s where DreamPlay was born.
+    </p>
+  `,
+    risks: `
+    <h3 class="text-2xl font-bold">Risks & Challenges</h3>
+    <p class="text-base leading-relaxed text-foreground">
+      Every crowdfunding campaign comes with risks, and I want to be fully transparent with you. Here are the main challenges we face and how I plan to overcome them:
+    </p>
+
+    <div class="space-y-2">
+      <h4 class="text-lg font-semibold">1. Manufacturing & Production Delays</h4>
+      <p class="text-base leading-relaxed text-muted-foreground">
+        Bringing a new musical instrument to life requires precision. Delays in manufacturing or supply chains can sometimes happen.
+      </p>
+      <p class="text-base leading-relaxed text-foreground">
+        <span class="font-medium">My plan:</span> I've already partnered with experienced manufacturers who specialize in digital instruments, and we've accounted for buffer time in the production schedule.
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <h4 class="text-lg font-semibold">2. Shipping & Logistics</h4>
+      <p class="text-base leading-relaxed text-muted-foreground">
+        Global shipping can face unexpected issues such as customs delays or increased costs.
+      </p>
+      <p class="text-base leading-relaxed text-foreground">
+        <span class="font-medium">My plan:</span> I'll be working with logistics partners who have handled international campaigns before. Shipping costs will be clearly calculated before you pledge, and I'll communicate any changes immediately.
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <h4 class="text-lg font-semibold">3. Product Development & Quality</h4>
+      <p class="text-base leading-relaxed text-muted-foreground">
+        The DS5.5 and DS6.0 prototypes are tested and working, but scaling production always carries the challenge of maintaining quality.
+      </p>
+      <p class="text-base leading-relaxed text-foreground">
+        <span class="font-medium">My plan:</span> Every unit will go through strict quality control before shipping. I'll personally oversee this process to ensure DreamPlay meets the professional standards I demand as a pianist.
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <h4 class="text-lg font-semibold">4. Stretch Goal Features</h4>
+      <p class="text-base leading-relaxed text-muted-foreground">
+        Some stretch goals (like the DS6.5 model or premium finishes) will require additional development.
+      </p>
+      <p class="text-base leading-relaxed text-foreground">
+        <span class="font-medium">My plan:</span> These features will only be unlocked if funding allows. This ensures I can deliver the promised products without overextending resources.
+      </p>
+    </div>
+
+    <div class="space-y-2">
+      <h4 class="text-lg font-semibold">5. Communication</h4>
+      <p class="text-base leading-relaxed text-muted-foreground">
+        Crowdfunding projects sometimes fail when creators go silent. That won't happen here.
+      </p>
+      <p class="text-base leading-relaxed text-foreground">
+        <span class="font-medium">My plan:</span> I will post regular updates and send emails throughout production, so you always know where things stand.
+      </p>
+    </div>
+
+    <div class="mt-8 rounded-lg border border-border bg-muted/30 p-6">
+      <h4 class="text-lg font-semibold mb-3">Final Note</h4>
+      <p class="text-base leading-relaxed text-foreground">
+        I've poured my heart into DreamPlay because I know what it feels like to struggle against the piano. My commitment to you is simple: I'll deliver the instrument I always wished I had, and I'll keep you updated every step of the way.
+      </p>
+      <p class="mt-4 text-base leading-relaxed text-foreground">
+        Thank you for trusting me and being part of this journey.
+      </p>
+    </div>
+  `,
+    images: {
+        hero: "/images/hero-piano.png",
+        gallery: [
+            "/placeholder.jpg",
+            "/placeholder.jpg"
+        ]
+    },
+    stats: {
+        totalPledged: 88808,
+        goalAmount: 5000,
+        totalBackers: 224,
+        daysLeft: 28
+    },
+    creator: {
+        id: "popumusic",
+        name: "PopuMusic",
+        avatarUrl: "/placeholder-user.jpg",
+        bio: "Founded on April 1, 2015, PopuMusic is a dynamic team revolutionizing music interaction. Our mission is to make music accessible and engaging.",
+        location: "Delaware City, DE",
+        projectsCreated: 1,
+        projectsBacked: 0
+    },
+    rewards: [
+        {
+            id: "vip-founder",
+            title: "VIP Founder Access",
+            price: 1,
+            description: "Early updates + lowest price guarantee",
+            itemsIncluded: ["VIP Access"],
+            estimatedDelivery: "Immediate",
+            shipsTo: ["Digital Reward"],
+            backersCount: 127,
+            isSoldOut: false
+        },
+        {
+            id: "super-early-bird",
+            title: "Super Early Bird",
+            price: 199,
+            originalPrice: 399,
+            description: "DS5.5 or DS6.0 at the deepest discount",
+            itemsIncluded: ["DreamPlay Keyboard"],
+            estimatedDelivery: "Feb 2026",
+            shipsTo: ["Anywhere in the world"],
+            backersCount: 50,
+            limitedQuantity: 50,
+            isSoldOut: true
+        },
+        {
+            id: "early-bird",
+            title: "Early Bird",
+            price: 249,
+            originalPrice: 349,
+            description: "DS5.5 or DS6.0 at a special price",
+            itemsIncluded: ["DreamPlay Keyboard"],
+            estimatedDelivery: "Feb 2026",
+            shipsTo: ["Anywhere in the world"],
+            backersCount: 34,
+            limitedQuantity: 100,
+            isSoldOut: false
+        }
+    ],
+    faqs: [
+        {
+            id: "model-choice",
+            category: "About Purchase",
+            question: "Which DreamPlay model is right for me?",
+            answer: "DreamPlay comes in two sizes: DS5.5..."
+        },
+        {
+            id: "delivery-timeline",
+            category: "About Purchase",
+            question: "When will I receive my keyboard?",
+            answer: "Here's the current timeline: Campaign ends..."
+        }
+    ]
+};
+</file>
+
 <file path="lib/utils.ts">
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -8868,6 +8165,63 @@ export function cn(...inputs: ClassValue[]) {
   body {
     @apply bg-background text-foreground;
   }
+}
+</file>
+
+<file path="types/campaign.ts">
+export interface Creator {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    bio: string;
+    location: string;
+    projectsCreated: number;
+    projectsBacked: number;
+}
+
+export interface Reward {
+    id: string;
+    title: string;
+    price: number;
+    originalPrice?: number;
+    description: string;
+    itemsIncluded: string[]; // e.g. ["Keyboard", "Cable"]
+    estimatedDelivery: string;
+    shipsTo: string[];
+    backersCount: number;
+    limitedQuantity?: number; // If null, unlimited
+    timeLeft?: string; // For scarcity logic
+    isSoldOut: boolean;
+}
+
+export interface FAQItem {
+    id: string;
+    question: string;
+    answer: string;
+    category: string;
+}
+
+export interface CampaignStats {
+    totalPledged: number;
+    goalAmount: number;
+    totalBackers: number;
+    daysLeft: number;
+}
+
+export interface Campaign {
+    id: string;
+    title: string;
+    subtitle: string;
+    story: string; // HTML or Markdown content
+    risks: string; // HTML or Markdown content
+    images: {
+        hero: string;
+        gallery: string[];
+    };
+    stats: CampaignStats;
+    creator: Creator;
+    rewards: Reward[];
+    faqs: FAQItem[];
 }
 </file>
 
@@ -9067,6 +8421,805 @@ export default config
   "exclude": [
     "node_modules"
   ]
+}
+</file>
+
+<file path="app/campaign/page.tsx">
+"use client"
+
+import { useState } from "react"
+import { SuccessBanner } from "@/components/crowdfunding/success-banner"
+import { ProjectHeader } from "@/components/crowdfunding/project-header"
+import { NavigationTabs } from "@/components/crowdfunding/navigation-tabs"
+import { CampaignPage } from "@/components/crowdfunding/campaign-page"
+
+export default function Campaign() {
+  const [activeTab, setActiveTab] = useState("campaign")
+
+  return (
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <SuccessBanner />
+        <ProjectHeader />
+        <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="mt-8">
+          <CampaignPage />
+        </div>
+      </div>
+    </main>
+  )
+}
+</file>
+
+<file path="app/layout.tsx">
+import React from "react"
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
+import './globals.css'
+
+import { CampaignProvider } from "@/context/campaign-context"
+
+const _geist = Geist({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: 'DreamPlay One - Crowdfunding Campaign',
+  description: 'Back the DreamPlay One keyboard with narrower keys designed for your handspan. Stop over-stretching.',
+  generator: 'v0.app',
+  icons: {
+    icon: [
+      {
+        url: '/icon-light-32x32.png',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        url: '/icon-dark-32x32.png',
+        media: '(prefers-color-scheme: dark)',
+      },
+      {
+        url: '/icon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    apple: '/apple-icon.png',
+  },
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return (
+    <html lang="en">
+      <body className={`font-sans antialiased`}>
+        <CampaignProvider>
+          {children}
+        </CampaignProvider>
+        <Analytics />
+      </body>
+    </html>
+  )
+}
+</file>
+
+<file path="app/page.tsx">
+"use client"
+
+import { CrowdfundingPage } from "@/components/crowdfunding-page"
+
+export default function Page() {
+  return <CrowdfundingPage />
+}
+</file>
+
+<file path="components/crowdfunding/hero-section.tsx">
+"use client"
+
+import * as React from "react"
+import Image from "next/image"
+import { Heart, Share2, Play } from "lucide-react"
+import { useCampaign } from "@/context/campaign-context"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+
+export function HeroSection() {
+  const { campaign } = useCampaign()
+  const [api, setApi] = React.useState<CarouselApi>()
+  const [current, setCurrent] = React.useState(0)
+
+  // Combine hero and gallery into one list for the slider
+  const allImages = [campaign.images.hero, ...campaign.images.gallery]
+
+  React.useEffect(() => {
+    if (!api) return
+
+    setCurrent(api.selectedScrollSnap())
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap())
+    })
+  }, [api])
+
+  const handleThumbnailClick = (index: number) => {
+    if (api) api.scrollTo(index)
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Main Slider */}
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted">
+        <Carousel setApi={setApi} className="w-full h-full">
+          <CarouselContent>
+            {allImages.map((src, index) => (
+              <CarouselItem key={index}>
+                <div className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5">
+                  {/* In a real app, use next/image here. For mock, we use a placeholder if src is invalid */}
+                  {src.startsWith('/') ? (
+                    <Image
+                      src={src}
+                      alt={`Product view ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground">Image {index + 1}</span>
+                  )}
+
+                  {/* Play Button Overlay (Mock for video) */}
+                  {index === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50">
+                        <Play className="h-6 w-6 text-white fill-white ml-1" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          {/* Navigation Arrows */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-between p-4">
+            <CarouselPrevious className="pointer-events-auto relative left-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
+            <CarouselNext className="pointer-events-auto relative right-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
+          </div>
+        </Carousel>
+
+        {/* Badges Overlay */}
+        <div className="absolute top-4 left-4 flex gap-2">
+          <Badge variant="secondary" className="bg-white/90 text-emerald-700 hover:bg-white font-semibold shadow-sm backdrop-blur-sm">
+            Project We Love
+          </Badge>
+        </div>
+      </div>
+
+      {/* Thumbnails Strip */}
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        {allImages.map((src, index) => (
+          <button
+            key={index}
+            onClick={() => handleThumbnailClick(index)}
+            className={`
+              relative flex-shrink-0 w-20 h-14 rounded-md overflow-hidden border-2 transition-all
+              ${current === index
+                ? "border-emerald-600 ring-2 ring-emerald-600/20"
+                : "border-transparent opacity-60 hover:opacity-100"}
+            `}
+          >
+            {src.startsWith('/') ? (
+              <Image src={src} alt="thumbnail" fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center text-xs">
+                {index + 1}
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+</file>
+
+<file path="components/crowdfunding/navigation-tabs.tsx">
+"use client"
+
+import { useState } from "react"
+import { Menu, X } from "lucide-react"
+
+// Define the interface for props to ensure type safety
+interface NavigationTabsProps {
+  activeTab: string
+  onTabChange: (tab: string) => void
+}
+
+export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const tabs = [
+    { id: "campaign", label: "Campaign" },
+    { id: "rewards", label: "Rewards" },
+    { id: "creator", label: "Creator" },
+    { id: "faq", label: "FAQ", count: 36 },
+    { id: "updates", label: "Updates", count: 2 },
+    { id: "comments", label: "Comments", count: 65 },
+    { id: "community", label: "Community" },
+  ]
+
+  const handleMobileTabClick = (tabId: string) => {
+    onTabChange(tabId)
+    setMobileMenuOpen(false)
+  }
+
+  return (
+    <div className="mt-8 border-t border-border bg-background"> {/* Added bg-background for sticky overlap */}
+      {/* Desktop Navigation */}
+      <nav className="hidden md:flex flex-wrap gap-x-6 gap-y-2 pt-4 pb-2"> {/* Added pb-2 */}
+        {tabs.map((tab) => (
+          <TabItem
+            key={tab.id}
+            label={tab.label}
+            count={tab.count}
+            id={tab.id}
+            active={activeTab === tab.id}
+            onClick={() => onTabChange(tab.id)}
+          />
+        ))}
+      </nav>
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden pt-4 pb-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            {tabs.find(t => t.id === activeTab)?.label || "Menu"}
+          </span>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-md hover:bg-muted transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="absolute right-4 mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
+            <div className="py-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleMobileTabClick(tab.id)}
+                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${activeTab === tab.id
+                      ? "bg-muted text-foreground font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  {tab.label}
+                  {tab.count !== undefined && (
+                    <sup className="ml-1 text-xs text-muted-foreground">{tab.count}</sup>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TabItem({ label, count, id, active, onClick }: { label: string; count?: number; id: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-sm py-2 border-b-2 transition-colors ${active
+          ? "border-foreground text-foreground font-medium"
+          : "border-transparent text-muted-foreground hover:text-foreground"
+        }`}
+    >
+      {label}
+      {count !== undefined && (
+        <sup className="ml-0.5 text-xs text-muted-foreground">{count}</sup>
+      )}
+    </button>
+  )
+}
+</file>
+
+<file path="components/crowdfunding/project-header.tsx">
+"use client"
+
+import { useCampaign } from "@/context/campaign-context"
+
+export function ProjectHeader() {
+  const { campaign } = useCampaign()
+
+  return (
+    <div className="text-center">
+      <h1 className="text-xl md:text-2xl font-bold text-foreground text-balance">
+        {campaign.title}
+      </h1>
+      <p className="text-sm text-muted-foreground mt-2">
+        {campaign.subtitle}
+      </p>
+    </div>
+  )
+}
+</file>
+
+<file path="components/crowdfunding/rewards-page.tsx">
+"use client"
+
+import { useCampaign } from "@/context/campaign-context"
+import { Button } from "@/components/ui/button"
+
+export function RewardsPage() {
+  const { campaign, selectReward } = useCampaign()
+
+  // Helper to determine if a reward is active
+  const isAvailable = (reward: any) => !reward.isSoldOut
+
+  return (
+    <div className="space-y-8">
+      <h2 className="text-2xl font-bold">Select a Reward</h2>
+
+      <div className="grid grid-cols-1 gap-6">
+        {campaign.rewards.map((reward) => (
+          <div
+            key={reward.id}
+            className={`
+              relative border rounded-lg p-6 transition-all duration-200 
+              ${isAvailable(reward)
+                ? "border-border hover:border-emerald-500 hover:shadow-md bg-card"
+                : "border-border/50 bg-muted/50 opacity-60 cursor-not-allowed"}
+            `}
+          >
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-foreground">{reward.title}</h3>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-2xl font-bold text-emerald-600">${reward.price}</span>
+                  {reward.originalPrice && (
+                    <span className="text-sm text-muted-foreground line-through">
+                      ${reward.originalPrice}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                disabled={!isAvailable(reward)}
+                onClick={() => selectReward(reward.id)}
+                className={isAvailable(reward) ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
+              >
+                {isAvailable(reward) ? "Select Reward" : "Sold Out"}
+              </Button>
+            </div>
+
+            {/* Description */}
+            <p className="text-muted-foreground mb-6">{reward.description}</p>
+
+            {/* Includes */}
+            <div className="space-y-2 mb-6">
+              <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Includes:</p>
+              <ul className="text-sm space-y-1">
+                {reward.itemsIncluded.map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Footer Stats */}
+            <div className="flex gap-6 text-xs text-muted-foreground border-t border-border pt-4">
+              <div>
+                <span className="font-semibold text-foreground block">{reward.backersCount}</span>
+                backers
+              </div>
+              <div>
+                <span className="font-semibold text-foreground block">{reward.estimatedDelivery}</span>
+                estimated delivery
+              </div>
+              <div>
+                <span className="font-semibold text-foreground block">
+                  {reward.shipsTo.length > 1 ? "Worldwide" : reward.shipsTo[0]}
+                </span>
+                ships to
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+</file>
+
+<file path="components/crowdfunding/stats-panel.tsx">
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Bookmark, Facebook, Twitter, Share2 } from "lucide-react"
+import { useCampaign } from "@/context/campaign-context"
+
+export function StatsPanel() {
+  // 1. Hook into the Context
+  const { totalPledged, backersCount, campaign } = useCampaign()
+
+  // 2. Calculate dynamic progress
+  const progressPercentage = Math.min(
+    (totalPledged / campaign.stats.goalAmount) * 100,
+    100
+  )
+
+  // 3. Format currency (e.g. 88808 -> "$88,808")
+  const formattedPledged = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(totalPledged)
+
+  const formattedGoal = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(campaign.stats.goalAmount)
+
+  return (
+    <div className="space-y-6">
+      {/* Progress Bar */}
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className="h-full bg-emerald-600 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${progressPercentage}%` }}
+        />
+      </div>
+
+      {/* Funding Amount */}
+      <div>
+        <div className="flex items-baseline gap-2">
+          <p className="text-3xl font-bold text-foreground">{formattedPledged}</p>
+          <span className="text-sm text-muted-foreground">pledged of {formattedGoal} goal</span>
+        </div>
+      </div>
+
+      {/* Backers */}
+      <div>
+        <p className="text-2xl font-semibold text-foreground">{backersCount}</p>
+        <p className="text-sm text-muted-foreground">backers</p>
+      </div>
+
+      {/* Days Left */}
+      <div>
+        <p className="text-2xl font-semibold text-foreground">{campaign.stats.daysLeft}</p>
+        <p className="text-sm text-muted-foreground">days to go</p>
+      </div>
+
+      {/* CTA Button */}
+      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg">
+        Back this project
+      </Button>
+
+      {/* Secondary Actions */}
+      <div className="flex items-center gap-2">
+        <Button variant="outline" className="flex-1 gap-2 bg-transparent">
+          <Bookmark className="h-4 w-4" />
+          Remind me
+        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-blue-600">
+            <Facebook className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-sky-500">
+            <Twitter className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground">
+            <Share2 className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground text-center">
+        All or nothing. This project will only be funded if it reaches its goal by {new Date().toLocaleDateString()}.
+      </p>
+    </div>
+  )
+}
+</file>
+
+<file path="components/crowdfunding/campaign-page.tsx">
+"use client"
+
+import { useState, useEffect } from "react"
+import { useCampaign } from "@/context/campaign-context"
+
+export function CampaignPage() {
+  const { campaign } = useCampaign() // <--- 1. Hook into Context
+  const [activeSection, setActiveSection] = useState("story")
+
+  const sections = [
+    { id: "story", label: "Story" },
+    { id: "features", label: "Features" },
+    { id: "specs", label: "Tech Specs" },
+    { id: "shipping", label: "Shipping" },
+    { id: "risks", label: "Risks" },
+  ]
+
+  // 2. Scroll Spy Logic
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id)
+          }
+        })
+      },
+      {
+        rootMargin: "-20% 0px -60% 0px", // Trigger when section is near top of screen
+        threshold: 0
+      }
+    )
+
+    sections.forEach(({ id }) => {
+      const element = document.getElementById(id)
+      if (element) observer.observe(element)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  // 3. Smooth Scroll Handler
+  const scrollToSection = (id: string) => {
+    setActiveSection(id)
+    const element = document.getElementById(id)
+    if (element) {
+      // Offset for the sticky header (approx 180px)
+      const headerOffset = 180
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.scrollY - headerOffset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      })
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:block md:col-span-1">
+        <div className="sticky top-32 space-y-1 border-l-2 border-border pl-4">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => scrollToSection(section.id)}
+              className={`block text-left text-sm transition-all duration-200 ${activeSection === section.id
+                  ? "font-bold text-emerald-600 translate-x-1"
+                  : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              {section.label}
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      {/* Mobile Horizontal Nav */}
+      <div className="md:hidden sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border -mx-4 px-4 py-2 overflow-x-auto flex gap-4 no-scrollbar">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => scrollToSection(section.id)}
+            className={`whitespace-nowrap text-sm px-3 py-1 rounded-full transition-colors ${activeSection === section.id
+                ? "bg-emerald-100 text-emerald-800 font-medium"
+                : "text-muted-foreground bg-muted/50"
+              }`}
+          >
+            {section.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <main className="md:col-span-3 space-y-16">
+
+        {/* Story Section (From Mock Data) */}
+        <section id="story" className="space-y-6 scroll-mt-32">
+          <h2 className="text-3xl font-bold">Story</h2>
+          <div
+            className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: campaign.story }}
+          />
+          {/* Gallery Images from Mock Data */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            {campaign.images.gallery.map((img, idx) => (
+              <div key={idx} className="aspect-video bg-muted rounded-lg border border-border flex items-center justify-center text-muted-foreground">
+                Image {idx + 1}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Features Section (Static for now, could be dynamic) */}
+        <section id="features" className="space-y-6 scroll-mt-32">
+          <h3 className="text-2xl font-bold">Key Features</h3>
+          <div className="grid grid-cols-2 gap-6">
+            {[
+              { icon: "📦", title: "Shipping Starts Feb", description: "Fast delivery" },
+              { icon: "🛡️", title: "1-Year Warranty", description: "Included" },
+              { icon: "🌍", title: "Global Shipping", description: "Worldwide" },
+              { icon: "💰", title: "Taxes Included", description: "No surprises" },
+            ].map((feature, idx) => (
+              <div key={idx} className="rounded-lg border border-border bg-card p-6 text-center shadow-sm">
+                <div className="mb-3 text-3xl">{feature.icon}</div>
+                <h4 className="mb-1 font-semibold">{feature.title}</h4>
+                <p className="text-xs text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Tech Specs */}
+        <section id="specs" className="space-y-6 scroll-mt-32">
+          <h3 className="text-2xl font-bold">Technical Specifications</h3>
+          <div className="bg-muted/30 rounded-lg p-6 border border-border">
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              <li><strong>Dimensions:</strong> 120cm x 30cm x 10cm</li>
+              <li><strong>Weight:</strong> 12kg</li>
+              <li><strong>Connectivity:</strong> USB-C, MIDI over Bluetooth</li>
+              <li><strong>Keys:</strong> 88 weighted keys (DS5.5 standard)</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Shipping Info */}
+        <section id="shipping" className="space-y-6 scroll-mt-32">
+          <h3 className="text-2xl font-bold">Shipping Information</h3>
+          <p className="text-muted-foreground leading-relaxed">
+            We plan to ship worldwide. Shipping costs are calculated at checkout based on your location.
+            Please note that VAT and import duties for EU/UK customers are included in the price.
+          </p>
+        </section>
+
+        {/* Risks Section (From Mock Data) */}
+        <section id="risks" className="space-y-6 scroll-mt-32 border-t pt-8">
+          <h3 className="text-2xl font-bold">Risks & Challenges</h3>
+          <div
+            className="prose dark:prose-invert max-w-none text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: campaign.risks }}
+          />
+        </section>
+
+      </main>
+    </div>
+  )
+}
+</file>
+
+<file path="components/crowdfunding-page.tsx">
+"use client"
+
+import { useRef, Suspense } from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import { useCampaign } from "@/context/campaign-context" // <--- Import Hook
+import { SuccessBanner } from "./crowdfunding/success-banner"
+import { ProjectHeader } from "./crowdfunding/project-header"
+import { HeroSection } from "./crowdfunding/hero-section"
+import { StatsPanel } from "./crowdfunding/stats-panel"
+import { NavigationTabs } from "./crowdfunding/navigation-tabs"
+import { CampaignPage } from "./crowdfunding/campaign-page"
+import { RewardsPage } from "./crowdfunding/rewards-page"
+import { CreatorPage } from "./crowdfunding/creator-page"
+import { FAQPage } from "./crowdfunding/faq-page"
+import { SectionPlaceholder } from "./crowdfunding/section-placeholder"
+import { MobilePledgeBar } from "./crowdfunding/mobile-pledge-bar"
+import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
+import { Skeleton } from "@/components/ui/skeleton" // <--- Import Skeleton
+
+function CrowdfundingContent() {
+  const { campaign, isLoading, error } = useCampaign() // <--- Access loading state
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const navRef = useRef<HTMLDivElement>(null)
+
+  const activeTab = searchParams.get("tab") || "campaign"
+
+  // 1. Loading State
+  if (isLoading) {
+    return (
+      <main className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+        <Skeleton className="h-12 w-3/4 mx-auto" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <Skeleton className="h-[400px] lg:col-span-2 rounded-xl" />
+          <Skeleton className="h-[400px] lg:col-span-1 rounded-xl" />
+        </div>
+      </main>
+    )
+  }
+
+  // 2. Error State
+  if (error || !campaign) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        Failed to load campaign: {error}
+      </div>
+    )
+  }
+
+  // 3. Success State (The normal page)
+  const handleTabChange = (tabId: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", tabId)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    setTimeout(() => {
+      navRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 50)
+  }
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-6">
+      <ProjectHeader />
+
+      <div id="section-1" className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+        <div className="lg:col-span-2">
+          <HeroSection />
+        </div>
+        <div className="lg:col-span-1">
+          <StatsPanel />
+        </div>
+      </div>
+
+      <div ref={navRef} className="scroll-mt-4 sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
+      </div>
+
+      <div id="content-section" className="mb-24 md:mb-0">
+        <div id="rewards-section-anchor" className="scroll-mt-24" />
+        <section className="mt-8 pt-8 border-t border-border min-h-[500px]">
+          {activeTab === "campaign" && <CampaignPage />}
+          {activeTab === "rewards" && <RewardsPage />}
+          {activeTab === "creator" && <CreatorPage />}
+          {activeTab === "faq" && <FAQPage />}
+          {activeTab === "updates" && <SectionPlaceholder title="Updates" />}
+          {activeTab === "comments" && <SectionPlaceholder title="Comments" />}
+          {activeTab === "community" && <SectionPlaceholder title="Community" />}
+        </section>
+      </div>
+
+      <MobilePledgeBar />
+      <CheckoutDialog />
+    </main>
+  )
+}
+
+export function CrowdfundingPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <SuccessBanner />
+      <Suspense fallback={<div className="h-screen" />}>
+        <CrowdfundingContent />
+      </Suspense>
+    </div>
+  )
 }
 </file>
 

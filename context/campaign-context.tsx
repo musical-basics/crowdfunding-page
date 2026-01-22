@@ -1,11 +1,12 @@
 "use client"
 
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { Campaign } from '@/types/campaign'
-import { CAMPAIGN_DATA } from '@/lib/mock-data'
 
 interface CampaignContextType {
-    campaign: Campaign
+    campaign: Campaign | null
+    isLoading: boolean
+    error: string | null
     totalPledged: number
     backersCount: number
     selectedRewardId: string | null
@@ -16,33 +17,55 @@ interface CampaignContextType {
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined)
 
 export function CampaignProvider({ children }: { children: ReactNode }) {
-    // Initialize state with data from our mock file
-    const [campaign] = useState<Campaign>(CAMPAIGN_DATA)
+    const [campaign, setCampaign] = useState<Campaign | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    // These are the "live" stats that will change when a user interacts
-    const [totalPledged, setTotalPledged] = useState(CAMPAIGN_DATA.stats.totalPledged)
-    const [backersCount, setBackersCount] = useState(CAMPAIGN_DATA.stats.totalBackers)
+    // Stats state
+    const [totalPledged, setTotalPledged] = useState(0)
+    const [backersCount, setBackersCount] = useState(0)
     const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null)
 
-    // Action: User selects a reward card
+    // Fetch data on mount
+    useEffect(() => {
+        async function fetchCampaign() {
+            try {
+                setIsLoading(true)
+                const res = await fetch('/api/campaign')
+
+                if (!res.ok) throw new Error('Failed to fetch campaign')
+
+                const data = await res.json()
+                setCampaign(data)
+
+                // Initialize stats from the fetched data
+                setTotalPledged(data.stats.totalPledged)
+                setBackersCount(data.stats.totalBackers)
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred')
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchCampaign()
+    }, [])
+
     const selectReward = (rewardId: string) => {
         setSelectedRewardId(rewardId)
-        // Optional: Scroll to checkout or open modal logic would trigger here
-        console.log(`Reward selected: ${rewardId}`)
     }
 
-    // Action: User actually pledges money
     const pledge = (amount: number) => {
         setTotalPledged((prev) => prev + amount)
         setBackersCount((prev) => prev + 1)
-        // Here is where you would eventually call an API or Stripe
-        console.log(`Pledged $${amount}`)
     }
 
     return (
         <CampaignContext.Provider
             value={{
                 campaign,
+                isLoading,
+                error,
                 totalPledged,
                 backersCount,
                 selectedRewardId,
@@ -55,7 +78,6 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     )
 }
 
-// Custom hook to use the context easily
 export function useCampaign() {
     const context = useContext(CampaignContext)
     if (context === undefined) {
