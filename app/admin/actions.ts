@@ -63,7 +63,7 @@ export async function createReward(prevState: any, formData: FormData) {
             description: formData.get("description"),
             items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
             estimated_delivery: formData.get("delivery"),
-            shipping_type: "worldwide", // Simplified for demo
+            ships_to: ["Anywhere in the world"], // Default to worldwide
             is_sold_out: false
         })
 

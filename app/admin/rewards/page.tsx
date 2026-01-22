@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Plus, Edit, Trash } from "lucide-react"
+import { Edit, Trash } from "lucide-react" // Removed 'Plus' import as it's inside the dialog now
 import {
     Table,
     TableBody,
@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { useCampaign } from "@/context/campaign-context"
-import { deleteReward } from "../actions" // Import action
+import { CreateRewardDialog } from "@/components/admin/create-reward-dialog" // <--- Import the new component
+import { deleteReward } from "../actions"
 
 export default function AdminRewardsPage() {
     const { campaign } = useCampaign()
@@ -21,12 +22,14 @@ export default function AdminRewardsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Manage Rewards</h1>
-                <Button className="bg-emerald-600 hover:bg-emerald-700">
-                    <Plus className="mr-2 h-4 w-4" /> Add Reward
-                </Button>
+
+                {/* Replaced the static button with the functional Dialog */}
+                <CreateRewardDialog />
+
             </div>
 
             <div className="border rounded-lg">
+                {/* ... (Table code remains exactly the same as before) ... */}
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -58,7 +61,6 @@ export default function AdminRewardsPage() {
                                             <Edit className="h-4 w-4" />
                                         </Button>
 
-                                        {/* Wrap the delete button in a form to trigger the server action */}
                                         <form action={async () => {
                                             await deleteReward(reward.id)
                                         }}>
