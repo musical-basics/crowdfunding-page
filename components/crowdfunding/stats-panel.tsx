@@ -3,18 +3,20 @@
 import { Button } from "@/components/ui/button"
 import { Bookmark, Facebook, Twitter, Share2 } from "lucide-react"
 import { useCampaign } from "@/context/campaign-context"
+import { useRouter, useSearchParams } from "next/navigation" // <--- Added imports
 
 export function StatsPanel() {
-  // 1. Hook into the Context
   const { totalPledged, backersCount, campaign } = useCampaign()
+  const router = useRouter() // <--- Initialize router
+  const searchParams = useSearchParams()
 
-  // 2. Calculate dynamic progress
+  // Calculate dynamic progress
   const progressPercentage = Math.min(
     (totalPledged / campaign.stats.goalAmount) * 100,
     100
   )
 
-  // 3. Format currency (e.g. 88808 -> "$88,808")
+  // Format currency
   const formattedPledged = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -26,6 +28,23 @@ export function StatsPanel() {
     currency: 'USD',
     maximumFractionDigits: 0
   }).format(campaign.stats.goalAmount)
+
+  // --- NEW HANDLER ---
+  const handleBackProject = () => {
+    // 1. Update URL to switch tab to 'rewards'
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", "rewards")
+    router.push(`?${params.toString()}`, { scroll: false })
+
+    // 2. Smooth scroll to the anchor we created earlier
+    // We use a tiny timeout to allow the Rewards tab to render first
+    setTimeout(() => {
+      const rewardsAnchor = document.getElementById("rewards-section-anchor")
+      if (rewardsAnchor) {
+        rewardsAnchor.scrollIntoView({ behavior: "smooth" })
+      }
+    }, 100)
+  }
 
   return (
     <div className="space-y-6">
@@ -57,8 +76,11 @@ export function StatsPanel() {
         <p className="text-sm text-muted-foreground">days to go</p>
       </div>
 
-      {/* CTA Button */}
-      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg">
+      {/* CTA Button - NOW CONNECTED */}
+      <Button
+        onClick={handleBackProject} // <--- Added click handler
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg"
+      >
         Back this project
       </Button>
 
