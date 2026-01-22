@@ -4,8 +4,12 @@ import { useState, useEffect } from "react"
 import { useCampaign } from "@/context/campaign-context"
 
 export function CampaignPage() {
-  const { campaign } = useCampaign() // <--- 1. Hook into Context
+  const { campaign, isLoading } = useCampaign()
   const [activeSection, setActiveSection] = useState("story")
+
+  if (isLoading || !campaign) {
+    return <div className="py-12 text-center text-muted-foreground">Loading campaign...</div>
+  }
 
   const sections = [
     { id: "story", label: "Story" },
@@ -66,8 +70,8 @@ export function CampaignPage() {
               key={section.id}
               onClick={() => scrollToSection(section.id)}
               className={`block text-left text-sm transition-all duration-200 ${activeSection === section.id
-                  ? "font-bold text-emerald-600 translate-x-1"
-                  : "text-muted-foreground hover:text-foreground"
+                ? "font-bold text-emerald-600 translate-x-1"
+                : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               {section.label}
@@ -83,8 +87,8 @@ export function CampaignPage() {
             key={section.id}
             onClick={() => scrollToSection(section.id)}
             className={`whitespace-nowrap text-sm px-3 py-1 rounded-full transition-colors ${activeSection === section.id
-                ? "bg-emerald-100 text-emerald-800 font-medium"
-                : "text-muted-foreground bg-muted/50"
+              ? "bg-emerald-100 text-emerald-800 font-medium"
+              : "text-muted-foreground bg-muted/50"
               }`}
           >
             {section.label}

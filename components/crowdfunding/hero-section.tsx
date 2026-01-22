@@ -16,10 +16,14 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 
+import Lightbox from "yet-another-react-lightbox"
+import "yet-another-react-lightbox/styles.css"
+
 export function HeroSection() {
   const { campaign } = useCampaign()
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
+  const [textboxOpen, setTextboxOpen] = React.useState(false)
 
   // Combine hero and gallery into one list for the slider
   const allImages = [campaign.images.hero, ...campaign.images.gallery]
@@ -46,7 +50,10 @@ export function HeroSection() {
           <CarouselContent>
             {allImages.map((src, index) => (
               <CarouselItem key={index}>
-                <div className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5">
+                <div
+                  className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5 cursor-zoom-in"
+                  onClick={() => setTextboxOpen(true)}
+                >
                   {/* In a real app, use next/image here. For mock, we use a placeholder if src is invalid */}
                   {src.startsWith('/') ? (
                     <Image
@@ -63,7 +70,7 @@ export function HeroSection() {
                   {/* Play Button Overlay (Mock for video) */}
                   {index === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50">
+                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110">
                         <Play className="h-6 w-6 text-white fill-white ml-1" />
                       </div>
                     </div>
@@ -80,13 +87,30 @@ export function HeroSection() {
           </div>
         </Carousel>
 
+        {/* Full Screen Button Overlay */}
+        <div className="absolute bottom-4 right-4 z-10">
+          <Button size="sm" variant="secondary" className="gap-2 shadow-sm" onClick={() => setTextboxOpen(true)}>
+            <Play className="h-4 w-4" /> View Fullscreen
+          </Button>
+        </div>
+
         {/* Badges Overlay */}
-        <div className="absolute top-4 left-4 flex gap-2">
-          <Badge variant="secondary" className="bg-white/90 text-emerald-700 hover:bg-white font-semibold shadow-sm backdrop-blur-sm">
+        <div className="absolute top-4 left-4 flex gap-2 pointer-events-none">
+          <Badge variant="secondary" className="bg-white/90 text-emerald-700 font-semibold shadow-sm backdrop-blur-sm">
             Project We Love
           </Badge>
         </div>
       </div>
+
+      <Lightbox
+        open={textboxOpen}
+        close={() => setTextboxOpen(false)}
+        index={current}
+        slides={allImages.map(src => ({
+          // If it's a gallery image, try to use the full res version
+          src: src.replace(/(\.jpg|\.png)$/, '-full$1')
+        }))}
+      />
 
       {/* Thumbnails Strip */}
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
