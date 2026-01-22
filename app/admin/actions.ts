@@ -87,3 +87,30 @@ export async function deleteFAQ(faqId: string) {
     revalidatePath("/")
     return { success: true }
 }
+
+// --- CREATOR ACTIONS ---
+
+export async function updateCreatorProfile(formData: FormData) {
+    const id = "popumusic" // Hardcoded for this single-creator demo
+
+    const name = formData.get("name") as string
+    const bio = formData.get("bio") as string
+    const location = formData.get("location") as string
+    const avatarUrl = formData.get("avatarUrl") as string
+
+    const { error } = await supabase
+        .from("cf_creator")
+        .update({
+            name,
+            bio,
+            location,
+            avatar_url: avatarUrl,
+        })
+        .eq("id", id)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/creator")
+    revalidatePath("/") // Update public page immediately
+    return { success: true }
+}

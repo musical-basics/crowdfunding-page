@@ -7,7 +7,8 @@ import {
     User,
     HelpCircle,
     Settings,
-    LogOut
+    LogOut,
+    ExternalLink // <--- Import this icon
 } from "lucide-react"
 import {
     Sidebar,
@@ -84,10 +85,21 @@ export function AppSidebar() {
                 </SidebarGroup>
             </SidebarContent>
 
-            <SidebarFooter className="p-4 border-t">
+            <SidebarFooter className="p-4 border-t space-y-2"> {/* Added space-y-2 for gap */}
                 <SidebarMenu>
+                    {/* NEW: Public View Button */}
                     <SidebarMenuItem>
-                        <SidebarMenuButton className="text-red-500 hover:text-red-600">
+                        <SidebarMenuButton asChild>
+                            <a href="/" target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-4 w-4" />
+                                <span>View Public Page</span>
+                            </a>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+
+                    {/* Sign Out Button */}
+                    <SidebarMenuItem>
+                        <SidebarMenuButton className="text-red-500 hover:text-red-600 hover:bg-red-50">
                             <LogOut className="h-4 w-4" />
                             <span>Sign Out</span>
                         </SidebarMenuButton>
