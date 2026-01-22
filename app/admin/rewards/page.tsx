@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { useCampaign } from "@/context/campaign-context"
+import { deleteReward } from "../actions" // Import action
 
 export default function AdminRewardsPage() {
     const { campaign } = useCampaign()
@@ -56,9 +57,21 @@ export default function AdminRewardsPage() {
                                         <Button variant="ghost" size="icon">
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600">
-                                            <Trash className="h-4 w-4" />
-                                        </Button>
+
+                                        {/* Wrap the delete button in a form to trigger the server action */}
+                                        <form action={async () => {
+                                            await deleteReward(reward.id)
+                                        }}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-red-500 hover:text-red-600"
+                                                type="submit"
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </form>
+
                                     </div>
                                 </TableCell>
                             </TableRow>

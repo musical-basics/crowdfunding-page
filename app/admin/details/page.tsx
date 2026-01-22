@@ -6,50 +6,65 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
+import { updateCampaignDetails } from "../actions" // <--- Import the action
+import { useCampaign } from "@/context/campaign-context"
 
 export default function CampaignDetailsEditor() {
     const { toast } = useToast()
+    const { campaign } = useCampaign() // Load current data to populate defaults
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault()
-        // Here we will eventually call supabase.from('cf_campaign').update(...)
-        toast({
-            title: "Changes Saved",
-            description: "Your campaign details have been updated successfully.",
-        })
+    // Wrapper to handle the server action response
+    async function handleSubmit(formData: FormData) {
+        try {
+            await updateCampaignDetails(formData)
+            toast({
+                title: "Success",
+                description: "Campaign updated successfully",
+                variant: "default",
+            })
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to update campaign",
+                variant: "destructive",
+            })
+        }
     }
+
+    if (!campaign) return <div>Loading...</div>
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Edit Campaign Details</h1>
-                <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700">Save Changes</Button>
             </div>
 
-            <form className="space-y-8">
+            {/* Connect the form to the Server Action */}
+            <form action={handleSubmit} className="space-y-8">
+
                 {/* Basic Info */}
                 <Card>
                     <CardHeader>
                         <CardTitle>Basic Information</CardTitle>
-                        <CardDescription>The core details displayed on your campaign header.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid gap-2">
                             <Label htmlFor="title">Campaign Title</Label>
-                            <Input id="title" defaultValue="DreamPlay One - Crowdfunding Campaign" />
+                            <Input id="title" name="title" defaultValue={campaign.title} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="subtitle">Subtitle</Label>
-                            <Textarea id="subtitle" defaultValue="Back the DreamPlay One keyboard with narrower keys..." />
+                            <Textarea id="subtitle" name="subtitle" defaultValue={campaign.subtitle} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="goal">Goal Amount ($)</Label>
-                                <Input id="goal" type="number" defaultValue="5000" />
+                                <Input id="goal" name="goal" type="number" defaultValue={campaign.stats.goalAmount} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="duration">End Date</Label>
-                                <Input id="duration" type="date" />
+                                <Label htmlFor="endDate">End Date</Label>
+                                {/* Note: You might need to format the date string properly for the input */}
+                                <Input id="endDate" name="endDate" type="date" />
                             </div>
                         </div>
                     </CardContent>
@@ -58,33 +73,35 @@ export default function CampaignDetailsEditor() {
                 {/* Story Editor */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Campaign Story</CardTitle>
-                        <CardDescription>HTML content for the main story tab.</CardDescription>
+                        <CardTitle>Campaign Story (HTML)</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-2">
-                            <Label htmlFor="story">Story Content (HTML)</Label>
-                            <Textarea id="story" className="min-h-[300px] font-mono text-sm" placeholder="<p>Write your story...</p>" />
-                            <p className="text-xs text-muted-foreground">
-                                Tip: In the future, we can replace this with a Rich Text Editor (Tiptap/Quill).
-                            </p>
-                        </div>
+                        <Textarea
+                            id="story"
+                            name="story"
+                            className="min-h-[300px] font-mono text-sm"
+                            defaultValue={campaign.story}
+                        />
                     </CardContent>
                 </Card>
 
-                {/* Risks Editor */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Risks & Challenges</CardTitle>
-                        <CardDescription>Be transparent about potential hurdles.</CardDescription>
+                        <CardTitle>Risks (HTML)</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-2">
-                            <Label htmlFor="risks">Risks Content (HTML)</Label>
-                            <Textarea id="risks" className="min-h-[200px] font-mono text-sm" />
-                        </div>
+                        <Textarea
+                            id="risks"
+                            name="risks"
+                            className="min-h-[200px]"
+                            defaultValue={campaign.risks}
+                        />
                     </CardContent>
                 </Card>
+
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
+                    Save All Changes
+                </Button>
             </form>
         </div>
     )
