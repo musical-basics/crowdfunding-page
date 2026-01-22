@@ -14,20 +14,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { submitPledge } from "@/app/actions" // <--- Import server action
+import { useToast } from "@/hooks/use-toast"
 
 export function CheckoutDialog() {
     const { campaign, selectedRewardId, selectReward, pledge } = useCampaign()
     const [isOpen, setIsOpen] = useState(false)
     const [bonusAmount, setBonusAmount] = useState(0)
+    const [isSubmitting, setIsSubmitting] = useState(false) // Loading state
+    const { toast } = useToast()
 
-    // Find the actual reward object from the ID
-    const reward = campaign.rewards.find(r => r.id === selectedRewardId)
+    const reward = campaign?.rewards.find(r => r.id === selectedRewardId)
 
-    // Sync internal state with Context state
     useEffect(() => {
         if (selectedRewardId) {
             setIsOpen(true)
-            setBonusAmount(0) // Reset bonus on new open
+            setBonusAmount(0)
         } else {
             setIsOpen(false)
         }
@@ -35,25 +37,43 @@ export function CheckoutDialog() {
 
     const handleClose = (open: boolean) => {
         if (!open) {
-            selectReward(null!) // Clear selection in context (using ! to bypass null check for now)
+            selectReward(null!)
             setIsOpen(false)
         }
     }
 
-    const handleConfirm = () => {
-        if (!reward) return
+    // Handle the form submission
+    const handlePaymentSubmit = async (formData: FormData) => {
+        setIsSubmitting(true)
+        try {
+            // Append calculated values that aren't in inputs
+            const total = (reward?.price || 0) + Number(bonusAmount)
+            formData.append("amount", total.toString())
+            formData.append("rewardId", reward?.id || "")
 
-        // Calculate total (Base Price + Bonus)
-        const total = reward.price + Number(bonusAmount)
+            // Call Server Action
+            await submitPledge(formData)
 
-        // Execute the pledge
-        pledge(total)
+            // Optimistic Update (Optional, as revalidatePath handles it mostly)
+            pledge(total)
 
-        // Close the modal
-        handleClose(false)
+            toast({
+                title: "Pledge Successful!",
+                description: `You backed ${reward?.title} for $${total}.`,
+                variant: "default"
+            })
 
-        // Optional: Trigger a success toast here via sonner/toast hook
-        alert(`Woohoo! You successfully pledged $${total}!`)
+            handleClose(false)
+        } catch (error) {
+            console.error(error)
+            toast({
+                title: "Transaction Failed",
+                description: "Please try again later.",
+                variant: "destructive"
+            })
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     if (!reward) return null
@@ -68,7 +88,8 @@ export function CheckoutDialog() {
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-6 py-4">
+                <form action={handlePaymentSubmit} className="grid gap-6 py-4">
+
                     {/* Reward Summary */}
                     <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -80,7 +101,21 @@ export function CheckoutDialog() {
 
                     <Separator />
 
-                    {/* Bonus Support Input */}
+                    {/* User Details (NEW) */}
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input id="name" name="name" required placeholder="Jane Doe" />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input id="email" name="email" type="email" required placeholder="jane@example.com" />
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Bonus Support */}
                     <div className="space-y-2">
                         <Label htmlFor="bonus">Bonus Support (Optional)</Label>
                         <div className="flex items-center gap-2">
@@ -94,26 +129,25 @@ export function CheckoutDialog() {
                                 className="max-w-[120px]"
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            Add a little extra to help the creator reach their stretch goals!
-                        </p>
                     </div>
 
-                    {/* Total Calculation */}
+                    {/* Total */}
                     <div className="bg-muted/50 p-4 rounded-lg flex justify-between items-center">
                         <span className="font-medium">Total Pledge</span>
                         <span className="text-xl font-bold text-emerald-600">
                             ${reward.price + Number(bonusAmount)}
                         </span>
                     </div>
-                </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-                    <Button onClick={handleConfirm} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                        Confirm Payment
-                    </Button>
-                </DialogFooter>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => handleClose(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                            {isSubmitting ? "Processing..." : "Confirm Payment"}
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     )
