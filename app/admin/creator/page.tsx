@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,12 +8,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
-import { updateCreatorProfile } from "../actions" // Import the new action
+import { updateCreatorProfile } from "../actions"
 import { useCampaign } from "@/context/campaign-context"
 
 export default function CreatorProfilePage() {
     const { toast } = useToast()
     const { campaign } = useCampaign()
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
     async function handleSubmit(formData: FormData) {
         try {
@@ -31,8 +33,18 @@ export default function CreatorProfilePage() {
         }
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const url = URL.createObjectURL(file)
+            setPreviewUrl(url)
+        }
+    }
+
     if (!campaign) return <div className="p-8">Loading creator data...</div>
     const { creator } = campaign
+
+    const currentAvatar = previewUrl || creator.avatarUrl
 
     return (
         <div className="space-y-6">
@@ -50,25 +62,34 @@ export default function CreatorProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
 
-                        {/* Avatar Preview & Input */}
+                        {/* Avatar Preview & Upload */}
                         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
                             <Avatar className="h-24 w-24 border-2 border-border">
-                                <AvatarImage src={creator.avatarUrl} className="object-cover" />
+                                <AvatarImage src={currentAvatar} className="object-cover" />
                                 <AvatarFallback className="text-2xl font-bold">
                                     {creator.name.substring(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
 
                             <div className="flex-1 gap-2 grid w-full">
-                                <Label htmlFor="avatarUrl">Avatar Image URL</Label>
-                                <Input
-                                    id="avatarUrl"
-                                    name="avatarUrl"
-                                    defaultValue={creator.avatarUrl}
-                                    placeholder="https://example.com/my-image.jpg"
-                                />
+                                <Label htmlFor="avatarFile">Profile Picture</Label>
+
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="avatarFile"
+                                        name="avatarFile"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="cursor-pointer"
+                                    />
+                                </div>
+
+                                {/* Hidden input to keep old URL if no new file */}
+                                <input type="hidden" name="avatarUrl" value={creator.avatarUrl} />
+
                                 <p className="text-xs text-muted-foreground">
-                                    Paste a direct link to an image (JPG/PNG).
+                                    Upload a JPG or PNG. Max size 2MB.
                                 </p>
                             </div>
                         </div>
@@ -101,9 +122,6 @@ export default function CreatorProfilePage() {
                                 className="min-h-[150px] font-sans"
                                 defaultValue={creator.bio}
                             />
-                            <p className="text-xs text-muted-foreground">
-                                Tell backers about yourself and your background.
-                            </p>
                         </div>
                     </CardContent>
                 </Card>

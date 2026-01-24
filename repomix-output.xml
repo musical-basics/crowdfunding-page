@@ -41,15 +41,31 @@ The content is organized as follows:
 
 <directory_structure>
 app/
+  admin/
+    creator/
+      page.tsx
+    details/
+      page.tsx
+    faqs/
+      page.tsx
+    rewards/
+      page.tsx
+    actions.ts
+    layout.tsx
+    page.tsx
   api/
     campaign/
       route.ts
   campaign/
     page.tsx
+  actions.ts
   globals.css
   layout.tsx
   page.tsx
 components/
+  admin/
+    app-sidebar.tsx
+    create-reward-dialog.tsx
   crowdfunding/
     campaign-page.tsx
     checkout-dialog.tsx
@@ -130,9 +146,16 @@ hooks/
   use-toast.ts
 lib/
   mock-data.ts
+  supabase.ts
   utils.ts
 public/
   images/
+    gallery-1-full.jpg
+    gallery-1.jpg
+    gallery-2-full.jpg
+    gallery-2.jpg
+    gallery-3-full.jpg
+    gallery-3.jpg
     hero-piano.png
   apple-icon.png
   icon-dark-32x32.png
@@ -145,6 +168,11 @@ public/
   placeholder.svg
 styles/
   globals.css
+supabase/
+  fix_permissions.sql
+  grant_permissions.sql
+  schema.sql
+  update_gallery.sql
 types/
   campaign.ts
 .gitignore
@@ -158,15 +186,366 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="app/api/campaign/route.ts">
-import { NextResponse } from 'next/server'
-import { CAMPAIGN_DATA } from '@/lib/mock-data'
+<file path="app/admin/creator/page.tsx">
+"use client"
 
-export async function GET() {
-    // Simulate a realistic database delay (e.g., 500ms)
-    await new Promise((resolve) => setTimeout(resolve, 500))
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useToast } from "@/hooks/use-toast"
+import { updateCreatorProfile } from "../actions" // Import the new action
+import { useCampaign } from "@/context/campaign-context"
 
-    return NextResponse.json(CAMPAIGN_DATA)
+export default function CreatorProfilePage() {
+    const { toast } = useToast()
+    const { campaign } = useCampaign()
+
+    async function handleSubmit(formData: FormData) {
+        try {
+            await updateCreatorProfile(formData)
+            toast({
+                title: "Success",
+                description: "Creator profile updated successfully",
+                variant: "default"
+            })
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to update profile",
+                variant: "destructive"
+            })
+        }
+    }
+
+    if (!campaign) return <div className="p-8">Loading creator data...</div>
+    const { creator } = campaign
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Creator Profile</h1>
+            </div>
+
+            <form action={handleSubmit} className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Public Profile</CardTitle>
+                        <CardDescription>
+                            This information appears on the campaign page sidebar and the "Creator" tab.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+
+                        {/* Avatar Preview & Input */}
+                        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                            <Avatar className="h-24 w-24 border-2 border-border">
+                                <AvatarImage src={creator.avatarUrl} className="object-cover" />
+                                <AvatarFallback className="text-2xl font-bold">
+                                    {creator.name.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1 gap-2 grid w-full">
+                                <Label htmlFor="avatarUrl">Avatar Image URL</Label>
+                                <Input
+                                    id="avatarUrl"
+                                    name="avatarUrl"
+                                    defaultValue={creator.avatarUrl}
+                                    placeholder="https://example.com/my-image.jpg"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Paste a direct link to an image (JPG/PNG).
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Display Name</Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                defaultValue={creator.name}
+                                className="max-w-md"
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="location">Location</Label>
+                            <Input
+                                id="location"
+                                name="location"
+                                defaultValue={creator.location}
+                                className="max-w-md"
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="bio">Biography</Label>
+                            <Textarea
+                                id="bio"
+                                name="bio"
+                                className="min-h-[150px] font-sans"
+                                defaultValue={creator.bio}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Tell backers about yourself and your background.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="flex justify-end">
+                    <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 min-w-[150px]">
+                        Save Profile
+                    </Button>
+                </div>
+            </form>
+        </div>
+    )
+}
+</file>
+
+<file path="app/admin/faqs/page.tsx">
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Plus, MoreHorizontal } from "lucide-react"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useCampaign } from "@/context/campaign-context"
+
+export default function AdminFAQPage() {
+    const { campaign } = useCampaign()
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Manage FAQs</h1>
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    <Plus className="mr-2 h-4 w-4" /> Add Question
+                </Button>
+            </div>
+
+            <div className="grid gap-4">
+                {campaign?.faqs.map((faq) => (
+                    <Card key={faq.id}>
+                        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                            <div className="space-y-1">
+                                <CardTitle className="text-base font-semibold">
+                                    {faq.question}
+                                </CardTitle>
+                                <CardDescription>
+                                    Category: <span className="font-medium text-foreground">{faq.category}</span>
+                                </CardDescription>
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                {faq.answer}
+                            </p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    )
+}
+</file>
+
+<file path="app/admin/layout.tsx">
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/admin/app-sidebar"
+import { Toaster } from "@/components/ui/toaster"
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <SidebarProvider>
+            <div className="flex min-h-screen w-full bg-muted/20">
+                <AppSidebar />
+                <main className="flex-1 overflow-y-auto">
+                    {/* Mobile Trigger & Header */}
+                    <header className="flex h-14 items-center gap-4 border-b bg-background px-6 lg:h-[60px]">
+                        <SidebarTrigger />
+                        <div className="flex-1">
+                            {/* Add Breadcrumbs here later if needed */}
+                        </div>
+                    </header>
+
+                    {/* Main Content Area */}
+                    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+                        {children}
+                    </div>
+                </main>
+                <Toaster />
+            </div>
+        </SidebarProvider>
+    )
+}
+</file>
+
+<file path="app/admin/page.tsx">
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { DollarSign, Users, Clock } from "lucide-react"
+
+export default function AdminDashboard() {
+    return (
+        <div className="space-y-8">
+            <h1 className="text-3xl font-bold">Dashboard Overview</h1>
+
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Pledged</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">$88,808</div>
+                        <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Backers</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">224</div>
+                        <p className="text-xs text-muted-foreground">+12 since yesterday</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Days Left</CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">28</div>
+                        <p className="text-xs text-muted-foreground">Ends on Feb 22, 2026</p>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}
+</file>
+
+<file path="app/actions.ts">
+'use server'
+
+import { supabase } from "@/lib/supabase"
+import { revalidatePath } from "next/cache"
+
+export async function submitPledge(formData: FormData) {
+    const campaignId = "dreamplay-one"
+
+    const rewardId = formData.get("rewardId") as string
+    const amount = Number(formData.get("amount"))
+    const email = formData.get("email") as string
+    const name = formData.get("name") as string
+
+    // 1. Find or Create Customer
+    // We try to find a customer by email first
+    let customerId: string
+
+    const { data: existingCustomer } = await supabase
+        .from("Customer")
+        .select("id")
+        .eq("email", email)
+        .single()
+
+    if (existingCustomer) {
+        customerId = existingCustomer.id
+    } else {
+        // Create new customer
+        const newId = crypto.randomUUID()
+        const { error: createError } = await supabase
+            .from("Customer")
+            .insert({
+                id: newId,
+                email,
+                name,
+                // Add any other required fields for your Customer table here
+            })
+
+        if (createError) throw new Error(`Customer creation failed: ${createError.message}`)
+        customerId = newId
+    }
+
+    // 2. Create the Pledge Record
+    const { error: pledgeError } = await supabase
+        .from("cf_pledge")
+        .insert({
+            campaign_id: campaignId,
+            reward_id: rewardId,
+            customer_id: customerId,
+            amount: amount,
+            status: 'succeeded' // In a real Stripe app, this would be 'pending' until webhook fires
+        })
+
+    if (pledgeError) throw new Error(`Pledge failed: ${pledgeError.message}`)
+
+    // 3. Update Campaign Stats (Atomic Increment)
+    // We use an RPC call or direct update. For simplicity/speed in this prototype, we fetch and update.
+    // Ideally, you'd use a Database Trigger for this to ensure consistency.
+
+    // A. Update Campaign Totals
+    const { data: campaign } = await supabase
+        .from("cf_campaign")
+        .select("total_pledged, total_backers")
+        .eq("id", campaignId)
+        .single()
+
+    if (campaign) {
+        await supabase.from("cf_campaign").update({
+            total_pledged: Number(campaign.total_pledged) + amount,
+            total_backers: Number(campaign.total_backers) + 1
+        }).eq("id", campaignId)
+    }
+
+    // B. Update Reward Stats
+    const { data: reward } = await supabase
+        .from("cf_reward")
+        .select("backers_count")
+        .eq("id", rewardId)
+        .single()
+
+    if (reward) {
+        await supabase.from("cf_reward").update({
+            backers_count: reward.backers_count + 1
+        }).eq("id", rewardId)
+    }
+
+    // 4. Revalidate to show new numbers on UI
+    revalidatePath("/")
+
+    return { success: true }
 }
 </file>
 
@@ -298,123 +677,97 @@ export async function GET() {
 }
 </file>
 
-<file path="components/crowdfunding/checkout-dialog.tsx">
+<file path="components/admin/create-reward-dialog.tsx">
 "use client"
 
-import { useEffect, useState } from "react"
-import { useCampaign } from "@/context/campaign-context"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
-    DialogFooter
+    DialogTrigger,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
+import { Plus } from "lucide-react"
+import { createReward } from "@/app/admin/actions" // Import the server action
+import { useToast } from "@/hooks/use-toast"
 
-export function CheckoutDialog() {
-    const { campaign, selectedRewardId, selectReward, pledge } = useCampaign()
-    const [isOpen, setIsOpen] = useState(false)
-    const [bonusAmount, setBonusAmount] = useState(0)
+export function CreateRewardDialog() {
+    const [open, setOpen] = useState(false)
+    const { toast } = useToast()
 
-    // Find the actual reward object from the ID
-    const reward = campaign.rewards.find(r => r.id === selectedRewardId)
+    async function handleSubmit(formData: FormData) {
+        const result = await createReward(null, formData)
 
-    // Sync internal state with Context state
-    useEffect(() => {
-        if (selectedRewardId) {
-            setIsOpen(true)
-            setBonusAmount(0) // Reset bonus on new open
+        if (result?.error) {
+            toast({
+                title: "Error",
+                description: result.error,
+                variant: "destructive",
+            })
         } else {
-            setIsOpen(false)
-        }
-    }, [selectedRewardId])
-
-    const handleClose = (open: boolean) => {
-        if (!open) {
-            selectReward(null!) // Clear selection in context (using ! to bypass null check for now)
-            setIsOpen(false)
+            toast({
+                title: "Success",
+                description: "Reward created successfully",
+                variant: "default", // You can use "success" if you have that variant configured
+            })
+            setOpen(false) // Close the modal
         }
     }
-
-    const handleConfirm = () => {
-        if (!reward) return
-
-        // Calculate total (Base Price + Bonus)
-        const total = reward.price + Number(bonusAmount)
-
-        // Execute the pledge
-        pledge(total)
-
-        // Close the modal
-        handleClose(false)
-
-        // Optional: Trigger a success toast here via sonner/toast hook
-        alert(`Woohoo! You successfully pledged $${total}!`)
-    }
-
-    if (!reward) return null
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[500px]">
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    <Plus className="mr-2 h-4 w-4" /> Add Reward
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Confirm your pledge</DialogTitle>
+                    <DialogTitle>Create New Reward</DialogTitle>
                     <DialogDescription>
-                        You chose <strong>{reward.title}</strong>
+                        Add a new pledge tier for your backers.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-6 py-4">
-                    {/* Reward Summary */}
-                    <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                            <p className="text-sm font-medium">Reward Base Price</p>
-                            <p className="text-xs text-muted-foreground">{reward.itemsIncluded.join(", ")}</p>
+                {/* The Action Attribute connects to the Server Action */}
+                <form action={handleSubmit} className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="title">Reward Title</Label>
+                        <Input id="title" name="title" placeholder="e.g. Early Bird Special" required />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="price">Price ($)</Label>
+                            <Input id="price" name="price" type="number" min="1" placeholder="50" required />
                         </div>
-                        <span className="font-semibold">${reward.price}</span>
-                    </div>
-
-                    <Separator />
-
-                    {/* Bonus Support Input */}
-                    <div className="space-y-2">
-                        <Label htmlFor="bonus">Bonus Support (Optional)</Label>
-                        <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">$</span>
-                            <Input
-                                id="bonus"
-                                type="number"
-                                min="0"
-                                value={bonusAmount}
-                                onChange={(e) => setBonusAmount(Number(e.target.value))}
-                                className="max-w-[120px]"
-                            />
+                        <div className="grid gap-2">
+                            <Label htmlFor="delivery">Est. Delivery</Label>
+                            <Input id="delivery" name="delivery" placeholder="Feb 2026" required />
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            Add a little extra to help the creator reach their stretch goals!
-                        </p>
                     </div>
 
-                    {/* Total Calculation */}
-                    <div className="bg-muted/50 p-4 rounded-lg flex justify-between items-center">
-                        <span className="font-medium">Total Pledge</span>
-                        <span className="text-xl font-bold text-emerald-600">
-                            ${reward.price + Number(bonusAmount)}
-                        </span>
+                    <div className="grid gap-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea id="description" name="description" placeholder="What do they get?" required />
                     </div>
-                </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
-                    <Button onClick={handleConfirm} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                        Confirm Payment
-                    </Button>
-                </DialogFooter>
+                    <div className="grid gap-2">
+                        <Label htmlFor="items">Items Included (comma separated)</Label>
+                        <Input id="items" name="items" placeholder="Keyboard, Stand, Cable..." required />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Save Reward</Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     )
@@ -7516,96 +7869,6 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
 }
 </file>
 
-<file path="context/campaign-context.tsx">
-"use client"
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { Campaign } from '@/types/campaign'
-
-interface CampaignContextType {
-    campaign: Campaign | null
-    isLoading: boolean
-    error: string | null
-    totalPledged: number
-    backersCount: number
-    selectedRewardId: string | null
-    selectReward: (rewardId: string) => void
-    pledge: (amount: number) => void
-}
-
-const CampaignContext = createContext<CampaignContextType | undefined>(undefined)
-
-export function CampaignProvider({ children }: { children: ReactNode }) {
-    const [campaign, setCampaign] = useState<Campaign | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    // Stats state
-    const [totalPledged, setTotalPledged] = useState(0)
-    const [backersCount, setBackersCount] = useState(0)
-    const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null)
-
-    // Fetch data on mount
-    useEffect(() => {
-        async function fetchCampaign() {
-            try {
-                setIsLoading(true)
-                const res = await fetch('/api/campaign')
-
-                if (!res.ok) throw new Error('Failed to fetch campaign')
-
-                const data = await res.json()
-                setCampaign(data)
-
-                // Initialize stats from the fetched data
-                setTotalPledged(data.stats.totalPledged)
-                setBackersCount(data.stats.totalBackers)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'An error occurred')
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
-        fetchCampaign()
-    }, [])
-
-    const selectReward = (rewardId: string) => {
-        setSelectedRewardId(rewardId)
-    }
-
-    const pledge = (amount: number) => {
-        setTotalPledged((prev) => prev + amount)
-        setBackersCount((prev) => prev + 1)
-    }
-
-    return (
-        <CampaignContext.Provider
-            value={{
-                campaign,
-                isLoading,
-                error,
-                totalPledged,
-                backersCount,
-                selectedRewardId,
-                selectReward,
-                pledge
-            }}
-        >
-            {children}
-        </CampaignContext.Provider>
-    )
-}
-
-export function useCampaign() {
-    const context = useContext(CampaignContext)
-    if (context === undefined) {
-        throw new Error('useCampaign must be used within a CampaignProvider')
-    }
-    return context
-}
-</file>
-
 <file path="hooks/use-mobile.ts">
 import * as React from 'react'
 
@@ -7994,6 +8257,16 @@ export const CAMPAIGN_DATA: Campaign = {
 };
 </file>
 
+<file path="lib/supabase.ts">
+import { createClient } from '@supabase/supabase-js'
+
+// Create a single supabase client for interacting with your database
+export const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // Use Service Role Key for Admin actions to bypass RLS if needed
+)
+</file>
+
 <file path="lib/utils.ts">
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -8168,6 +8441,166 @@ export function cn(...inputs: ClassValue[]) {
 }
 </file>
 
+<file path="supabase/fix_permissions.sql">
+-- 1. Ensure RLS is enabled on all tables
+ALTER TABLE "public"."cf_campaign" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."cf_reward" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."cf_faq" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."cf_creator" ENABLE ROW LEVEL SECURITY;
+
+-- 2. Drop existing policies to avoid conflicts (in case some partially exist)
+DROP POLICY IF EXISTS "Public read campaigns" ON "public"."cf_campaign";
+DROP POLICY IF EXISTS "Public read rewards" ON "public"."cf_reward";
+DROP POLICY IF EXISTS "Public read faqs" ON "public"."cf_faq";
+DROP POLICY IF EXISTS "Public read creators" ON "public"."cf_creator";
+
+-- 3. Re-create the policies to allow public read access
+CREATE POLICY "Public read campaigns" ON "public"."cf_campaign" FOR SELECT USING (true);
+CREATE POLICY "Public read rewards" ON "public"."cf_reward" FOR SELECT USING (true);
+CREATE POLICY "Public read faqs" ON "public"."cf_faq" FOR SELECT USING (true);
+CREATE POLICY "Public read creators" ON "public"."cf_creator" FOR SELECT USING (true);
+</file>
+
+<file path="supabase/grant_permissions.sql">
+-- Grants basic permissions that might be missing
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+-- Grant access to tables explicitly
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+
+-- Ensure sequences are accessible
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+</file>
+
+<file path="supabase/schema.sql">
+-- 1. Create a Creator table (matches your Creator interface)
+CREATE TABLE "public"."cf_creator" (
+    "id" "text" PRIMARY KEY, -- e.g., 'popumusic'
+    "name" "text" NOT NULL,
+    "avatar_url" "text",
+    "bio" "text",
+    "location" "text",
+    "projects_created" integer DEFAULT 0,
+    "projects_backed" integer DEFAULT 0,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- 2. Create the Crowdfunding Campaign table
+-- We use 'cf_campaign' to avoid conflict with your existing 'Campaign' table
+CREATE TABLE "public"."cf_campaign" (
+    "id" "text" PRIMARY KEY, -- e.g., 'dreamplay-one'
+    "creator_id" "text" REFERENCES "public"."cf_creator"("id"),
+    "title" "text" NOT NULL,
+    "subtitle" "text",
+    "story" "text", -- HTML content
+    "risks" "text", -- HTML content
+    "hero_image" "text",
+    "gallery_images" "text"[], -- Array of image URLs
+    "goal_amount" numeric NOT NULL,
+    "total_pledged" numeric DEFAULT 0,
+    "total_backers" integer DEFAULT 0,
+    "ends_at" timestamp with time zone, -- Replaces 'daysLeft' for accuracy
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- 3. Create Rewards table
+CREATE TABLE "public"."cf_reward" (
+    "id" "text" PRIMARY KEY,
+    "campaign_id" "text" REFERENCES "public"."cf_campaign"("id") ON DELETE CASCADE,
+    "title" "text" NOT NULL,
+    "price" numeric NOT NULL,
+    "original_price" numeric,
+    "description" "text",
+    "items_included" "text"[],
+    "estimated_delivery" "text",
+    "ships_to" "text"[],
+    "limit_quantity" integer, -- Null means unlimited
+    "backers_count" integer DEFAULT 0,
+    "is_sold_out" boolean DEFAULT false,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- 4. Create FAQs table
+CREATE TABLE "public"."cf_faq" (
+    "id" "text" PRIMARY KEY,
+    "campaign_id" "text" REFERENCES "public"."cf_campaign"("id") ON DELETE CASCADE,
+    "category" "text",
+    "question" "text" NOT NULL,
+    "answer" "text" NOT NULL,
+    "order" integer DEFAULT 0
+);
+
+-- 5. Create Pledges table (The Transaction Log)
+-- This links your crowdfunding logic to your existing "Customer" table
+CREATE TABLE "public"."cf_pledge" (
+    "id" uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    "campaign_id" "text" REFERENCES "public"."cf_campaign"("id"),
+    "reward_id" "text" REFERENCES "public"."cf_reward"("id"),
+    "customer_id" "text" REFERENCES "public"."Customer"("id"), -- Links to existing users
+    "amount" numeric NOT NULL,
+    "status" "text" DEFAULT 'succeeded', -- succeeded, pending, failed
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Enable RLS (Row Level Security)
+ALTER TABLE "public"."cf_campaign" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."cf_reward" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."cf_pledge" ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access (so anyone can view the campaign)
+CREATE POLICY "Public read campaigns" ON "public"."cf_campaign" FOR SELECT USING (true);
+CREATE POLICY "Public read rewards" ON "public"."cf_reward" FOR SELECT USING (true);
+CREATE POLICY "Public read faqs" ON "public"."cf_faq" FOR SELECT USING (true);
+CREATE POLICY "Public read creators" ON "public"."cf_creator" FOR SELECT USING (true);
+
+-- Insert Creator
+INSERT INTO "public"."cf_creator" (id, name, avatar_url, bio, location)
+VALUES (
+    'popumusic', 
+    'PopuMusic', 
+    '/placeholder-user.jpg', 
+    'Founded on April 1, 2015, PopuMusic is a dynamic team revolutionizing music interaction.', 
+    'Delaware City, DE'
+);
+
+-- Insert Campaign
+INSERT INTO "public"."cf_campaign" (id, creator_id, title, subtitle, story, risks, hero_image, gallery_images, goal_amount, total_pledged, total_backers, ends_at)
+VALUES (
+    'dreamplay-one',
+    'popumusic',
+    'DreamPlay One - Crowdfunding Campaign',
+    'Back the DreamPlay One keyboard with narrower keys designed for your handspan. Stop over-stretching.',
+    '<p>I’ve been a concert pianist for years, and I’ve always struggled with the standard keyboard size. It’s just too big for my hands, and I know I’m not alone.</p><p>That’s why I created DreamPlay One. It’s a keyboard designed for pianists with smaller hands, so you can play comfortably and without pain.</p><h3>Why DreamPlay One?</h3><ul><li><strong>Narrower Keys:</strong> The keys are 15/16ths the width of standard keys, making it easier to reach octaves and large chords.</li><li><strong>Professional Sound:</strong> We’ve partnered with top sound engineers to ensure DreamPlay One sounds as good as it feels.</li><li><strong>Portable Design:</strong> It’s lightweight and compact, so you can take it with you wherever you go.</li></ul><p>Join us in revolutionizing the way we play piano. Back DreamPlay One today!</p>',
+    '<p>Every crowdfunding campaign comes with risks, but we’ve done our homework. We have a working prototype and have partnered with a reputable manufacturer.</p><p>However, unforeseen delays can happen in manufacturing and shipping. We promise to keep you updated every step of the way.</p>',
+    '/images/hero-piano.png',
+    ARRAY['/images/gallery-1.jpg', '/images/gallery-2.jpg'],
+    5000,
+    88808,
+    224,
+    NOW() + INTERVAL '28 days' -- Automatically sets end date 28 days from now
+);
+
+-- Insert Rewards
+INSERT INTO "public"."cf_reward" (id, campaign_id, title, price, original_price, description, items_included, estimated_delivery, ships_to, backers_count, is_sold_out)
+VALUES 
+('vip-founder', 'dreamplay-one', 'VIP Founder Access', 1, NULL, 'Early updates + lowest price guarantee', ARRAY['VIP Access'], 'Immediate', ARRAY['Digital Reward'], 127, false),
+('super-early-bird', 'dreamplay-one', 'Super Early Bird', 199, 399, 'DS5.5 or DS6.0 at the deepest discount', ARRAY['DreamPlay Keyboard'], 'Feb 2026', ARRAY['Anywhere in the world'], 50, true),
+('early-bird', 'dreamplay-one', 'Early Bird', 249, 349, 'DS5.5 or DS6.0 at a special price', ARRAY['DreamPlay Keyboard'], 'Feb 2026', ARRAY['Anywhere in the world'], 34, false);
+
+-- Insert FAQs
+INSERT INTO "public"."cf_faq" (id, campaign_id, category, question, answer, "order")
+VALUES
+('model-choice', 'dreamplay-one', 'About Purchase', 'Which DreamPlay model is right for me?', 'DreamPlay comes in two sizes: DS5.5 for smaller hands and DS6.0 for average hands. Check our sizing guide to find your perfect fit.', 1),
+('delivery-timeline', 'dreamplay-one', 'About Purchase', 'When will I receive my keyboard?', 'We estimate shipping to begin in February 2026. We will keep all backers updated on our progress.', 2);
+</file>
+
+<file path="supabase/update_gallery.sql">
+UPDATE "public"."cf_campaign"
+SET gallery_images = ARRAY['/images/gallery-1.jpg', '/images/gallery-2.jpg', '/images/gallery-3.jpg']
+WHERE id = 'dreamplay-one';
+</file>
+
 <file path="types/campaign.ts">
 export interface Creator {
     id: string;
@@ -8293,82 +8726,6 @@ const nextConfig = {
 export default nextConfig
 </file>
 
-<file path="package.json">
-{
-  "name": "my-v0-project",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "lint": "eslint .",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^3.10.0",
-    "@radix-ui/react-accordion": "1.2.2",
-    "@radix-ui/react-alert-dialog": "1.1.4",
-    "@radix-ui/react-aspect-ratio": "1.1.1",
-    "@radix-ui/react-avatar": "1.1.2",
-    "@radix-ui/react-checkbox": "1.1.3",
-    "@radix-ui/react-collapsible": "1.1.2",
-    "@radix-ui/react-context-menu": "2.2.4",
-    "@radix-ui/react-dialog": "1.1.4",
-    "@radix-ui/react-dropdown-menu": "2.1.4",
-    "@radix-ui/react-hover-card": "1.1.4",
-    "@radix-ui/react-label": "2.1.1",
-    "@radix-ui/react-menubar": "1.1.4",
-    "@radix-ui/react-navigation-menu": "1.2.3",
-    "@radix-ui/react-popover": "1.1.4",
-    "@radix-ui/react-progress": "1.1.1",
-    "@radix-ui/react-radio-group": "1.2.2",
-    "@radix-ui/react-scroll-area": "1.2.2",
-    "@radix-ui/react-select": "2.1.4",
-    "@radix-ui/react-separator": "1.1.1",
-    "@radix-ui/react-slider": "1.2.2",
-    "@radix-ui/react-slot": "1.1.1",
-    "@radix-ui/react-switch": "1.1.2",
-    "@radix-ui/react-tabs": "1.1.2",
-    "@radix-ui/react-toast": "1.2.4",
-    "@radix-ui/react-toggle": "1.1.1",
-    "@radix-ui/react-toggle-group": "1.1.1",
-    "@radix-ui/react-tooltip": "1.1.6",
-    "@vercel/analytics": "1.3.1",
-    "autoprefixer": "^10.4.20",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "cmdk": "1.0.4",
-    "date-fns": "4.1.0",
-    "embla-carousel-react": "8.5.1",
-    "input-otp": "1.4.1",
-    "lucide-react": "^0.454.0",
-    "next": "16.0.10",
-    "next-themes": "^0.4.6",
-    "react": "19.2.0",
-    "react-day-picker": "9.8.0",
-    "react-dom": "19.2.0",
-    "react-hook-form": "^7.60.0",
-    "react-resizable-panels": "^2.1.7",
-    "recharts": "2.15.4",
-    "sonner": "^1.7.4",
-    "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7",
-    "vaul": "^1.1.2",
-    "zod": "3.25.76"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.9",
-    "@types/node": "^22",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "postcss": "^8.5",
-    "tailwindcss": "^4.1.9",
-    "tw-animate-css": "1.3.3",
-    "typescript": "^5"
-  }
-}
-</file>
-
 <file path="postcss.config.mjs">
 /** @type {import('postcss-load-config').Config} */
 const config = {
@@ -8421,6 +8778,217 @@ export default config
   "exclude": [
     "node_modules"
   ]
+}
+</file>
+
+<file path="app/admin/details/page.tsx">
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+import { updateCampaignDetails } from "../actions" // <--- Import the action
+import { useCampaign } from "@/context/campaign-context"
+
+export default function CampaignDetailsEditor() {
+    const { toast } = useToast()
+    const { campaign } = useCampaign() // Load current data to populate defaults
+
+    // Wrapper to handle the server action response
+    async function handleSubmit(formData: FormData) {
+        try {
+            await updateCampaignDetails(formData)
+            toast({
+                title: "Success",
+                description: "Campaign updated successfully",
+                variant: "default",
+            })
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to update campaign",
+                variant: "destructive",
+            })
+        }
+    }
+
+    if (!campaign) return <div>Loading...</div>
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Edit Campaign Details</h1>
+            </div>
+
+            {/* Connect the form to the Server Action */}
+            <form action={handleSubmit} className="space-y-8">
+
+                {/* Basic Info */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Basic Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="title">Campaign Title</Label>
+                            <Input id="title" name="title" defaultValue={campaign.title} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="subtitle">Subtitle</Label>
+                            <Textarea id="subtitle" name="subtitle" defaultValue={campaign.subtitle} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="goal">Goal Amount ($)</Label>
+                                <Input id="goal" name="goal" type="number" defaultValue={campaign.stats.goalAmount} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="endDate">End Date</Label>
+                                {/* Note: You might need to format the date string properly for the input */}
+                                <Input id="endDate" name="endDate" type="date" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Story Editor */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Campaign Story (HTML)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea
+                            id="story"
+                            name="story"
+                            className="min-h-[300px] font-mono text-sm"
+                            defaultValue={campaign.story}
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Risks (HTML)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea
+                            id="risks"
+                            name="risks"
+                            className="min-h-[200px]"
+                            defaultValue={campaign.risks}
+                        />
+                    </CardContent>
+                </Card>
+
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
+                    Save All Changes
+                </Button>
+            </form>
+        </div>
+    )
+}
+</file>
+
+<file path="app/api/campaign/route.ts">
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { Campaign } from '@/types/campaign'
+
+// Initialize Supabase (Use specific env vars for this site)
+export async function GET() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+        return NextResponse.json({ error: 'Missing Supabase environment variables' }, { status: 500 })
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    const campaignId = 'dreamplay-one' // In a real app, you might get this from searchParams
+
+    // 1. Fetch Campaign & Creator
+    const { data: campaignData, error: campaignError } = await supabase
+        .from('cf_campaign')
+        .select(`
+      *,
+      creator:cf_creator(*)
+    `)
+        .eq('id', campaignId)
+        .single()
+
+    if (campaignError || !campaignData) {
+        console.error('Supabase Error:', campaignError)
+        return NextResponse.json({ error: 'Campaign not found', details: campaignError }, { status: 404 })
+    }
+
+    // 2. Fetch Rewards
+    const { data: rewardsData } = await supabase
+        .from('cf_reward')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .order('price', { ascending: true })
+
+    // 3. Fetch FAQs
+    const { data: faqData } = await supabase
+        .from('cf_faq')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .order('order', { ascending: true })
+
+    // 4. Transform DB Snake_Case to Frontend CamelCase
+    // We need to map the DB columns back to your Typescript interfaces
+    const formattedCampaign: Campaign = {
+        id: campaignData.id,
+        title: campaignData.title,
+        subtitle: campaignData.subtitle,
+        story: campaignData.story,
+        risks: campaignData.risks,
+        images: {
+            hero: campaignData.hero_image,
+            gallery: campaignData.gallery_images || []
+        },
+        stats: {
+            totalPledged: Number(campaignData.total_pledged),
+            goalAmount: Number(campaignData.goal_amount),
+            totalBackers: campaignData.total_backers,
+            // Calculate days left dynamically
+            daysLeft: Math.max(0, Math.ceil((new Date(campaignData.ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        },
+        creator: {
+            id: campaignData.creator.id,
+            name: campaignData.creator.name,
+            avatarUrl: campaignData.creator.avatar_url,
+            bio: campaignData.creator.bio,
+            location: campaignData.creator.location,
+            projectsCreated: campaignData.creator.projects_created,
+            projectsBacked: campaignData.creator.projects_backed
+        },
+        rewards: rewardsData?.map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            price: Number(r.price),
+            originalPrice: r.original_price ? Number(r.original_price) : undefined,
+            description: r.description,
+            itemsIncluded: r.items_included || [],
+            estimatedDelivery: r.estimated_delivery,
+            shipsTo: r.ships_to || [],
+            backersCount: r.backers_count,
+            limitedQuantity: r.limit_quantity,
+            isSoldOut: r.is_sold_out
+        })) || [],
+        faqs: faqData?.map((f: any) => ({
+            id: f.id,
+            category: f.category,
+            question: f.question,
+            answer: f.answer
+        })) || []
+    }
+
+    return NextResponse.json(formattedCampaign)
 }
 </file>
 
@@ -8514,122 +9082,274 @@ export default function Page() {
 }
 </file>
 
-<file path="components/crowdfunding/hero-section.tsx">
+<file path="components/admin/app-sidebar.tsx">
 "use client"
 
-import * as React from "react"
-import Image from "next/image"
-import { Heart, Share2, Play } from "lucide-react"
-import { useCampaign } from "@/context/campaign-context"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel"
+    LayoutDashboard,
+    FileText,
+    Gift,
+    User,
+    HelpCircle,
+    Settings,
+    LogOut,
+    ExternalLink // <--- Import this icon
+} from "lucide-react"
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarHeader,
+    SidebarFooter,
+} from "@/components/ui/sidebar"
 
-export function HeroSection() {
-  const { campaign } = useCampaign()
-  const [api, setApi] = React.useState<CarouselApi>()
-  const [current, setCurrent] = React.useState(0)
+// Menu items matching your requested sections
+const items = [
+    {
+        title: "Dashboard",
+        url: "/admin",
+        icon: LayoutDashboard,
+    },
+    {
+        title: "Campaign Details",
+        url: "/admin/details",
+        icon: FileText,
+    },
+    {
+        title: "Rewards",
+        url: "/admin/rewards",
+        icon: Gift,
+    },
+    {
+        title: "Creator Profile",
+        url: "/admin/creator",
+        icon: User,
+    },
+    {
+        title: "FAQs",
+        url: "/admin/faqs",
+        icon: HelpCircle,
+    },
+    {
+        title: "Settings",
+        url: "/admin/settings",
+        icon: Settings,
+    },
+]
 
-  // Combine hero and gallery into one list for the slider
-  const allImages = [campaign.images.hero, ...campaign.images.gallery]
+export function AppSidebar() {
+    return (
+        <Sidebar>
+            <SidebarHeader className="p-4 border-b">
+                <h2 className="text-xl font-bold tracking-tight">DreamPlay Admin</h2>
+                <p className="text-xs text-muted-foreground">Crowdfunding Manager</p>
+            </SidebarHeader>
 
-  React.useEffect(() => {
-    if (!api) return
+            <SidebarContent>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Management</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {items.map((item) => (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton asChild>
+                                        <a href={item.url}>
+                                            <item.icon className="h-4 w-4" />
+                                            <span>{item.title}</span>
+                                        </a>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
 
-    setCurrent(api.selectedScrollSnap())
+            <SidebarFooter className="p-4 border-t space-y-2"> {/* Added space-y-2 for gap */}
+                <SidebarMenu>
+                    {/* NEW: Public View Button */}
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                            <a href="/" target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-4 w-4" />
+                                <span>View Public Page</span>
+                            </a>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap())
-    })
-  }, [api])
+                    {/* Sign Out Button */}
+                    <SidebarMenuItem>
+                        <SidebarMenuButton className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                            <LogOut className="h-4 w-4" />
+                            <span>Sign Out</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
+        </Sidebar>
+    )
+}
+</file>
 
-  const handleThumbnailClick = (index: number) => {
-    if (api) api.scrollTo(index)
-  }
+<file path="components/crowdfunding/checkout-dialog.tsx">
+"use client"
 
-  return (
-    <div className="space-y-4">
-      {/* Main Slider */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted">
-        <Carousel setApi={setApi} className="w-full h-full">
-          <CarouselContent>
-            {allImages.map((src, index) => (
-              <CarouselItem key={index}>
-                <div className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5">
-                  {/* In a real app, use next/image here. For mock, we use a placeholder if src is invalid */}
-                  {src.startsWith('/') ? (
-                    <Image
-                      src={src}
-                      alt={`Product view ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      priority={index === 0}
-                    />
-                  ) : (
-                    <span className="text-muted-foreground">Image {index + 1}</span>
-                  )}
+import { useEffect, useState } from "react"
+import { useCampaign } from "@/context/campaign-context"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { submitPledge } from "@/app/actions" // <--- Import server action
+import { useToast } from "@/hooks/use-toast"
 
-                  {/* Play Button Overlay (Mock for video) */}
-                  {index === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50">
-                        <Play className="h-6 w-6 text-white fill-white ml-1" />
-                      </div>
+export function CheckoutDialog() {
+    const { campaign, selectedRewardId, selectReward, pledge } = useCampaign()
+    const [isOpen, setIsOpen] = useState(false)
+    const [bonusAmount, setBonusAmount] = useState(0)
+    const [isSubmitting, setIsSubmitting] = useState(false) // Loading state
+    const { toast } = useToast()
+
+    const reward = campaign?.rewards.find(r => r.id === selectedRewardId)
+
+    useEffect(() => {
+        if (selectedRewardId) {
+            setIsOpen(true)
+            setBonusAmount(0)
+        } else {
+            setIsOpen(false)
+        }
+    }, [selectedRewardId])
+
+    const handleClose = (open: boolean) => {
+        if (!open) {
+            selectReward(null!)
+            setIsOpen(false)
+        }
+    }
+
+    // Handle the form submission
+    const handlePaymentSubmit = async (formData: FormData) => {
+        setIsSubmitting(true)
+        try {
+            // Append calculated values that aren't in inputs
+            const total = (reward?.price || 0) + Number(bonusAmount)
+            formData.append("amount", total.toString())
+            formData.append("rewardId", reward?.id || "")
+
+            // Call Server Action
+            await submitPledge(formData)
+
+            // Optimistic Update (Optional, as revalidatePath handles it mostly)
+            pledge(total)
+
+            toast({
+                title: "Pledge Successful!",
+                description: `You backed ${reward?.title} for $${total}.`,
+                variant: "default"
+            })
+
+            handleClose(false)
+        } catch (error) {
+            console.error(error)
+            toast({
+                title: "Transaction Failed",
+                description: "Please try again later.",
+                variant: "destructive"
+            })
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    if (!reward) return null
+
+    return (
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>Confirm your pledge</DialogTitle>
+                    <DialogDescription>
+                        You chose <strong>{reward.title}</strong>
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form action={handlePaymentSubmit} className="grid gap-6 py-4">
+
+                    {/* Reward Summary */}
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium">Reward Base Price</p>
+                            <p className="text-xs text-muted-foreground">{reward.itemsIncluded.join(", ")}</p>
+                        </div>
+                        <span className="font-semibold">${reward.price}</span>
                     </div>
-                  )}
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
 
-          {/* Navigation Arrows */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-between p-4">
-            <CarouselPrevious className="pointer-events-auto relative left-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
-            <CarouselNext className="pointer-events-auto relative right-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
-          </div>
-        </Carousel>
+                    <Separator />
 
-        {/* Badges Overlay */}
-        <div className="absolute top-4 left-4 flex gap-2">
-          <Badge variant="secondary" className="bg-white/90 text-emerald-700 hover:bg-white font-semibold shadow-sm backdrop-blur-sm">
-            Project We Love
-          </Badge>
-        </div>
-      </div>
+                    {/* User Details (NEW) */}
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input id="name" name="name" required placeholder="Jane Doe" />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input id="email" name="email" type="email" required placeholder="jane@example.com" />
+                        </div>
+                    </div>
 
-      {/* Thumbnails Strip */}
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {allImages.map((src, index) => (
-          <button
-            key={index}
-            onClick={() => handleThumbnailClick(index)}
-            className={`
-              relative flex-shrink-0 w-20 h-14 rounded-md overflow-hidden border-2 transition-all
-              ${current === index
-                ? "border-emerald-600 ring-2 ring-emerald-600/20"
-                : "border-transparent opacity-60 hover:opacity-100"}
-            `}
-          >
-            {src.startsWith('/') ? (
-              <Image src={src} alt="thumbnail" fill className="object-cover" />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center text-xs">
-                {index + 1}
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
+                    <Separator />
+
+                    {/* Bonus Support */}
+                    <div className="space-y-2">
+                        <Label htmlFor="bonus">Bonus Support (Optional)</Label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">$</span>
+                            <Input
+                                id="bonus"
+                                type="number"
+                                min="0"
+                                value={bonusAmount}
+                                onChange={(e) => setBonusAmount(Number(e.target.value))}
+                                className="max-w-[120px]"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Total */}
+                    <div className="bg-muted/50 p-4 rounded-lg flex justify-between items-center">
+                        <span className="font-medium">Total Pledge</span>
+                        <span className="text-xl font-bold text-emerald-600">
+                            ${reward.price + Number(bonusAmount)}
+                        </span>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => handleClose(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                            {isSubmitting ? "Processing..." : "Confirm Payment"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
 }
 </file>
 
@@ -8739,27 +9459,6 @@ function TabItem({ label, count, id, active, onClick }: { label: string; count?:
 }
 </file>
 
-<file path="components/crowdfunding/project-header.tsx">
-"use client"
-
-import { useCampaign } from "@/context/campaign-context"
-
-export function ProjectHeader() {
-  const { campaign } = useCampaign()
-
-  return (
-    <div className="text-center">
-      <h1 className="text-xl md:text-2xl font-bold text-foreground text-balance">
-        {campaign.title}
-      </h1>
-      <p className="text-sm text-muted-foreground mt-2">
-        {campaign.subtitle}
-      </p>
-    </div>
-  )
-}
-</file>
-
 <file path="components/crowdfunding/rewards-page.tsx">
 "use client"
 
@@ -8851,24 +9550,568 @@ export function RewardsPage() {
 }
 </file>
 
+<file path="context/campaign-context.tsx">
+"use client"
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { Campaign } from '@/types/campaign'
+
+interface CampaignContextType {
+    campaign: Campaign | null
+    isLoading: boolean
+    error: string | null
+    totalPledged: number
+    backersCount: number
+    selectedRewardId: string | null
+    selectReward: (rewardId: string) => void
+    pledge: (amount: number) => void
+}
+
+const CampaignContext = createContext<CampaignContextType | undefined>(undefined)
+
+export function CampaignProvider({ children }: { children: ReactNode }) {
+    const [campaign, setCampaign] = useState<Campaign | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    // Stats state
+    const [totalPledged, setTotalPledged] = useState(0)
+    const [backersCount, setBackersCount] = useState(0)
+    const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null)
+
+    // Fetch data on mount
+    useEffect(() => {
+        async function fetchCampaign() {
+            try {
+                setIsLoading(true)
+                const res = await fetch('/api/campaign')
+
+                if (!res.ok) throw new Error('Failed to fetch campaign')
+
+                const data = await res.json()
+                setCampaign(data)
+
+                // Initialize stats from the fetched data
+                setTotalPledged(data.stats.totalPledged)
+                setBackersCount(data.stats.totalBackers)
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred')
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchCampaign()
+    }, [])
+
+    const selectReward = (rewardId: string) => {
+        setSelectedRewardId(rewardId)
+    }
+
+    const pledge = (amount: number) => {
+        setTotalPledged((prev) => prev + amount)
+        setBackersCount((prev) => prev + 1)
+    }
+
+    return (
+        <CampaignContext.Provider
+            value={{
+                campaign,
+                isLoading,
+                error,
+                totalPledged,
+                backersCount,
+                selectedRewardId,
+                selectReward,
+                pledge
+            }}
+        >
+            {children}
+        </CampaignContext.Provider>
+    )
+}
+
+export function useCampaign() {
+    const context = useContext(CampaignContext)
+    if (context === undefined) {
+        throw new Error('useCampaign must be used within a CampaignProvider')
+    }
+    return context
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "my-v0-project",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "eslint .",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@radix-ui/react-accordion": "1.2.2",
+    "@radix-ui/react-alert-dialog": "1.1.4",
+    "@radix-ui/react-aspect-ratio": "1.1.1",
+    "@radix-ui/react-avatar": "1.1.2",
+    "@radix-ui/react-checkbox": "1.1.3",
+    "@radix-ui/react-collapsible": "1.1.2",
+    "@radix-ui/react-context-menu": "2.2.4",
+    "@radix-ui/react-dialog": "1.1.4",
+    "@radix-ui/react-dropdown-menu": "2.1.4",
+    "@radix-ui/react-hover-card": "1.1.4",
+    "@radix-ui/react-label": "2.1.1",
+    "@radix-ui/react-menubar": "1.1.4",
+    "@radix-ui/react-navigation-menu": "1.2.3",
+    "@radix-ui/react-popover": "1.1.4",
+    "@radix-ui/react-progress": "1.1.1",
+    "@radix-ui/react-radio-group": "1.2.2",
+    "@radix-ui/react-scroll-area": "1.2.2",
+    "@radix-ui/react-select": "2.1.4",
+    "@radix-ui/react-separator": "1.1.1",
+    "@radix-ui/react-slider": "1.2.2",
+    "@radix-ui/react-slot": "1.1.1",
+    "@radix-ui/react-switch": "1.1.2",
+    "@radix-ui/react-tabs": "1.1.2",
+    "@radix-ui/react-toast": "1.2.4",
+    "@radix-ui/react-toggle": "1.1.1",
+    "@radix-ui/react-toggle-group": "1.1.1",
+    "@radix-ui/react-tooltip": "1.1.6",
+    "@supabase/supabase-js": "^2.91.0",
+    "@vercel/analytics": "1.3.1",
+    "autoprefixer": "^10.4.20",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "1.0.4",
+    "date-fns": "4.1.0",
+    "embla-carousel-react": "8.5.1",
+    "input-otp": "1.4.1",
+    "lucide-react": "^0.454.0",
+    "next": "16.0.10",
+    "next-themes": "^0.4.6",
+    "react": "19.2.0",
+    "react-day-picker": "9.8.0",
+    "react-dom": "19.2.0",
+    "react-hook-form": "^7.60.0",
+    "react-resizable-panels": "^2.1.7",
+    "recharts": "2.15.4",
+    "sonner": "^1.7.4",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "vaul": "^1.1.2",
+    "yet-another-react-lightbox": "^3.28.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.9",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "postcss": "^8.5",
+    "tailwindcss": "^4.1.9",
+    "tw-animate-css": "1.3.3",
+    "typescript": "^5"
+  }
+}
+</file>
+
+<file path="app/admin/rewards/page.tsx">
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Edit, Trash } from "lucide-react" // Removed 'Plus' import as it's inside the dialog now
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { useCampaign } from "@/context/campaign-context"
+import { CreateRewardDialog } from "@/components/admin/create-reward-dialog" // <--- Import the new component
+import { deleteReward } from "../actions"
+
+export default function AdminRewardsPage() {
+    const { campaign } = useCampaign()
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">Manage Rewards</h1>
+
+                {/* Replaced the static button with the functional Dialog */}
+                <CreateRewardDialog />
+
+            </div>
+
+            <div className="border rounded-lg">
+                {/* ... (Table code remains exactly the same as before) ... */}
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Backers</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {campaign?.rewards.map((reward) => (
+                            <TableRow key={reward.id}>
+                                <TableCell className="font-medium">{reward.title}</TableCell>
+                                <TableCell>${reward.price}</TableCell>
+                                <TableCell>{reward.backersCount}</TableCell>
+                                <TableCell>
+                                    {reward.isSoldOut ? (
+                                        <Badge variant="destructive">Sold Out</Badge>
+                                    ) : (
+                                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
+                                            Active
+                                        </Badge>
+                                    )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2">
+                                        <Button variant="ghost" size="icon">
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+
+                                        <form action={async () => {
+                                            await deleteReward(reward.id)
+                                        }}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-red-500 hover:text-red-600"
+                                                type="submit"
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </form>
+
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    )
+}
+</file>
+
+<file path="app/admin/actions.ts">
+'use server'
+
+import { supabase } from "@/lib/supabase"
+import { revalidatePath } from "next/cache"
+
+// --- CAMPAIGN ACTIONS ---
+
+export async function updateCampaignDetails(formData: FormData) {
+    const id = "dreamplay-one" // Hardcoded for single-campaign app
+
+    const title = formData.get("title") as string
+    const subtitle = formData.get("subtitle") as string
+    const story = formData.get("story") as string
+    const risks = formData.get("risks") as string
+    const goalAmount = formData.get("goal")
+    const endsAt = formData.get("endDate")
+
+    const { error } = await supabase
+        .from("cf_campaign")
+        .update({
+            title,
+            subtitle,
+            story,
+            risks,
+            goal_amount: goalAmount,
+            ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined
+        })
+        .eq("id", id)
+
+    if (error) throw new Error(error.message)
+
+    // Refresh the data on the site immediately
+    revalidatePath("/")
+    revalidatePath("/admin/details")
+    return { success: true }
+}
+
+// --- REWARD ACTIONS ---
+
+export async function deleteReward(rewardId: string) {
+    const { error } = await supabase
+        .from("cf_reward")
+        .delete()
+        .eq("id", rewardId)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/rewards")
+    revalidatePath("/") // Update public page too
+    return { success: true }
+}
+
+export async function createReward(prevState: any, formData: FormData) {
+    const campaignId = "dreamplay-one"
+
+    const { error } = await supabase
+        .from("cf_reward")
+        .insert({
+            id: crypto.randomUUID(), // Generate a new ID
+            campaign_id: campaignId,
+            title: formData.get("title"),
+            price: Number(formData.get("price")),
+            description: formData.get("description"),
+            items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
+            estimated_delivery: formData.get("delivery"),
+            ships_to: ["Anywhere in the world"], // Default to worldwide
+            is_sold_out: false
+        })
+
+    if (error) return { error: error.message }
+
+    revalidatePath("/admin/rewards")
+    return { success: true }
+}
+
+// --- FAQ ACTIONS ---
+
+export async function deleteFAQ(faqId: string) {
+    const { error } = await supabase
+        .from("cf_faq")
+        .delete()
+        .eq("id", faqId)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/faqs")
+    revalidatePath("/")
+    return { success: true }
+}
+
+// --- CREATOR ACTIONS ---
+
+export async function updateCreatorProfile(formData: FormData) {
+    const id = "popumusic" // Hardcoded for this single-creator demo
+
+    const name = formData.get("name") as string
+    const bio = formData.get("bio") as string
+    const location = formData.get("location") as string
+    const avatarUrl = formData.get("avatarUrl") as string
+
+    const { error } = await supabase
+        .from("cf_creator")
+        .update({
+            name,
+            bio,
+            location,
+            avatar_url: avatarUrl,
+        })
+        .eq("id", id)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/creator")
+    revalidatePath("/") // Update public page immediately
+    return { success: true }
+}
+</file>
+
+<file path="components/crowdfunding/hero-section.tsx">
+"use client"
+
+import * as React from "react"
+import Image from "next/image"
+import { Heart, Share2, Play } from "lucide-react"
+import { useCampaign } from "@/context/campaign-context"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+
+import Lightbox from "yet-another-react-lightbox"
+import "yet-another-react-lightbox/styles.css"
+
+export function HeroSection() {
+  const { campaign } = useCampaign()
+  const [api, setApi] = React.useState<CarouselApi>()
+  const [current, setCurrent] = React.useState(0)
+  const [textboxOpen, setTextboxOpen] = React.useState(false)
+
+  // Combine hero and gallery into one list for the slider
+  const allImages = [campaign.images.hero, ...campaign.images.gallery]
+
+  React.useEffect(() => {
+    if (!api) return
+
+    setCurrent(api.selectedScrollSnap())
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap())
+    })
+  }, [api])
+
+  const handleThumbnailClick = (index: number) => {
+    if (api) api.scrollTo(index)
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Main Slider */}
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted">
+        <Carousel setApi={setApi} className="w-full h-full">
+          <CarouselContent>
+            {allImages.map((src, index) => (
+              <CarouselItem key={index}>
+                <div
+                  className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5 cursor-zoom-in"
+                  onClick={() => setTextboxOpen(true)}
+                >
+                  {/* In a real app, use next/image here. For mock, we use a placeholder if src is invalid */}
+                  {src.startsWith('/') ? (
+                    <Image
+                      src={src}
+                      alt={`Product view ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground">Image {index + 1}</span>
+                  )}
+
+                  {/* Play Button Overlay (Mock for video) */}
+                  {index === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110">
+                        <Play className="h-6 w-6 text-white fill-white ml-1" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          {/* Navigation Arrows */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-between p-4">
+            <CarouselPrevious className="pointer-events-auto relative left-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
+            <CarouselNext className="pointer-events-auto relative right-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
+          </div>
+        </Carousel>
+
+        {/* Full Screen Button Overlay */}
+        <div className="absolute bottom-4 right-4 z-10">
+          <Button size="sm" variant="secondary" className="gap-2 shadow-sm" onClick={() => setTextboxOpen(true)}>
+            <Play className="h-4 w-4" /> View Fullscreen
+          </Button>
+        </div>
+
+        {/* Badges Overlay */}
+        <div className="absolute top-4 left-4 flex gap-2 pointer-events-none">
+          <Badge variant="secondary" className="bg-white/90 text-emerald-700 font-semibold shadow-sm backdrop-blur-sm">
+            Project We Love
+          </Badge>
+        </div>
+      </div>
+
+      <Lightbox
+        open={textboxOpen}
+        close={() => setTextboxOpen(false)}
+        index={current}
+        slides={allImages.map(src => ({
+          // If it's a gallery image, try to use the full res version
+          src: src.replace(/(\.jpg|\.png)$/, '-full$1')
+        }))}
+      />
+
+      {/* Thumbnails Strip */}
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        {allImages.map((src, index) => (
+          <button
+            key={index}
+            onClick={() => handleThumbnailClick(index)}
+            className={`
+              relative flex-shrink-0 w-20 h-14 rounded-md overflow-hidden border-2 transition-all
+              ${current === index
+                ? "border-emerald-600 ring-2 ring-emerald-600/20"
+                : "border-transparent opacity-60 hover:opacity-100"}
+            `}
+          >
+            {src.startsWith('/') ? (
+              <Image src={src} alt="thumbnail" fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center text-xs">
+                {index + 1}
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+</file>
+
+<file path="components/crowdfunding/project-header.tsx">
+"use client"
+
+import { useCampaign } from "@/context/campaign-context"
+
+export function ProjectHeader() {
+  const { campaign } = useCampaign()
+
+  if (!campaign) return null
+
+  return (
+    <div className="text-center">
+      <h1 className="text-xl md:text-2xl font-bold text-foreground text-balance">
+        {campaign.title}
+      </h1>
+      <p className="text-sm text-muted-foreground mt-2">
+        {campaign.subtitle}
+      </p>
+    </div>
+  )
+}
+</file>
+
 <file path="components/crowdfunding/stats-panel.tsx">
 "use client"
 
 import { Button } from "@/components/ui/button"
 import { Bookmark, Facebook, Twitter, Share2 } from "lucide-react"
 import { useCampaign } from "@/context/campaign-context"
+import { useRouter, useSearchParams } from "next/navigation" // <--- Added imports
 
 export function StatsPanel() {
-  // 1. Hook into the Context
   const { totalPledged, backersCount, campaign } = useCampaign()
+  const router = useRouter() // <--- Initialize router
+  const searchParams = useSearchParams()
 
-  // 2. Calculate dynamic progress
+  // Calculate dynamic progress
   const progressPercentage = Math.min(
     (totalPledged / campaign.stats.goalAmount) * 100,
     100
   )
 
-  // 3. Format currency (e.g. 88808 -> "$88,808")
+  // Format currency
   const formattedPledged = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -8880,6 +10123,23 @@ export function StatsPanel() {
     currency: 'USD',
     maximumFractionDigits: 0
   }).format(campaign.stats.goalAmount)
+
+  // --- NEW HANDLER ---
+  const handleBackProject = () => {
+    // 1. Update URL to switch tab to 'rewards'
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", "rewards")
+    router.push(`?${params.toString()}`, { scroll: false })
+
+    // 2. Smooth scroll to the anchor we created earlier
+    // We use a tiny timeout to allow the Rewards tab to render first
+    setTimeout(() => {
+      const rewardsAnchor = document.getElementById("rewards-section-anchor")
+      if (rewardsAnchor) {
+        rewardsAnchor.scrollIntoView({ behavior: "smooth" })
+      }
+    }, 100)
+  }
 
   return (
     <div className="space-y-6">
@@ -8911,8 +10171,11 @@ export function StatsPanel() {
         <p className="text-sm text-muted-foreground">days to go</p>
       </div>
 
-      {/* CTA Button */}
-      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg">
+      {/* CTA Button - NOW CONNECTED */}
+      <Button
+        onClick={handleBackProject} // <--- Added click handler
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg"
+      >
         Back this project
       </Button>
 
@@ -8950,8 +10213,12 @@ import { useState, useEffect } from "react"
 import { useCampaign } from "@/context/campaign-context"
 
 export function CampaignPage() {
-  const { campaign } = useCampaign() // <--- 1. Hook into Context
+  const { campaign, isLoading } = useCampaign()
   const [activeSection, setActiveSection] = useState("story")
+
+  if (isLoading || !campaign) {
+    return <div className="py-12 text-center text-muted-foreground">Loading campaign...</div>
+  }
 
   const sections = [
     { id: "story", label: "Story" },
@@ -9012,8 +10279,8 @@ export function CampaignPage() {
               key={section.id}
               onClick={() => scrollToSection(section.id)}
               className={`block text-left text-sm transition-all duration-200 ${activeSection === section.id
-                  ? "font-bold text-emerald-600 translate-x-1"
-                  : "text-muted-foreground hover:text-foreground"
+                ? "font-bold text-emerald-600 translate-x-1"
+                : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               {section.label}
@@ -9029,8 +10296,8 @@ export function CampaignPage() {
             key={section.id}
             onClick={() => scrollToSection(section.id)}
             className={`whitespace-nowrap text-sm px-3 py-1 rounded-full transition-colors ${activeSection === section.id
-                ? "bg-emerald-100 text-emerald-800 font-medium"
-                : "text-muted-foreground bg-muted/50"
+              ? "bg-emerald-100 text-emerald-800 font-medium"
+              : "text-muted-foreground bg-muted/50"
               }`}
           >
             {section.label}

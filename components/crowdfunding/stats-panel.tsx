@@ -103,9 +103,7 @@ export function StatsPanel() {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground text-center">
-        All or nothing. This project will only be funded if it reaches its goal by {new Date().toLocaleDateString()}.
-      </p>
+
     </div>
   )
 }

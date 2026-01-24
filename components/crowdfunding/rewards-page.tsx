@@ -9,6 +9,10 @@ export function RewardsPage() {
   // Helper to determine if a reward is active
   const isAvailable = (reward: any) => !reward.isSoldOut
 
+  if (!campaign) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold">Select a Reward</h2>
@@ -18,12 +22,14 @@ export function RewardsPage() {
           <div
             key={reward.id}
             className={`
-              relative border rounded-lg p-6 transition-all duration-200 
+              relative overflow-hidden rounded-2xl p-8 transition-all duration-300 group
               ${isAvailable(reward)
-                ? "border-border hover:border-emerald-500 hover:shadow-md bg-card"
-                : "border-border/50 bg-muted/50 opacity-60 cursor-not-allowed"}
+                ? "bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                : "bg-slate-100 opacity-60 grayscale border border-slate-200 cursor-not-allowed"}
             `}
           >
+            {/* Add a colored accent bar at the top */}
+            <div className={`absolute top-0 left-0 right-0 h-1.5 ${isAvailable(reward) ? "bg-primary" : "bg-gray-300"}`} />
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
               <div>

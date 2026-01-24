@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, ShoppingBag } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-// Define the interface for props to ensure type safety
 interface NavigationTabsProps {
   activeTab: string
   onTabChange: (tab: string) => void
@@ -12,92 +12,93 @@ interface NavigationTabsProps {
 export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const tabs = [
-    { id: "campaign", label: "Campaign" },
+  // We removed "Campaign" from here because the Logo will serve as the "Home/Campaign" link
+  const navLinks = [
     { id: "rewards", label: "Rewards" },
+    { id: "faq", label: "FAQ" },
     { id: "creator", label: "Creator" },
-    { id: "faq", label: "FAQ", count: 36 },
-    { id: "updates", label: "Updates", count: 2 },
-    { id: "comments", label: "Comments", count: 65 },
     { id: "community", label: "Community" },
   ]
 
-  const handleMobileTabClick = (tabId: string) => {
-    onTabChange(tabId)
-    setMobileMenuOpen(false)
-  }
-
   return (
-    <div className="mt-8 border-t border-border bg-background"> {/* Added bg-background for sticky overlap */}
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex flex-wrap gap-x-6 gap-y-2 pt-4 pb-2"> {/* Added pb-2 */}
-        {tabs.map((tab) => (
-          <TabItem
-            key={tab.id}
-            label={tab.label}
-            count={tab.count}
-            id={tab.id}
-            active={activeTab === tab.id}
-            onClick={() => onTabChange(tab.id)}
-          />
-        ))}
-      </nav>
+    <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden pt-4 pb-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">
-            {tabs.find(t => t.id === activeTab)?.label || "Menu"}
-          </span>
+        {/* Left: Logo (Acts as Home/Campaign Link) */}
+        <div className="flex items-center">
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-md hover:bg-muted transition-colors"
-            aria-label="Toggle navigation menu"
+            onClick={() => onTabChange("campaign")}
+            className="text-xl font-bold tracking-tight flex items-center gap-2"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center">D</span>
+            <span>DreamPlay</span>
           </button>
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="absolute right-4 mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
-            <div className="py-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleMobileTabClick(tab.id)}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${activeTab === tab.id
-                      ? "bg-muted text-foreground font-medium"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                >
-                  {tab.label}
-                  {tab.count !== undefined && (
-                    <sup className="ml-1 text-xs text-muted-foreground">{tab.count}</sup>
-                  )}
-                </button>
-              ))}
+        {/* Center: Desktop Links */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => onTabChange(link.id)}
+              className={`text-sm font-medium transition-colors hover:text-primary ${activeTab === link.id ? "text-primary" : "text-muted-foreground"
+                }`}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Right: CTA Button */}
+        <div className="hidden md:flex items-center">
+          <Button
+            onClick={() => onTabChange("rewards")}
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+          >
+            Back this project
+          </Button>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="flex md:hidden">
+          <button
+            type="button"
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-muted-foreground"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border bg-background">
+          <div className="space-y-1 px-4 py-6">
+            <button
+              onClick={() => { onTabChange("campaign"); setMobileMenuOpen(false); }}
+              className="block py-2 text-base font-semibold text-foreground"
+            >
+              Overview
+            </button>
+            {navLinks.map((link) => (
+              <button
+                key={link.id}
+                onClick={() => { onTabChange(link.id); setMobileMenuOpen(false); }}
+                className="block py-2 text-base font-medium text-muted-foreground hover:text-primary"
+              >
+                {link.label}
+              </button>
+            ))}
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }} className="w-full">
+                Back this project
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function TabItem({ label, count, id, active, onClick }: { label: string; count?: number; id: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`text-sm py-2 border-b-2 transition-colors ${active
-          ? "border-foreground text-foreground font-medium"
-          : "border-transparent text-muted-foreground hover:text-foreground"
-        }`}
-    >
-      {label}
-      {count !== undefined && (
-        <sup className="ml-0.5 text-xs text-muted-foreground">{count}</sup>
+        </div>
       )}
-    </button>
+    </nav>
   )
 }

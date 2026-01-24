@@ -96,7 +96,30 @@ export async function updateCreatorProfile(formData: FormData) {
     const name = formData.get("name") as string
     const bio = formData.get("bio") as string
     const location = formData.get("location") as string
-    const avatarUrl = formData.get("avatarUrl") as string
+
+    // Handle File Upload
+    const avatarFile = formData.get("avatarFile") as File
+    let avatarUrl = formData.get("avatarUrl") as string
+
+    if (avatarFile && avatarFile.size > 0) {
+        // 1. Upload file to Supabase Storage
+        const fileExt = avatarFile.name.split('.').pop()
+        const fileName = `avatar-${Date.now()}.${fileExt}`
+        const filePath = `creators/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+            .from('campaign-assets')
+            .upload(filePath, avatarFile)
+
+        if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
+
+        // 2. Get Public URL
+        const { data: urlData } = supabase.storage
+            .from('campaign-assets')
+            .getPublicUrl(filePath)
+
+        avatarUrl = urlData.publicUrl
+    }
 
     const { error } = await supabase
         .from("cf_creator")

@@ -59,38 +59,47 @@ function CrowdfundingContent() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6">
-      <ProjectHeader />
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* 1. Global Header (NavigationTabs moved to TOP) */}
+      <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-      <div id="section-1" className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        <div className="lg:col-span-2">
-          <HeroSection />
+      <main className="flex-1">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+
+          {/* 2. Page Title & Hero */}
+          <div className="mb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <ProjectHeader />
+
+            {/* Hero Grid */}
+            <div id="section-1" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <HeroSection />
+              </div>
+              <div className="lg:col-span-1">
+                <StatsPanel />
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Dynamic Content */}
+          <div id="content-section" className="mb-24 md:mb-0 min-h-[500px]">
+            <div id="rewards-section-anchor" className="scroll-mt-24" />
+
+            {activeTab === "campaign" && <CampaignPage />}
+            {activeTab === "rewards" && <RewardsPage />}
+            {activeTab === "creator" && <CreatorPage />}
+            {activeTab === "faq" && <FAQPage />}
+            {activeTab === "updates" && <SectionPlaceholder title="Updates" />}
+            {activeTab === "comments" && <SectionPlaceholder title="Comments" />}
+            {activeTab === "community" && <SectionPlaceholder title="Community" />}
+          </div>
+
         </div>
-        <div className="lg:col-span-1">
-          <StatsPanel />
-        </div>
-      </div>
-
-      <div ref={navRef} className="scroll-mt-4 sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
-      </div>
-
-      <div id="content-section" className="mb-24 md:mb-0">
-        <div id="rewards-section-anchor" className="scroll-mt-24" />
-        <section className="mt-8 pt-8 border-t border-border min-h-[500px]">
-          {activeTab === "campaign" && <CampaignPage />}
-          {activeTab === "rewards" && <RewardsPage />}
-          {activeTab === "creator" && <CreatorPage />}
-          {activeTab === "faq" && <FAQPage />}
-          {activeTab === "updates" && <SectionPlaceholder title="Updates" />}
-          {activeTab === "comments" && <SectionPlaceholder title="Comments" />}
-          {activeTab === "community" && <SectionPlaceholder title="Community" />}
-        </section>
-      </div>
+      </main>
 
       <MobilePledgeBar />
       <CheckoutDialog />
-    </main>
+    </div>
   )
 }
 
