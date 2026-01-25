@@ -137,3 +137,83 @@ export async function updateCreatorProfile(formData: FormData) {
     revalidatePath("/") // Update public page immediately
     return { success: true }
 }
+
+// Helper to parse CSV respecting quotes
+function parseCSVLine(line: string): string[] {
+    const result = [];
+    let startValueIndex = 0;
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') {
+            inQuotes = !inQuotes;
+        } else if (line[i] === ',' && !inQuotes) {
+            let val = line.substring(startValueIndex, i).trim();
+            // Remove surrounding quotes if present
+            if (val.startsWith('"') && val.endsWith('"')) {
+                val = val.slice(1, -1).replace(/""/g, '"');
+            }
+            result.push(val);
+            startValueIndex = i + 1;
+        }
+    }
+    // Push last value
+    let lastVal = line.substring(startValueIndex).trim();
+    if (lastVal.startsWith('"') && lastVal.endsWith('"')) {
+        lastVal = lastVal.slice(1, -1).replace(/""/g, '"');
+    }
+    result.push(lastVal);
+    return result;
+}
+
+// --- CSV IMPORT ACTION ---
+
+export async function importRewards(formData: FormData) {
+    const file = formData.get("file") as File
+    if (!file) return { success: false, error: "No file provided" }
+
+    const text = await file.text()
+    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0)
+
+    // Assuming Row 1 is header, skip it
+    // Expected Format: Title, Price, Description, Items (comma sep), Delivery, Quantity
+    const dataRows = lines.slice(1)
+    const campaignId = "dreamplay-one"
+    const newRewards = []
+
+    for (const line of dataRows) {
+        const cols = parseCSVLine(line)
+
+        // Safety check for column count
+        if (cols.length < 3) continue
+
+        newRewards.push({
+            id: crypto.randomUUID(),
+            campaign_id: campaignId,
+            title: cols[0] || "Untitled Reward",
+            price: parseFloat(cols[1]) || 0,
+            description: cols[2] || "",
+            items_included: cols[3] ? cols[3].split(';').map(i => i.trim()) : [], // Use ; for items inside CSV
+            estimated_delivery: cols[4] || "TBD",
+            ships_to: ["Anywhere in the world"],
+            limit_quantity: cols[5] ? parseInt(cols[5]) : null,
+            backers_count: 0,
+            is_sold_out: false
+        })
+    }
+
+    if (newRewards.length === 0) {
+        return { success: false, error: "No valid rows found in CSV" }
+    }
+
+    const { error } = await supabase
+        .from("cf_reward")
+        .insert(newRewards)
+
+    if (error) return { success: false, error: error.message }
+
+    revalidatePath("/admin/rewards")
+    revalidatePath("/")
+
+    return { success: true, count: newRewards.length }
+}

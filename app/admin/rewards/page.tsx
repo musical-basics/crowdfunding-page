@@ -26,16 +26,20 @@ import { useCampaign } from "@/context/campaign-context"
 import { CreateRewardDialog } from "@/components/admin/create-reward-dialog" // <--- Import the new component
 import { deleteReward } from "../actions"
 
+import { ImportRewardsButton } from "@/components/admin/import-rewards-button"
+
 export default function AdminRewardsPage() {
-    const { campaign } = useCampaign()
+    const { campaign, refreshCampaign } = useCampaign()
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Manage Rewards</h1>
 
-                {/* Replaced the static button with the functional Dialog */}
-                <CreateRewardDialog />
+                <div className="flex gap-2">
+                    <ImportRewardsButton />
+                    <CreateRewardDialog />
+                </div>
 
             </div>
 
@@ -95,6 +99,7 @@ export default function AdminRewardsPage() {
                                                         className="bg-red-600 hover:bg-red-700"
                                                         onClick={async () => {
                                                             await deleteReward(reward.id)
+                                                            await refreshCampaign()
                                                         }}
                                                     >
                                                         Delete

@@ -18,9 +18,12 @@ import { Plus } from "lucide-react"
 import { createReward } from "@/app/admin/actions" // Import the server action
 import { useToast } from "@/hooks/use-toast"
 
+import { useCampaign } from "@/context/campaign-context"
+
 export function CreateRewardDialog() {
     const [open, setOpen] = useState(false)
     const { toast } = useToast()
+    const { refreshCampaign } = useCampaign()
 
     async function handleSubmit(formData: FormData) {
         const result = await createReward(null, formData)
@@ -32,12 +35,18 @@ export function CreateRewardDialog() {
                 variant: "destructive",
             })
         } else {
+            // Success case
+            setOpen(false) // Close the modal first
+
+            if (refreshCampaign) {
+                await refreshCampaign()
+            }
+
             toast({
                 title: "Success",
                 description: "Reward created successfully",
-                variant: "default", // You can use "success" if you have that variant configured
+                variant: "default",
             })
-            setOpen(false) // Close the modal
         }
     }
 
