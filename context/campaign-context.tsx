@@ -12,6 +12,7 @@ interface CampaignContextType {
     selectedRewardId: string | null
     selectReward: (rewardId: string) => void
     pledge: (amount: number) => void
+    refreshCampaign: () => Promise<void>
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined)
@@ -24,32 +25,39 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     // Stats state
     const [totalPledged, setTotalPledged] = useState(0)
     const [backersCount, setBackersCount] = useState(0)
+
+
     const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null)
+
+    const fetchCampaign = async () => {
+        try {
+            setIsLoading(true)
+            const res = await fetch('/api/campaign')
+
+            if (!res.ok) throw new Error('Failed to fetch campaign')
+
+            const data = await res.json()
+            setCampaign(data)
+
+            // Initialize stats only if they haven't been modified locally (optional, but good practice)
+            // For now, we trust the server source of truth on refresh
+            setTotalPledged(data.stats.totalPledged)
+            setBackersCount(data.stats.totalBackers)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     // Fetch data on mount
     useEffect(() => {
-        async function fetchCampaign() {
-            try {
-                setIsLoading(true)
-                const res = await fetch('/api/campaign')
-
-                if (!res.ok) throw new Error('Failed to fetch campaign')
-
-                const data = await res.json()
-                setCampaign(data)
-
-                // Initialize stats from the fetched data
-                setTotalPledged(data.stats.totalPledged)
-                setBackersCount(data.stats.totalBackers)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'An error occurred')
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
         fetchCampaign()
     }, [])
+
+    const refreshCampaign = () => {
+        return fetchCampaign()
+    }
 
     const selectReward = (rewardId: string) => {
         setSelectedRewardId(rewardId)
@@ -70,7 +78,8 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
                 backersCount,
                 selectedRewardId,
                 selectReward,
-                pledge
+                pledge,
+                refreshCampaign
             }}
         >
             {children}

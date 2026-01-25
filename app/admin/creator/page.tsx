@@ -10,40 +10,82 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { updateCreatorProfile } from "../actions"
 import { useCampaign } from "@/context/campaign-context"
+import { ImageCropper } from "@/components/admin/image-cropper"
+import { Loader2 } from "lucide-react"
 
 export default function CreatorProfilePage() {
     const { toast } = useToast()
-    const { campaign } = useCampaign()
+    const { campaign, refreshCampaign } = useCampaign() // using refreshCampaign
+
+    // UI States
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [isSaving, setIsSaving] = useState(false)
+
+    // Cropper States
+    const [originalImageSrc, setOriginalImageSrc] = useState<string | null>(null)
+    const [isCropperOpen, setIsCropperOpen] = useState(false)
+    const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null)
+
+    // 1. User picks a file -> Read it -> Open Cropper
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.addEventListener("load", () => {
+                setOriginalImageSrc(reader.result as string)
+                setIsCropperOpen(true)
+                // Clear the input so selecting the same file again works if needed
+                e.target.value = ""
+            })
+            reader.readAsDataURL(file)
+        }
+    }
+
+    // 2. User confirms crop
+    const handleCropComplete = (blob: Blob) => {
+        setCroppedBlob(blob)
+        setPreviewUrl(URL.createObjectURL(blob)) // Show cropped preview
+        setIsCropperOpen(false)
+    }
 
     async function handleSubmit(formData: FormData) {
+        setIsSaving(true)
         try {
+            // If we have a cropped blob, we must append it manually 
+            // because the original file input still holds the uncropped file (or is empty if we cleared it)
+            // But actually, we want to SEND the cropped blob.
+            if (croppedBlob) {
+                formData.set("avatarFile", croppedBlob, "avatar-cropped.jpg")
+            }
+
             await updateCreatorProfile(formData)
+
+            // Refresh context to show latest data
+            if (refreshCampaign) {
+                await refreshCampaign()
+            }
+
             toast({
                 title: "Success",
                 description: "Creator profile updated successfully",
                 variant: "default"
             })
         } catch (error) {
+            console.error(error)
             toast({
                 title: "Error",
                 description: "Failed to update profile",
                 variant: "destructive"
             })
-        }
-    }
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            const url = URL.createObjectURL(file)
-            setPreviewUrl(url)
+        } finally {
+            setIsSaving(false)
         }
     }
 
     if (!campaign) return <div className="p-8">Loading creator data...</div>
     const { creator } = campaign
 
+    // Use preview URL if available, otherwise fallback to database URL
     const currentAvatar = previewUrl || creator.avatarUrl
 
     return (
@@ -72,20 +114,28 @@ export default function CreatorProfilePage() {
                             </Avatar>
 
                             <div className="flex-1 gap-2 grid w-full">
-                                <Label htmlFor="avatarFile">Profile Picture</Label>
+                                <Label htmlFor="avatarTrigger">Profile Picture</Label>
 
                                 <div className="flex gap-2">
+                                    {/* Visible Label acting as button */}
+                                    <Label
+                                        htmlFor="avatarTrigger"
+                                        className="cursor-pointer inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                    >
+                                        Choose Image to Crop & Upload...
+                                    </Label>
+
+                                    {/* Hidden Input */}
                                     <Input
-                                        id="avatarFile"
-                                        name="avatarFile"
+                                        id="avatarTrigger"
                                         type="file"
                                         accept="image/*"
                                         onChange={handleFileChange}
-                                        className="cursor-pointer"
+                                        className="hidden"
                                     />
                                 </div>
 
-                                {/* Hidden input to keep old URL if no new file */}
+                                {/* Keep old URL just in case */}
                                 <input type="hidden" name="avatarUrl" value={creator.avatarUrl} />
 
                                 <p className="text-xs text-muted-foreground">
@@ -127,11 +177,22 @@ export default function CreatorProfilePage() {
                 </Card>
 
                 <div className="flex justify-end">
-                    <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 min-w-[150px]">
+                    <Button type="submit" disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 min-w-[150px]">
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Profile
                     </Button>
                 </div>
             </form>
+
+            {/* Cropper Modal */}
+            {originalImageSrc && (
+                <ImageCropper
+                    isOpen={isCropperOpen}
+                    imageSrc={originalImageSrc}
+                    onClose={() => setIsCropperOpen(false)}
+                    onCropComplete={handleCropComplete}
+                />
+            )}
         </div>
     )
 }
