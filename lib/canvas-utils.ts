@@ -28,11 +28,16 @@ export function rotateSize(width: number, height: number, rotation: number) {
 /**
  * This function was adapted from the one in the ReadMe of https://github.com/DominicTobias/react-image-crop
  */
+/**
+ * This function was adapted from the one in the ReadMe of https://github.com/DominicTobias/react-image-crop
+ */
 export default async function getCroppedImg(
     imageSrc: string,
     pixelCrop: { x: number; y: number; width: number; height: number },
     rotation = 0,
-    flip = { horizontal: false, vertical: false }
+    flip = { horizontal: false, vertical: false },
+    maxDimension = 1080, // New: Downscale updates
+    quality = 0.7        // New: Quality control
 ): Promise<Blob | null> {
     const image = await createImage(imageSrc)
     const canvas = document.createElement('canvas')
@@ -64,26 +69,55 @@ export default async function getCroppedImg(
     // draw rotated image
     ctx.drawImage(image, 0, 0)
 
-    // croppedAreaPixels values are bounding box relative
-    // extract the cropped image using these values
-    const data = ctx.getImageData(
+    // --- NEW DOWNSCALING LOGIC ---
+
+    // 1. Calculate the final output size based on maxDimension
+    let targetWidth = pixelCrop.width
+    let targetHeight = pixelCrop.height
+
+    const aspectRatio = targetWidth / targetHeight
+
+    if (targetWidth > maxDimension || targetHeight > maxDimension) {
+        if (targetWidth > targetHeight) {
+            targetWidth = maxDimension
+            targetHeight = Math.round(maxDimension / aspectRatio)
+        } else {
+            targetHeight = maxDimension
+            targetWidth = Math.round(maxDimension * aspectRatio)
+        }
+    }
+
+    // 2. Create a new canvas for the final resized crop
+    const finalCanvas = document.createElement('canvas')
+    finalCanvas.width = targetWidth
+    finalCanvas.height = targetHeight
+    const finalCtx = finalCanvas.getContext('2d')
+
+    if (!finalCtx) {
+        return null
+    }
+
+    // 3. Draw the cropped portion from the rotated canvas onto the final canvas, scaling it down
+    finalCtx.drawImage(
+        canvas,
         pixelCrop.x,
         pixelCrop.y,
         pixelCrop.width,
-        pixelCrop.height
+        pixelCrop.height,
+        0,
+        0,
+        targetWidth,
+        targetHeight
     )
 
-    // set canvas width to final desired crop size - this will clear existing context
-    canvas.width = pixelCrop.width
-    canvas.height = pixelCrop.height
-
-    // paste generated rotate image at the top left corner
-    ctx.putImageData(data, 0, 0)
-
-    // As Blob
+    // 4. Export as Blob with compression
     return new Promise((resolve, reject) => {
-        canvas.toBlob((file) => {
-            resolve(file)
-        }, 'image/jpeg')
+        finalCanvas.toBlob(
+            (file) => {
+                resolve(file)
+            },
+            'image/jpeg',
+            quality // Apply quality compression
+        )
     })
 }
