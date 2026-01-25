@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from "@/lib/supabase"
+import { createAdminClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 // --- CAMPAIGN ACTIONS ---
@@ -15,6 +15,7 @@ export async function updateCampaignDetails(formData: FormData) {
     const goalAmount = formData.get("goal")
     const endsAt = formData.get("endDate")
 
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from("cf_campaign")
         .update({
@@ -107,6 +108,7 @@ export async function updateCreatorProfile(formData: FormData) {
         const fileName = `avatar-${Date.now()}.${fileExt}`
         const filePath = `creators/${fileName}`
 
+        const supabase = createAdminClient()
         const { error: uploadError } = await supabase.storage
             .from('campaign-assets')
             .upload(filePath, avatarFile)

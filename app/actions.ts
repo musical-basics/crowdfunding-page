@@ -1,9 +1,10 @@
 'use server'
 
-import { supabase } from "@/lib/supabase"
+import { createAdminClient } from "@/lib/supabase/server" // <--- Import from new server file
 import { revalidatePath } from "next/cache"
 
 export async function submitPledge(formData: FormData) {
+    const supabase = createAdminClient() // <--- Initialize it here
     const campaignId = "dreamplay-one"
 
     const rewardId = formData.get("rewardId") as string
