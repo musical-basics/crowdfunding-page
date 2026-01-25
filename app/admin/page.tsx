@@ -1,7 +1,20 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DollarSign, Users, Clock } from "lucide-react"
+import { useCampaign } from "@/context/campaign-context"
 
 export default function AdminDashboard() {
+    const { totalPledged, backersCount, campaign } = useCampaign()
+
+    if (!campaign) return <div className="p-8">Loading stats...</div>
+
+    const formattedPledged = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+    }).format(totalPledged)
+
     return (
         <div className="space-y-8">
             <h1 className="text-3xl font-bold">Dashboard Overview</h1>
@@ -13,8 +26,10 @@ export default function AdminDashboard() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">$88,808</div>
-                        <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+                        <div className="text-2xl font-bold">{formattedPledged}</div>
+                        <p className="text-xs text-muted-foreground">
+                            {((totalPledged / campaign.stats.goalAmount) * 100).toFixed(1)}% of goal reached
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -24,8 +39,10 @@ export default function AdminDashboard() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">224</div>
-                        <p className="text-xs text-muted-foreground">+12 since yesterday</p>
+                        <div className="text-2xl font-bold">{backersCount}</div>
+                        <p className="text-xs text-muted-foreground">
+                            Total supporters
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -35,8 +52,10 @@ export default function AdminDashboard() {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">28</div>
-                        <p className="text-xs text-muted-foreground">Ends on Feb 22, 2026</p>
+                        <div className="text-2xl font-bold">{campaign.stats.daysLeft}</div>
+                        <p className="text-xs text-muted-foreground">
+                            Ends on {new Date(new Date().setDate(new Date().getDate() + campaign.stats.daysLeft)).toLocaleDateString()}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
