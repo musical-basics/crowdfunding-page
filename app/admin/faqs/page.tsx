@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, MoreHorizontal } from "lucide-react"
 import {
@@ -16,15 +17,32 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useCampaign } from "@/context/campaign-context"
+import { FAQDialog } from "@/components/admin/faq-dialog" // <--- Import the new dialog
+import { deleteFAQ } from "../actions"
+import { FAQItem } from "@/types/campaign"
 
 export default function AdminFAQPage() {
-    const { campaign } = useCampaign()
+    const { campaign, refreshCampaign } = useCampaign()
+
+    // State to manage the modal
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [selectedFaq, setSelectedFaq] = useState<FAQItem | null>(null)
+
+    const handleEdit = (faq: FAQItem) => {
+        setSelectedFaq(faq)
+        setIsDialogOpen(true)
+    }
+
+    const handleCreate = () => {
+        setSelectedFaq(null) // Clear selection for create mode
+        setIsDialogOpen(true)
+    }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Manage FAQs</h1>
-                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700">
                     <Plus className="mr-2 h-4 w-4" /> Add Question
                 </Button>
             </div>
@@ -48,8 +66,24 @@ export default function AdminFAQPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+
+                                    {/* Connect Edit Button */}
+                                    <DropdownMenuItem onClick={() => handleEdit(faq)}>
+                                        Edit
+                                    </DropdownMenuItem>
+
+                                    {/* Connect Delete Button */}
+                                    <form action={async () => {
+                                        await deleteFAQ(faq.id)
+                                        if (refreshCampaign) await refreshCampaign()
+                                    }}>
+                                        <button type="submit" className="w-full text-left">
+                                            <DropdownMenuItem className="text-red-600 cursor-pointer">
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </button>
+                                    </form>
+
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </CardHeader>
@@ -61,6 +95,13 @@ export default function AdminFAQPage() {
                     </Card>
                 ))}
             </div>
+
+            {/* The Dialog Component */}
+            <FAQDialog
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                faqToEdit={selectedFaq}
+            />
         </div>
     )
 }

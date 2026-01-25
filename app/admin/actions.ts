@@ -257,3 +257,45 @@ export async function bulkCreateRewards(rewards: RewardRow[]) {
 
     return { success: true }
 }
+
+// --- FAQ ACTIONS ---
+
+export async function createFAQ(formData: FormData) {
+    const campaignId = "dreamplay-one"
+
+    const { error } = await supabase
+        .from("cf_faq")
+        .insert({
+            id: crypto.randomUUID(),
+            campaign_id: campaignId,
+            question: formData.get("question"),
+            answer: formData.get("answer"),
+            category: formData.get("category"),
+            order: 0 // Default to 0 for now
+        })
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/faqs")
+    revalidatePath("/")
+    return { success: true }
+}
+
+export async function updateFAQ(formData: FormData) {
+    const id = formData.get("id") as string
+
+    const { error } = await supabase
+        .from("cf_faq")
+        .update({
+            question: formData.get("question"),
+            answer: formData.get("answer"),
+            category: formData.get("category"),
+        })
+        .eq("id", id)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/faqs")
+    revalidatePath("/")
+    return { success: true }
+}
