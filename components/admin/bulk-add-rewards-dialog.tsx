@@ -30,24 +30,21 @@ const EMPTY_ROW = {
 
 export function BulkAddRewardsDialog() {
     const [open, setOpen] = useState(false)
-    const [rows, setRows] = useState([EMPTY_ROW]) // Start with 1 empty row
+    const [rows, setRows] = useState([EMPTY_ROW])
     const [isSaving, setIsSaving] = useState(false)
     const { toast } = useToast()
     const { refreshCampaign } = useCampaign()
 
-    // Add a new blank line
     const addRow = () => {
         setRows([...rows, { ...EMPTY_ROW }])
     }
 
-    // Remove a specific line
     const removeRow = (index: number) => {
-        if (rows.length === 1) return // Prevent deleting the last remaining row
+        if (rows.length === 1) return
         const newRows = rows.filter((_, i) => i !== index)
         setRows(newRows)
     }
 
-    // Handle typing in inputs
     const updateRow = (index: number, field: string, value: string) => {
         const newRows = [...rows]
         // @ts-ignore
@@ -56,7 +53,6 @@ export function BulkAddRewardsDialog() {
     }
 
     const handleSave = async () => {
-        // 1. Basic Validation: Filter out completely empty rows
         const validRows = rows.filter(r => r.title && r.price)
 
         if (validRows.length === 0) {
@@ -66,7 +62,6 @@ export function BulkAddRewardsDialog() {
 
         setIsSaving(true)
 
-        // 2. Convert string inputs to proper types for the server action
         const payload = validRows.map(r => ({
             title: r.title,
             price: parseFloat(r.price),
@@ -76,7 +71,6 @@ export function BulkAddRewardsDialog() {
             quantity: r.quantity ? parseInt(r.quantity) : null
         }))
 
-        // 3. Send to server
         const result = await bulkCreateRewards(payload)
 
         if (result.success) {
@@ -85,8 +79,8 @@ export function BulkAddRewardsDialog() {
             }
 
             toast({ title: "Success", description: `Added ${validRows.length} rewards.` })
-            setRows([EMPTY_ROW]) // Reset form
-            setOpen(false) // Close modal
+            setRows([EMPTY_ROW])
+            setOpen(false)
         } else {
             toast({ title: "Error", description: result.error, variant: "destructive" })
         }
@@ -102,25 +96,27 @@ export function BulkAddRewardsDialog() {
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-6xl w-full">
+            {/* UPDATE: Increased width to 90vw and added max height */}
+            <DialogContent className="max-w-[95vw] w-full max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Bulk Add Rewards</DialogTitle>
                     <DialogDescription>
-                        Add multiple rewards at once. Use the "Add Row" button to create more lines.
+                        Add multiple rewards at once.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="max-h-[60vh] overflow-y-auto border rounded-md">
+                {/* Scrollable container for the table */}
+                <div className="flex-1 overflow-y-auto border rounded-md min-h-[300px]">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-secondary z-10">
                             <TableRow>
-                                <TableHead className="min-w-[150px]">Title</TableHead>
-                                <TableHead className="w-[100px]">Price ($)</TableHead>
-                                <TableHead className="min-w-[200px]">Description</TableHead>
-                                <TableHead className="min-w-[150px]">Items (comma sep)</TableHead>
-                                <TableHead className="min-w-[120px]">Delivery</TableHead>
-                                <TableHead className="w-[80px]">Qty</TableHead>
-                                <TableHead className="w-[50px]"></TableHead>
+                                <TableHead className="min-w-[200px]">Title</TableHead>
+                                <TableHead className="w-[120px]">Price ($)</TableHead>
+                                <TableHead className="min-w-[300px]">Description</TableHead>
+                                <TableHead className="min-w-[200px]">Items (comma sep)</TableHead>
+                                <TableHead className="min-w-[150px]">Delivery</TableHead>
+                                <TableHead className="w-[100px]">Qty</TableHead>
+                                <TableHead className="w-[60px]"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -187,18 +183,18 @@ export function BulkAddRewardsDialog() {
                     </Table>
                 </div>
 
-                <div className="flex justify-center py-2 border-b">
+                <div className="flex justify-between py-2 border-t pt-4">
                     <Button variant="ghost" onClick={addRow} className="gap-2 text-primary hover:text-primary hover:bg-primary/10">
                         <Plus className="h-4 w-4" /> Add New Row
                     </Button>
-                </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
-                        {isSaving ? "Saving..." : "Save All Rewards"}
-                    </Button>
-                </DialogFooter>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
+                            {isSaving ? "Saving..." : "Save All Rewards"}
+                        </Button>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     )
