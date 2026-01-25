@@ -17,30 +17,28 @@ interface CampaignContextType {
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined)
 
-export function CampaignProvider({ children }: { children: ReactNode }) {
-    const [campaign, setCampaign] = useState<Campaign | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
+// ADD: initialData prop
+export function CampaignProvider({ children, initialData }: { children: ReactNode, initialData?: Campaign | null }) {
+    // CHANGE: Initialize with initialData if present
+    const [campaign, setCampaign] = useState<Campaign | null>(initialData || null)
+    const [isLoading, setIsLoading] = useState(!initialData)
     const [error, setError] = useState<string | null>(null)
 
-    // Stats state
-    const [totalPledged, setTotalPledged] = useState(0)
-    const [backersCount, setBackersCount] = useState(0)
-
+    // Initialize stats from server data immediately
+    const [totalPledged, setTotalPledged] = useState(initialData?.stats.totalPledged || 0)
+    const [backersCount, setBackersCount] = useState(initialData?.stats.totalBackers || 0)
 
     const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null)
 
     const fetchCampaign = async () => {
         try {
-            setIsLoading(true)
+            // Optional: Don't set loading true if we are just refreshing
             const res = await fetch('/api/campaign')
-
             if (!res.ok) throw new Error('Failed to fetch campaign')
-
             const data = await res.json()
             setCampaign(data)
 
-            // Initialize stats only if they haven't been modified locally (optional, but good practice)
-            // For now, we trust the server source of truth on refresh
+            // Only update these on fresh fetches to avoid jitter
             setTotalPledged(data.stats.totalPledged)
             setBackersCount(data.stats.totalBackers)
         } catch (err) {
@@ -50,10 +48,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Fetch data on mount
+    // CHANGE: Only fetch on mount if we DON'T have initialData
     useEffect(() => {
-        fetchCampaign()
-    }, [])
+        if (!initialData) {
+            fetchCampaign()
+        }
+    }, [initialData])
 
     const refreshCampaign = () => {
         return fetchCampaign()

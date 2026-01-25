@@ -6,6 +6,8 @@ import './globals.css'
 
 import { CampaignProvider } from "@/context/campaign-context"
 
+import { getCampaignData } from "@/lib/campaign"
+
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
@@ -32,15 +34,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Fetch data on the server
+  const campaignData = await getCampaignData()
+
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <CampaignProvider>
+        <CampaignProvider initialData={campaignData}>
           {children}
         </CampaignProvider>
         <Analytics />
