@@ -217,3 +217,43 @@ export async function importRewards(formData: FormData) {
 
     return { success: true, count: newRewards.length }
 }
+
+// Define the type for our bulk insert payload
+type RewardRow = {
+    title: string
+    price: number
+    description: string
+    items: string
+    delivery: string
+    quantity: number | null
+}
+
+export async function bulkCreateRewards(rewards: RewardRow[]) {
+    const campaignId = "dreamplay-one"
+
+    // Transform the rows into the database format
+    const dbPayload = rewards.map(r => ({
+        id: crypto.randomUUID(),
+        campaign_id: campaignId,
+        title: r.title,
+        price: r.price,
+        description: r.description,
+        items_included: r.items ? r.items.split(',').map(i => i.trim()) : [],
+        estimated_delivery: r.delivery,
+        limit_quantity: r.quantity && r.quantity > 0 ? r.quantity : null,
+        ships_to: ["Anywhere in the world"],
+        is_sold_out: false,
+        backers_count: 0
+    }))
+
+    const { error } = await supabase
+        .from("cf_reward")
+        .insert(dbPayload)
+
+    if (error) return { success: false, error: error.message }
+
+    revalidatePath("/admin/rewards")
+    revalidatePath("/")
+
+    return { success: true }
+}

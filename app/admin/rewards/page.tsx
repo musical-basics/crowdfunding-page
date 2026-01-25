@@ -27,6 +27,7 @@ import { CreateRewardDialog } from "@/components/admin/create-reward-dialog" // 
 import { deleteReward } from "../actions"
 
 import { ImportRewardsButton } from "@/components/admin/import-rewards-button"
+import { BulkAddRewardsDialog } from "@/components/admin/bulk-add-rewards-dialog"
 
 export default function AdminRewardsPage() {
     const { campaign, refreshCampaign } = useCampaign()
@@ -37,6 +38,7 @@ export default function AdminRewardsPage() {
                 <h1 className="text-3xl font-bold">Manage Rewards</h1>
 
                 <div className="flex gap-2">
+                    <BulkAddRewardsDialog />
                     <ImportRewardsButton />
                     <CreateRewardDialog />
                 </div>
