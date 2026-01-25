@@ -97,7 +97,7 @@ export function BulkAddRewardsDialog() {
             </DialogTrigger>
 
             {/* UPDATE: Increased width to 90vw and added max height */}
-            <DialogContent className="max-w-[95vw] w-full max-h-[90vh] flex flex-col">
+            <DialogContent className="sm:max-w-[95vw] w-full max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Bulk Add Rewards</DialogTitle>
                     <DialogDescription>
