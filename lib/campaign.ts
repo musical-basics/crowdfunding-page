@@ -1,18 +1,19 @@
 import { createAdminClient } from "@/lib/supabase/server"
 import { Campaign } from "@/types/campaign"
 
-export async function getCampaignData(): Promise<Campaign | null> {
+export async function getCampaignData(slug: string): Promise<Campaign | null> {
     const supabase = createAdminClient()
-    const campaignId = 'dreamplay-one'
 
     // 1. Fetch Campaign & Creator
     const { data: campaignData, error } = await supabase
         .from('cf_campaign')
         .select(`*, creator:cf_creator(*)`)
-        .eq('id', campaignId)
+        .eq('id', slug)
         .single()
 
     if (error || !campaignData) return null
+
+    const campaignId = campaignData.id
 
     // 2. Fetch Rewards
     const { data: rewardsData } = await supabase

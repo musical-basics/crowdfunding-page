@@ -1,7 +1,5 @@
-"use client"
-
-import { CrowdfundingPage } from "@/components/crowdfunding-page"
+import { redirect } from 'next/navigation'
 
 export default function Page() {
-  return <CrowdfundingPage />
+  redirect('/dreamplay-one')
 }

@@ -4,9 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-import { CampaignProvider } from "@/context/campaign-context"
 
-import { getCampaignData } from "@/lib/campaign"
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -39,15 +37,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Fetch data on the server
-  const campaignData = await getCampaignData()
+
 
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <CampaignProvider initialData={campaignData}>
-          {children}
-        </CampaignProvider>
+        {children}
         <Analytics />
       </body>
     </html>
