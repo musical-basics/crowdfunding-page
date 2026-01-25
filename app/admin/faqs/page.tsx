@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, MoreHorizontal } from "lucide-react"
+import { Plus, Edit, Trash } from "lucide-react"
 import {
     Card,
     CardContent,
@@ -11,11 +11,16 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { useCampaign } from "@/context/campaign-context"
 import { FAQDialog } from "@/components/admin/faq-dialog" // <--- Import the new dialog
 import { deleteFAQ } from "../actions"
@@ -59,33 +64,45 @@ export default function AdminFAQPage() {
                                     Category: <span className="font-medium text-foreground">{faq.category}</span>
                                 </CardDescription>
                             </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
 
-                                    {/* Connect Edit Button */}
-                                    <DropdownMenuItem onClick={() => handleEdit(faq)}>
-                                        Edit
-                                    </DropdownMenuItem>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => handleEdit(faq)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
 
-                                    {/* Connect Delete Button */}
-                                    <form action={async () => {
-                                        await deleteFAQ(faq.id)
-                                        if (refreshCampaign) await refreshCampaign()
-                                    }}>
-                                        <button type="submit" className="w-full text-left">
-                                            <DropdownMenuItem className="text-red-600 cursor-pointer">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        >
+                                            <Trash className="h-4 w-4" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete this question.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                className="bg-red-600 hover:bg-red-700"
+                                                onClick={async () => {
+                                                    await deleteFAQ(faq.id)
+                                                    if (refreshCampaign) await refreshCampaign()
+                                                }}
+                                            >
                                                 Delete
-                                            </DropdownMenuItem>
-                                        </button>
-                                    </form>
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
 
-                                </DropdownMenuContent>
-                            </DropdownMenu>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-muted-foreground line-clamp-2">
