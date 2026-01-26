@@ -285,6 +285,7 @@ export async function createFAQ(formData: FormData) {
 
 export async function updateFAQ(formData: FormData) {
     const id = formData.get("id") as string
+    const supabase = createAdminClient()
 
     const { error } = await supabase
         .from("cf_faq")
@@ -300,4 +301,43 @@ export async function updateFAQ(formData: FormData) {
     revalidatePath("/admin/faqs")
     revalidatePath("/")
     return { success: true }
+}
+
+// --- SETTINGS ACTIONS ---
+
+export async function recalculateCampaignStats() {
+    const campaignId = "dreamplay-one"
+    const supabase = createAdminClient()
+
+    // 1. Calculate Totals from scratch (The Source of Truth)
+    const { data, error } = await supabase
+        .from('cf_pledge')
+        .select('amount')
+        .eq('campaign_id', campaignId)
+        .eq('status', 'succeeded')
+
+    if (error) throw new Error(error.message)
+
+    // 2. Perform the math
+    const totalPledged = data.reduce((sum, row) => sum + Number(row.amount), 0)
+    const totalBackers = data.length
+
+    // 3. Overwrite the Campaign Table
+    const { error: updateError } = await supabase
+        .from('cf_campaign')
+        .update({
+            total_pledged: totalPledged,
+            total_backers: totalBackers
+        })
+        .eq('id', campaignId)
+
+    if (updateError) throw new Error(updateError.message)
+
+    revalidatePath("/")
+    revalidatePath("/admin")
+
+    return {
+        success: true,
+        stats: { totalPledged, totalBackers }
+    }
 }
