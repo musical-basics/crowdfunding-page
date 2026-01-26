@@ -3,7 +3,6 @@
 import { useRef, Suspense } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import { useCampaign } from "@/context/campaign-context" // <--- Import Hook
-import { SuccessBanner } from "./crowdfunding/success-banner"
 import { ProjectHeader } from "./crowdfunding/project-header"
 import { HeroSection } from "./crowdfunding/hero-section"
 import { StatsPanel } from "./crowdfunding/stats-panel"
@@ -116,7 +115,6 @@ function CrowdfundingContent() {
 export function CrowdfundingPage() {
   return (
     <div className="min-h-screen bg-background">
-      <SuccessBanner />
       <Suspense fallback={<div className="h-screen" />}>
         <CrowdfundingContent />
       </Suspense>

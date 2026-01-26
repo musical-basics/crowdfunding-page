@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+import Image from "next/image" // <--- Import Image
+
 interface SiteHeaderProps {
     onTabChange: (tab: string) => void
 }
@@ -19,10 +21,16 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                 <div className="flex items-center">
                     <button
                         onClick={() => onTabChange("campaign")}
-                        className="text-xl font-bold tracking-tight flex items-center gap-2"
+                        className="flex items-center gap-2"
                     >
-                        <span className="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center">D</span>
-                        <span>DreamPlay</span>
+                        <Image
+                            src="/images/DP update_DP outline black2.png"
+                            alt="DreamPlay"
+                            width={150}
+                            height={40}
+                            className="h-8 w-auto object-contain"
+                            priority
+                        />
                     </button>
                 </div>
 
