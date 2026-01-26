@@ -1,5 +1,10 @@
 "use client"
 
+interface NavigationTabsProps {
+  activeTab: string
+  onTabChange: (tab: string) => void
+}
+
 export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
 
   // We removed "Campaign" from here because the Logo will serve as the "Home/Campaign" link
@@ -10,7 +15,6 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
     { id: "community", label: "Community" },
   ]
 
-  return (
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-t border-white/10 bg-background/95 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-center px-4 sm:px-6 lg:px-8">
