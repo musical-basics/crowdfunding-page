@@ -61,7 +61,7 @@ function CrowdfundingContent() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* 1. Global Header (NavigationTabs moved to TOP) */}
-      <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
+
 
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -80,7 +80,11 @@ function CrowdfundingContent() {
               </div>
             </div>
           </div>
+        </div>
 
+        <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
+
+        <div className="max-w-6xl mx-auto px-4 py-8">
           {/* 3. Dynamic Content */}
           <div id="content-section" className="mb-24 md:mb-0 min-h-[500px]">
             <div id="rewards-section-anchor" className="scroll-mt-24" />

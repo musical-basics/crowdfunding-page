@@ -11,12 +11,13 @@ import { useCampaign } from "@/context/campaign-context"
 
 export default function CampaignDetailsEditor() {
     const { toast } = useToast()
-    const { campaign } = useCampaign() // Load current data to populate defaults
+    const { campaign, refreshCampaign } = useCampaign() // Load current data to populate defaults
 
     // Wrapper to handle the server action response
     async function handleSubmit(formData: FormData) {
         try {
             await updateCampaignDetails(formData)
+            await refreshCampaign() // Refresh client state immediately
             toast({
                 title: "Success",
                 description: "Campaign updated successfully",
