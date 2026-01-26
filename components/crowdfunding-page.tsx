@@ -7,6 +7,7 @@ import { SuccessBanner } from "./crowdfunding/success-banner"
 import { ProjectHeader } from "./crowdfunding/project-header"
 import { HeroSection } from "./crowdfunding/hero-section"
 import { StatsPanel } from "./crowdfunding/stats-panel"
+import { SiteHeader } from "./crowdfunding/site-header" // <--- Import
 import { NavigationTabs } from "./crowdfunding/navigation-tabs"
 import { CampaignPage } from "./crowdfunding/campaign-page"
 import { RewardsPage } from "./crowdfunding/rewards-page"
@@ -53,14 +54,19 @@ function CrowdfundingContent() {
     const params = new URLSearchParams(searchParams.toString())
     params.set("tab", tabId)
     router.push(`${pathname}?${params.toString()}`, { scroll: false })
-    setTimeout(() => {
-      navRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    }, 50)
+    // If clicking a tab, we probably want to scroll to content
+    if (tabId !== "campaign") {
+      setTimeout(() => {
+        // Find the tabs element? Or just scroll to top of content
+        // navRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 50)
+    }
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* 1. Global Header (NavigationTabs moved to TOP) */}
+      {/* 1. Global Header (Logo + CTA) */}
+      <SiteHeader onTabChange={handleTabChange} />
 
 
       <main className="flex-1">
