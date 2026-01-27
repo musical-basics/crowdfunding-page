@@ -15,6 +15,14 @@ export async function updateCampaignDetails(formData: FormData) {
     const goalAmount = formData.get("goal")
     const endsAt = formData.get("endDate")
 
+    // Parse JSON fields
+    const keyFeaturesJson = formData.get("key_features_json") as string
+    const techSpecsJson = formData.get("tech_specs_json") as string
+
+    // Default to empty array if valid JSON isn't provided (though UI sends [])
+    const keyFeatures = keyFeaturesJson ? JSON.parse(keyFeaturesJson) : []
+    const techSpecs = techSpecsJson ? JSON.parse(techSpecsJson) : []
+
     // Handle Gallery Images
     // 1. Parse existing (kept) images
     const existingImagesJson = formData.get("existing_gallery_images") as string
@@ -60,7 +68,9 @@ export async function updateCampaignDetails(formData: FormData) {
             risks,
             goal_amount: goalAmount,
             ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined,
-            gallery_images: galleryImages
+            gallery_images: galleryImages,
+            key_features: keyFeatures,
+            tech_specs: techSpecs
         })
         .eq("id", id)
 
@@ -137,6 +147,8 @@ export async function updateCreatorProfile(formData: FormData) {
     const bio = formData.get("bio") as string
     const location = formData.get("location") as string
 
+    const supabase = createAdminClient() // Move to top scope
+
     // Handle File Upload
     const avatarFile = formData.get("avatarFile") as File
     let avatarUrl = formData.get("avatarUrl") as string
@@ -147,7 +159,6 @@ export async function updateCreatorProfile(formData: FormData) {
         const fileName = `avatar-${Date.now()}.${fileExt}`
         const filePath = `creators/${fileName}`
 
-        const supabase = createAdminClient()
         const { error: uploadError } = await supabase.storage
             .from('campaign-assets')
             .upload(filePath, avatarFile)

@@ -37,6 +37,17 @@ export interface CampaignStats {
     daysLeft: number;
 }
 
+export interface KeyFeature {
+    icon: string;
+    title: string;
+    desc: string;
+}
+
+export interface TechSpec {
+    label: string;
+    value: string;
+}
+
 export interface Campaign {
     id: string;
     title: string;
@@ -51,4 +62,6 @@ export interface Campaign {
     creator: Creator;
     rewards: Reward[];
     faqs: FAQItem[];
+    keyFeatures: KeyFeature[];
+    techSpecs: TechSpec[];
 }

@@ -115,12 +115,12 @@ export function CampaignPage() {
         <section id="features" className="scroll-mt-24 pt-8 border-t border-border">
           <h3 className="text-2xl font-bold mb-6">Key Features</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
+            {(campaign.keyFeatures?.length > 0 ? campaign.keyFeatures : [
               { icon: "🎹", title: "Narrower Keys", desc: "15/16th size for ergonomic reach." },
               { icon: "🔊", title: "Pro Sound Engine", desc: "Sampled from a 9ft Concert Grand." },
               { icon: "🔋", title: "Portable Power", desc: "Built-in battery for 8 hours of play." },
               { icon: "📱", title: "Bluetooth MIDI", desc: "Connect instantly to your tablet." },
-            ].map((feature, idx) => (
+            ]).map((feature, idx) => (
               <div key={idx} className="p-6 rounded-xl border border-border bg-card/50">
                 <div className="text-3xl mb-3">{feature.icon}</div>
                 <h4 className="font-semibold mb-1">{feature.title}</h4>
@@ -136,10 +136,21 @@ export function CampaignPage() {
           <div className="rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
               <tbody className="divide-y divide-border">
-                <tr className="bg-muted/30"><td className="p-4 font-medium">Dimensions</td><td className="p-4 text-muted-foreground">120cm x 30cm x 10cm</td></tr>
-                <tr><td className="p-4 font-medium">Weight</td><td className="p-4 text-muted-foreground">12kg (26 lbs)</td></tr>
-                <tr className="bg-muted/30"><td className="p-4 font-medium">Connectivity</td><td className="p-4 text-muted-foreground">USB-C, Bluetooth 5.0, MIDI</td></tr>
-                <tr><td className="p-4 font-medium">Power</td><td className="p-4 text-muted-foreground">Internal Battery (8hrs) or AC Adapter</td></tr>
+                {campaign.techSpecs?.length > 0 ? (
+                  campaign.techSpecs.map((spec, idx) => (
+                    <tr key={idx} className={idx % 2 === 0 ? "bg-muted/30" : ""}>
+                      <td className="p-4 font-medium">{spec.label}</td>
+                      <td className="p-4 text-muted-foreground">{spec.value}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <>
+                    <tr className="bg-muted/30"><td className="p-4 font-medium">Dimensions</td><td className="p-4 text-muted-foreground">120cm x 30cm x 10cm</td></tr>
+                    <tr><td className="p-4 font-medium">Weight</td><td className="p-4 text-muted-foreground">12kg (26 lbs)</td></tr>
+                    <tr className="bg-muted/30"><td className="p-4 font-medium">Connectivity</td><td className="p-4 text-muted-foreground">USB-C, Bluetooth 5.0, MIDI</td></tr>
+                    <tr><td className="p-4 font-medium">Power</td><td className="p-4 text-muted-foreground">Internal Battery (8hrs) or AC Adapter</td></tr>
+                  </>
+                )}
               </tbody>
             </table>
           </div>

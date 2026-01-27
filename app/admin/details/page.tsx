@@ -9,11 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import { updateCampaignDetails } from "../actions" // <--- Import the action
 import { useCampaign } from "@/context/campaign-context"
+import { KeyFeature, TechSpec } from "@/types/campaign"
+import { Plus, Trash2 } from "lucide-react"
 
 export default function CampaignDetailsEditor() {
     const { toast } = useToast()
     const { campaign, refreshCampaign } = useCampaign() // Load current data to populate defaults
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
+    const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
+    const [techSpecs, setTechSpecs] = useState<TechSpec[]>(campaign?.techSpecs || [])
 
     // Wrapper to handle the server action response
     async function handleSubmit(formData: FormData) {
@@ -155,6 +159,147 @@ export default function CampaignDetailsEditor() {
                         />
                     </CardContent>
                 </Card>
+
+                {/* Key Features Editor */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Key Features</CardTitle>
+                            <CardDescription>Add the main selling points (Icon + Title + Desc)</CardDescription>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setKeyFeatures([...keyFeatures, { icon: "✨", title: "", desc: "" }])}
+                        >
+                            <Plus className="h-4 w-4 mr-2" /> Add Feature
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {keyFeatures.map((feature, idx) => (
+                            <div key={idx} className="flex gap-4 items-start border p-4 rounded-md bg-muted/20">
+                                <div className="w-16">
+                                    <Label className="text-xs">Icon</Label>
+                                    <Input
+                                        value={feature.icon}
+                                        onChange={(e) => {
+                                            const newFeatures = [...keyFeatures]
+                                            newFeatures[idx].icon = e.target.value
+                                            setKeyFeatures(newFeatures)
+                                        }}
+                                        className="text-center text-xl"
+                                    />
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                    <div>
+                                        <Label className="text-xs">Title</Label>
+                                        <Input
+                                            value={feature.title}
+                                            onChange={(e) => {
+                                                const newFeatures = [...keyFeatures]
+                                                newFeatures[idx].title = e.target.value
+                                                setKeyFeatures(newFeatures)
+                                            }}
+                                            placeholder="Feature Title"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label className="text-xs">Description</Label>
+                                        <Input
+                                            value={feature.desc}
+                                            onChange={(e) => {
+                                                const newFeatures = [...keyFeatures]
+                                                newFeatures[idx].desc = e.target.value
+                                                setKeyFeatures(newFeatures)
+                                            }}
+                                            placeholder="Short description"
+                                        />
+                                    </div>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => {
+                                        const newFeatures = [...keyFeatures]
+                                        newFeatures.splice(idx, 1)
+                                        setKeyFeatures(newFeatures)
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                        {keyFeatures.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No features added yet.</p>}
+                    </CardContent>
+                </Card>
+
+                {/* Tech Specs Editor */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Technical Specs</CardTitle>
+                            <CardDescription>Add specification details (Label + Value)</CardDescription>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setTechSpecs([...techSpecs, { label: "", value: "" }])}
+                        >
+                            <Plus className="h-4 w-4 mr-2" /> Add Spec
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {techSpecs.map((spec, idx) => (
+                            <div key={idx} className="flex gap-4 items-end border p-4 rounded-md bg-muted/20">
+                                <div className="flex-1">
+                                    <Label className="text-xs">Label</Label>
+                                    <Input
+                                        value={spec.label}
+                                        onChange={(e) => {
+                                            const newSpecs = [...techSpecs]
+                                            newSpecs[idx].label = e.target.value
+                                            setTechSpecs(newSpecs)
+                                        }}
+                                        placeholder="e.g. Weight"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Label className="text-xs">Value</Label>
+                                    <Input
+                                        value={spec.value}
+                                        onChange={(e) => {
+                                            const newSpecs = [...techSpecs]
+                                            newSpecs[idx].value = e.target.value
+                                            setTechSpecs(newSpecs)
+                                        }}
+                                        placeholder="e.g. 12kg"
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => {
+                                        const newSpecs = [...techSpecs]
+                                        newSpecs.splice(idx, 1)
+                                        setTechSpecs(newSpecs)
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                        {techSpecs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added yet.</p>}
+                    </CardContent>
+                </Card>
+
+                <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
+                <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
 
                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
                     Save All Changes
