@@ -34,6 +34,46 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                     </button>
                 </div>
 
+                {/* Center: Navigation Links (Desktop) */}
+                <nav className="hidden md:flex items-center">
+                    <div className="flex items-center gap-1 backdrop-blur-xl bg-white/5 border border-white/10 rounded-full px-4 py-1">
+                        <button
+                            onClick={() => onTabChange("campaign")}
+                            className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
+                        >
+                            Overview
+                        </button>
+                        <div className="w-px h-4 bg-white/20" />
+                        <button
+                            onClick={() => onTabChange("rewards")}
+                            className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
+                        >
+                            Rewards
+                        </button>
+                        <div className="w-px h-4 bg-white/20" />
+                        <button
+                            onClick={() => onTabChange("faq")}
+                            className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
+                        >
+                            FAQ
+                        </button>
+                        <div className="w-px h-4 bg-white/20" />
+                        <button
+                            onClick={() => onTabChange("creator")}
+                            className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
+                        >
+                            Creator
+                        </button>
+                        <div className="w-px h-4 bg-white/20" />
+                        <button
+                            onClick={() => onTabChange("community")}
+                            className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
+                        >
+                            Community
+                        </button>
+                    </div>
+                </nav>
+
                 {/* Right: CTA + Mobile Menu */}
                 <div className="flex items-center gap-4">
                     {/* Desktop CTA */}
