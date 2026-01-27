@@ -77,23 +77,23 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
                             {/* Dropdown Menu */}
                             <div
-                                className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-xl border border-black/5 bg-white shadow-2xl overflow-hidden transition-all duration-200 ${showAboutDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
+                                className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden transition-all duration-200 z-50 isolate ${showAboutDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
                             >
                                 <Link
                                     href="https://dreamplaypianos.com/our-story"
-                                    className="block px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5 transition-colors"
+                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                                 >
                                     Our Story
                                 </Link>
                                 <Link
                                     href="https://dreamplaypianos.com/about-us/ds-standard"
-                                    className="block px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5 transition-colors"
+                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                                 >
                                     The DS Standard
                                 </Link>
                                 <Link
                                     href="https://blog.dreamplaypianos.com/blog"
-                                    className="block px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5 transition-colors"
+                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                                 >
                                     Our Blog
                                 </Link>
@@ -117,17 +117,17 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
                             {/* Dropdown Menu */}
                             <div
-                                className={`absolute top-full right-0 mt-2 w-48 rounded-xl border border-black/5 bg-white shadow-2xl overflow-hidden transition-all duration-200 ${showPoliciesDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
+                                className={`absolute top-full right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden transition-all duration-200 z-50 isolate ${showPoliciesDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
                             >
                                 <Link
                                     href="https://dreamplaypianos.com/information-and-policies/faq"
-                                    className="block px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5 transition-colors"
+                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                                 >
                                     FAQ
                                 </Link>
                                 <Link
                                     href="https://dreamplaypianos.com/information-and-policies/shipping"
-                                    className="block px-4 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5 transition-colors"
+                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                                 >
                                     Shipping
                                 </Link>
