@@ -77,7 +77,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
                             {/* Dropdown Menu */}
                             <div
-                                className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-xl border border-white/10 bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden transition-all duration-200 ${showAboutDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
+                                className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-xl border border-black/5 bg-white shadow-2xl overflow-hidden transition-all duration-200 ${showAboutDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
                             >
                                 <Link
                                     href="https://dreamplaypianos.com/our-story"
@@ -117,7 +117,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
                             {/* Dropdown Menu */}
                             <div
-                                className={`absolute top-full right-0 mt-2 w-48 rounded-xl border border-white/10 bg-background/95 backdrop-blur-xl shadow-xl overflow-hidden transition-all duration-200 ${showPoliciesDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
+                                className={`absolute top-full right-0 mt-2 w-48 rounded-xl border border-black/5 bg-white shadow-2xl overflow-hidden transition-all duration-200 ${showPoliciesDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
                             >
                                 <Link
                                     href="https://dreamplaypianos.com/information-and-policies/faq"
