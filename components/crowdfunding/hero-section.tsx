@@ -94,12 +94,7 @@ export function HeroSection() {
           </Button>
         </div>
 
-        {/* Badges Overlay */}
-        <div className="absolute top-4 left-4 flex gap-2 pointer-events-none">
-          <Badge variant="secondary" className="bg-white/90 text-emerald-700 font-semibold shadow-sm backdrop-blur-sm">
-            Project We Love
-          </Badge>
-        </div>
+
       </div>
 
       <Lightbox
