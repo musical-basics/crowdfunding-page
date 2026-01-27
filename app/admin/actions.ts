@@ -15,7 +15,42 @@ export async function updateCampaignDetails(formData: FormData) {
     const goalAmount = formData.get("goal")
     const endsAt = formData.get("endDate")
 
+    // Handle Gallery Images
+    // 1. Parse existing (kept) images
+    const existingImagesJson = formData.get("existing_gallery_images") as string
+    let galleryImages: string[] = existingImagesJson ? JSON.parse(existingImagesJson) : []
+
+    // 2. Handle new file uploads
+    const newFiles = formData.getAll("new_gallery_images") as File[]
+
+    // We need a supabase client for storage uploads
     const supabase = createAdminClient()
+
+    if (newFiles && newFiles.length > 0) {
+        for (const file of newFiles) {
+            if (file.size > 0) {
+                const fileExt = file.name.split('.').pop()
+                const fileName = `gallery-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+                const filePath = `campaign-gallery/${fileName}`
+
+                const { error: uploadError } = await supabase.storage
+                    .from('campaign-assets')
+                    .upload(filePath, file)
+
+                if (uploadError) {
+                    console.error("Upload failed:", uploadError)
+                    continue // Skip failed uploads but continue with others
+                }
+
+                const { data: urlData } = supabase.storage
+                    .from('campaign-assets')
+                    .getPublicUrl(filePath)
+
+                galleryImages.push(urlData.publicUrl)
+            }
+        }
+    }
+
     const { error } = await supabase
         .from("cf_campaign")
         .update({
@@ -24,7 +59,8 @@ export async function updateCampaignDetails(formData: FormData) {
             story,
             risks,
             goal_amount: goalAmount,
-            ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined
+            ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined,
+            gallery_images: galleryImages
         })
         .eq("id", id)
 
@@ -39,6 +75,7 @@ export async function updateCampaignDetails(formData: FormData) {
 // --- REWARD ACTIONS ---
 
 export async function deleteReward(rewardId: string) {
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from("cf_reward")
         .delete()
@@ -53,6 +90,7 @@ export async function deleteReward(rewardId: string) {
 
 export async function createReward(prevState: any, formData: FormData) {
     const campaignId = "dreamplay-one"
+    const supabase = createAdminClient()
 
     const { error } = await supabase
         .from("cf_reward")
@@ -77,6 +115,7 @@ export async function createReward(prevState: any, formData: FormData) {
 // --- FAQ ACTIONS ---
 
 export async function deleteFAQ(faqId: string) {
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from("cf_faq")
         .delete()
@@ -174,6 +213,8 @@ export async function importRewards(formData: FormData) {
     const file = formData.get("file") as File
     if (!file) return { success: false, error: "No file provided" }
 
+    const supabase = createAdminClient()
+
     const text = await file.text()
     const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0)
 
@@ -232,6 +273,7 @@ type RewardRow = {
 
 export async function bulkCreateRewards(rewards: RewardRow[]) {
     const campaignId = "dreamplay-one"
+    const supabase = createAdminClient()
 
     // Transform the rows into the database format
     const dbPayload = rewards.map(r => ({
@@ -264,6 +306,7 @@ export async function bulkCreateRewards(rewards: RewardRow[]) {
 
 export async function createFAQ(formData: FormData) {
     const campaignId = "dreamplay-one"
+    const supabase = createAdminClient()
 
     const { error } = await supabase
         .from("cf_faq")

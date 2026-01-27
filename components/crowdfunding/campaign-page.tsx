@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useCampaign } from "@/context/campaign-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -98,8 +99,13 @@ export function CampaignPage() {
           {/* Gallery Insert */}
           <div className="grid grid-cols-2 gap-4 my-8">
             {campaign.images.gallery.map((img, idx) => (
-              <div key={idx} className="aspect-video bg-muted rounded-lg border border-border flex items-center justify-center text-muted-foreground text-sm">
-                Gallery Image {idx + 1}
+              <div key={idx} className="relative aspect-video bg-muted rounded-lg border border-border overflow-hidden">
+                <Image
+                  src={img}
+                  alt={`Gallery Image ${idx + 1}`}
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-500"
+                />
               </div>
             ))}
           </div>
