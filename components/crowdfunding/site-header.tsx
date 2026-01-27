@@ -3,9 +3,14 @@
 import { useState } from "react"
 import { Menu, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import Link from "next/link"
-
-import Image from "next/image" // <--- Import Image
+import Image from "next/image"
 
 interface SiteHeaderProps {
     onTabChange: (tab: string) => void
@@ -13,11 +18,9 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ onTabChange }: SiteHeaderProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const [showAboutDropdown, setShowAboutDropdown] = useState(false)
-    const [showPoliciesDropdown, setShowPoliciesDropdown] = useState(false)
 
     return (
-        <header className="w-full border-b border-white/10 bg-background/80 backdrop-blur-md">
+        <header className="w-full border-b border-white/10 bg-background/80 backdrop-blur-md sticky top-0 z-50">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 
                 {/* Left: Logo (Home Link) */}
@@ -63,76 +66,66 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                         <div className="w-px h-4 bg-white/20" />
 
                         {/* About Us Dropdown */}
-                        <div
-                            className="relative group"
-                            onMouseEnter={() => setShowAboutDropdown(true)}
-                            onMouseLeave={() => setShowAboutDropdown(false)}
-                        >
-                            <button
-                                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
-                            >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5 outline-none">
                                 About Us
-                                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showAboutDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            <div
-                                className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden transition-all duration-200 z-50 isolate ${showAboutDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
-                            >
-                                <Link
-                                    href="https://dreamplaypianos.com/our-story"
-                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                >
-                                    Our Story
-                                </Link>
-                                <Link
-                                    href="https://dreamplaypianos.com/about-us/ds-standard"
-                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                >
-                                    The DS Standard
-                                </Link>
-                                <Link
-                                    href="https://blog.dreamplaypianos.com/blog"
-                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                >
-                                    Our Blog
-                                </Link>
-                            </div>
-                        </div>
+                                <ChevronDown className="w-3 h-3 transition-transform duration-200" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-48 bg-white border-gray-200">
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="https://dreamplaypianos.com/our-story"
+                                        className="w-full cursor-pointer text-gray-700 hover:text-gray-900"
+                                    >
+                                        Our Story
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="https://dreamplaypianos.com/about-us/ds-standard"
+                                        className="w-full cursor-pointer text-gray-700 hover:text-gray-900"
+                                    >
+                                        The DS Standard
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="https://blog.dreamplaypianos.com/blog"
+                                        className="w-full cursor-pointer text-gray-700 hover:text-gray-900"
+                                    >
+                                        Our Blog
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
                         <div className="w-px h-4 bg-white/20" />
 
                         {/* Information & Policies Dropdown */}
-                        <div
-                            className="relative group"
-                            onMouseEnter={() => setShowPoliciesDropdown(true)}
-                            onMouseLeave={() => setShowPoliciesDropdown(false)}
-                        >
-                            <button
-                                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
-                            >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5 outline-none">
                                 Info & Policies
-                                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showPoliciesDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            <div
-                                className={`absolute top-full right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden transition-all duration-200 z-50 isolate ${showPoliciesDropdown ? 'opacity-100 translate-y-0 visible' : 'opacity-0 translate-y-2 invisible'}`}
-                            >
-                                <Link
-                                    href="https://dreamplaypianos.com/information-and-policies/faq"
-                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                >
-                                    FAQ
-                                </Link>
-                                <Link
-                                    href="https://dreamplaypianos.com/information-and-policies/shipping"
-                                    className="block px-4 py-2.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                                >
-                                    Shipping
-                                </Link>
-                            </div>
-                        </div>
+                                <ChevronDown className="w-3 h-3 transition-transform duration-200" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-48 bg-white border-gray-200" align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="https://dreamplaypianos.com/information-and-policies/faq"
+                                        className="w-full cursor-pointer text-gray-700 hover:text-gray-900"
+                                    >
+                                        FAQ
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href="https://dreamplaypianos.com/information-and-policies/shipping"
+                                        className="w-full cursor-pointer text-gray-700 hover:text-gray-900"
+                                    >
+                                        Shipping
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </nav>
 
@@ -164,41 +157,79 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
             {/* Mobile Menu Dropdown */}
             {mobileMenuOpen && (
-                <div className="md:hidden border-t border-border bg-background">
+                <div className="md:hidden border-t border-border bg-background absolute left-0 right-0 top-16 h-[calc(100vh-4rem)] overflow-y-auto">
                     <div className="space-y-1 px-4 py-6">
-                        <button
-                            onClick={() => { onTabChange("campaign"); setMobileMenuOpen(false); }}
-                            className="block py-2 text-base font-semibold text-foreground"
+                        <Link
+                            href="https://dreamplaypianos.com/"
+                            className="block py-2 text-base font-semibold text-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
                         >
-                            Overview
-                        </button>
-                        <button
-                            onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }}
-                            className="block py-2 text-base font-medium text-muted-foreground hover:text-primary"
+                            DreamPlay One
+                        </Link>
+                        <Link
+                            href="https://dreamplaypianos.com/why-narrow"
+                            className="block py-2 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
                         >
-                            Rewards
-                        </button>
-                        <button
-                            onClick={() => { onTabChange("faq"); setMobileMenuOpen(false); }}
-                            className="block py-2 text-base font-medium text-muted-foreground hover:text-primary"
+                            Why Narrow?
+                        </Link>
+                        <Link
+                            href="https://dreamplaypianos.com/how-it-works"
+                            className="block py-2 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            How It Works
+                        </Link>
+
+                        <div className="my-4 h-px bg-border" />
+
+                        <div className="px-0 py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                            About Us
+                        </div>
+                        <Link
+                            href="https://dreamplaypianos.com/our-story"
+                            className="block py-2 pl-4 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Our Story
+                        </Link>
+                        <Link
+                            href="https://dreamplaypianos.com/about-us/ds-standard"
+                            className="block py-2 pl-4 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            The DS Standard
+                        </Link>
+                        <Link
+                            href="https://blog.dreamplaypianos.com/blog"
+                            className="block py-2 pl-4 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Our Blog
+                        </Link>
+
+                        <div className="my-4 h-px bg-border" />
+
+                        <div className="px-0 py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                            Information & Policies
+                        </div>
+                        <Link
+                            href="https://dreamplaypianos.com/information-and-policies/faq"
+                            className="block py-2 pl-4 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
                         >
                             FAQ
-                        </button>
-                        <button
-                            onClick={() => { onTabChange("creator"); setMobileMenuOpen(false); }}
-                            className="block py-2 text-base font-medium text-muted-foreground hover:text-primary"
+                        </Link>
+                        <Link
+                            href="https://dreamplaypianos.com/information-and-policies/shipping"
+                            className="block py-2 pl-4 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
+                            onClick={() => setMobileMenuOpen(false)}
                         >
-                            Creator
-                        </button>
-                        <button
-                            onClick={() => { onTabChange("community"); setMobileMenuOpen(false); }}
-                            className="block py-2 text-base font-medium text-muted-foreground hover:text-primary"
-                        >
-                            Community
-                        </button>
+                            Shipping
+                        </Link>
 
-                        <div className="mt-4 pt-4 border-t border-border">
-                            <Button onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }} className="w-full">
+                        <div className="mt-8 pt-4 border-t border-border">
+                            <Button onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }} className="w-full rounded-full py-6 text-lg">
                                 Back this project
                             </Button>
                         </div>
