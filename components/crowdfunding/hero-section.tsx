@@ -20,7 +20,8 @@ import Lightbox from "yet-another-react-lightbox"
 import "yet-another-react-lightbox/styles.css"
 
 export function HeroSection() {
-  const { campaign } = useCampaign()
+  const { campaign } = useCampaign() // Fixes lint: 'campaign' is possibly 'null'
+  if (!campaign) return null
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
   const [textboxOpen, setTextboxOpen] = React.useState(false)
@@ -102,8 +103,7 @@ export function HeroSection() {
         close={() => setTextboxOpen(false)}
         index={current}
         slides={allImages.map(src => ({
-          // If it's a gallery image, try to use the full res version
-          src: src.replace(/(\.jpg|\.png)$/, '-full$1')
+          src
         }))}
       />
 
