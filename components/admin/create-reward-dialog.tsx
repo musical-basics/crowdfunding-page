@@ -19,6 +19,7 @@ import { createReward } from "@/app/admin/actions" // Import the server action
 import { useToast } from "@/hooks/use-toast"
 
 import { useCampaign } from "@/context/campaign-context"
+import { ImageCropper } from "./image-cropper"
 
 export function CreateRewardDialog() {
     const [open, setOpen] = useState(false)
@@ -26,15 +27,37 @@ export function CreateRewardDialog() {
     const { refreshCampaign } = useCampaign()
     const [preview, setPreview] = useState("")
 
+    // Cropper States
+    const [originalImageSrc, setOriginalImageSrc] = useState<string | null>(null)
+    const [isCropperOpen, setIsCropperOpen] = useState(false)
+    const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null)
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            const url = URL.createObjectURL(file)
-            setPreview(url)
+            const reader = new FileReader()
+            reader.addEventListener("load", () => {
+                setOriginalImageSrc(reader.result as string)
+                setIsCropperOpen(true)
+                // Clear the input so selecting the same file again works
+                e.target.value = ""
+            })
+            reader.readAsDataURL(file)
         }
     }
 
+    const handleCropComplete = (blob: Blob) => {
+        setCroppedBlob(blob)
+        setPreview(URL.createObjectURL(blob))
+        setIsCropperOpen(false)
+    }
+
     async function handleSubmit(formData: FormData) {
+        // If we have a cropped blob, we must append it manually
+        if (croppedBlob) {
+            formData.set("imageFile", croppedBlob, "reward-cropped.jpg")
+        }
+
         const result = await createReward(null, formData)
 
         if (result?.error) {
@@ -46,6 +69,8 @@ export function CreateRewardDialog() {
         } else {
             // Success case
             setOpen(false) // Close the modal first
+            setPreview("")
+            setCroppedBlob(null)
 
             if (refreshCampaign) {
                 await refreshCampaign()
@@ -137,6 +162,17 @@ export function CreateRewardDialog() {
                     </DialogFooter>
                 </form>
             </DialogContent>
+
+            {/* Cropper Modal */}
+            {originalImageSrc && (
+                <ImageCropper
+                    isOpen={isCropperOpen}
+                    imageSrc={originalImageSrc}
+                    onClose={() => setIsCropperOpen(false)}
+                    onCropComplete={handleCropComplete}
+                    aspect={16 / 9} // Landscape for rewards
+                />
+            )}
         </Dialog >
     )
 }

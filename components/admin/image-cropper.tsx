@@ -13,9 +13,10 @@ interface ImageCropperProps {
     isOpen: boolean
     onClose: () => void
     onCropComplete: (croppedBlob: Blob) => void
+    aspect?: number // Added aspect prop
 }
 
-export function ImageCropper({ imageSrc, isOpen, onClose, onCropComplete }: ImageCropperProps) {
+export function ImageCropper({ imageSrc, isOpen, onClose, onCropComplete, aspect = 1 }: ImageCropperProps) {
     const [crop, setCrop] = useState({ x: 0, y: 0 })
     const [zoom, setZoom] = useState(1)
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
@@ -54,7 +55,7 @@ export function ImageCropper({ imageSrc, isOpen, onClose, onCropComplete }: Imag
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col p-0 gap-0">
                 <DialogHeader className="p-4 border-b">
-                    <DialogTitle>Crop Profile Picture</DialogTitle>
+                    <DialogTitle>Crop Image</DialogTitle>
                 </DialogHeader>
 
                 <div className="relative flex-1 bg-black w-full overflow-hidden">
@@ -62,7 +63,7 @@ export function ImageCropper({ imageSrc, isOpen, onClose, onCropComplete }: Imag
                         image={imageSrc}
                         crop={crop}
                         zoom={zoom}
-                        aspect={1} // Square aspect ratio for avatars
+                        aspect={aspect} // Use the aspect prop
                         onCropChange={onCropChange}
                         onCropComplete={onCropCompleteHandler}
                         onZoomChange={onZoomChange}

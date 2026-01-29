@@ -19,6 +19,7 @@ import { updateReward } from "@/app/admin/actions"
 import { useToast } from "@/hooks/use-toast"
 import { useCampaign } from "@/context/campaign-context"
 import { Reward } from "@/types/campaign"
+import { ImageCropper } from "./image-cropper" // Add import
 
 interface EditRewardDialogProps {
     reward: Reward
@@ -30,16 +31,39 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
     const { refreshCampaign } = useCampaign()
     const [preview, setPreview] = useState(reward.imageUrl || "")
 
+    // Cropper States
+    const [originalImageSrc, setOriginalImageSrc] = useState<string | null>(null)
+    const [isCropperOpen, setIsCropperOpen] = useState(false)
+    const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null)
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            const url = URL.createObjectURL(file)
-            setPreview(url)
+            const reader = new FileReader()
+            reader.addEventListener("load", () => {
+                setOriginalImageSrc(reader.result as string)
+                setIsCropperOpen(true)
+                // Clear the input so selecting the same file again works
+                e.target.value = ""
+            })
+            reader.readAsDataURL(file)
         }
+    }
+
+    const handleCropComplete = (blob: Blob) => {
+        setCroppedBlob(blob)
+        setPreview(URL.createObjectURL(blob))
+        setIsCropperOpen(false)
     }
 
     async function handleSubmit(formData: FormData) {
         formData.append("id", reward.id) // Ensure ID is passed
+
+        // If we have a cropped blob, we must append it manually
+        if (croppedBlob) {
+            formData.set("imageFile", croppedBlob, "reward-cropped.jpg")
+        }
+
         const result = await updateReward(null, formData)
 
         if (result?.error) {
@@ -50,6 +74,7 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
             })
         } else {
             setOpen(false)
+            setCroppedBlob(null) // Reset
             if (refreshCampaign) await refreshCampaign()
             toast({
                 title: "Success",
@@ -138,6 +163,17 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                     </DialogFooter>
                 </form>
             </DialogContent>
+
+            {/* Cropper Modal */}
+            {originalImageSrc && (
+                <ImageCropper
+                    isOpen={isCropperOpen}
+                    imageSrc={originalImageSrc}
+                    onClose={() => setIsCropperOpen(false)}
+                    onCropComplete={handleCropComplete}
+                    aspect={16 / 9} // Landscape for rewards
+                />
+            )}
         </Dialog>
     )
 }
