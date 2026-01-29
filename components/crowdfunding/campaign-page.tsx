@@ -211,6 +211,13 @@ export function CampaignPage() {
                   </p>
                 </div>
 
+                {/* Reward Image */}
+                {reward.imageUrl && (
+                  <div className="rounded-lg overflow-hidden aspect-video relative bg-slate-100">
+                    <img src={reward.imageUrl} alt={reward.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+
                 {/* Description */}
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {reward.description}
