@@ -75,6 +75,7 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                 </DialogHeader>
 
                 <form action={handleSubmit} className="grid gap-4 py-4">
+                    <input type="hidden" name="imageUrl" value={reward.imageUrl || ""} />
                     <div className="grid gap-2">
                         <Label htmlFor="title">Reward Title</Label>
                         <Input id="title" name="title" defaultValue={reward.title} required />

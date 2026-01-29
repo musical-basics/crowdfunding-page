@@ -83,7 +83,8 @@ export async function GET() {
             shipsTo: r.ships_to || [],
             backersCount: r.backers_count,
             limitedQuantity: r.limit_quantity,
-            isSoldOut: r.is_sold_out
+            isSoldOut: r.is_sold_out,
+            imageUrl: r.image_url
         })) || [],
         faqs: faqData?.map((f: any) => ({
             id: f.id,
