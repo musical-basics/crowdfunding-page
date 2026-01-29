@@ -134,6 +134,7 @@ export async function updateReward(prevState: any, formData: FormData) {
             description: formData.get("description"),
             items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
             estimated_delivery: formData.get("delivery"),
+            limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
         })
         .eq("id", id)
 

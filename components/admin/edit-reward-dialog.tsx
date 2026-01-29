@@ -83,6 +83,18 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                     </div>
 
                     <div className="grid gap-2">
+                        <Label htmlFor="quantity">Quantity Limit (Optional)</Label>
+                        <Input
+                            id="quantity"
+                            name="quantity"
+                            type="number"
+                            min="1"
+                            defaultValue={reward.limitedQuantity || ""}
+                            placeholder="Leave empty for unlimited"
+                        />
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="description">Description</Label>
                         <Textarea id="description" name="description" defaultValue={reward.description} required />
                     </div>
