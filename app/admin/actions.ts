@@ -128,6 +128,32 @@ export async function updateReward(prevState: any, formData: FormData) {
     const id = formData.get("id") as string
     const supabase = createAdminClient()
 
+    // Upload image first so we can catch errors
+    const imageFile = formData.get("imageFile") as File
+    const existingImageUrl = formData.get("imageUrl") as string
+    let imageUrl = existingImageUrl || null
+
+    if (imageFile && imageFile.size > 0) {
+        const fileExt = imageFile.name.split('.').pop()
+        const fileName = `reward-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+        const filePath = `rewards/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+            .from('campaign-assets')
+            .upload(filePath, imageFile)
+
+        if (uploadError) {
+            console.error("Upload failed:", uploadError)
+            return { error: `Image upload failed: ${uploadError.message}` }
+        }
+
+        const { data: urlData } = supabase.storage
+            .from('campaign-assets')
+            .getPublicUrl(filePath)
+
+        imageUrl = urlData.publicUrl
+    }
+
     const { error } = await supabase
         .from("cf_reward")
         .update({
@@ -137,12 +163,14 @@ export async function updateReward(prevState: any, formData: FormData) {
             items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
             estimated_delivery: formData.get("delivery"),
             limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
-            image_url: await uploadRewardImage(formData.get("imageFile") as File, supabase, formData.get("imageUrl") as string)
+            image_url: imageUrl
         })
         .eq("id", id)
 
     if (error) return { error: error.message }
 
+    revalidatePath("/admin/rewards")
+    revalidatePath("/")
     return { success: true }
 }
 
