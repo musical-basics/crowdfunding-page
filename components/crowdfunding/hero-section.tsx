@@ -137,15 +137,15 @@ export function HeroSection() {
       {/* Video Dialog */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
         <DialogContent
-          className="sm:max-w-5xl p-0 border-none bg-black/95 overflow-hidden shadow-2xl"
+          className="sm:max-w-5xl p-0 border-none bg-black overflow-hidden shadow-2xl"
           showCloseButton={false}
         >
           <DialogTitle className="sr-only">Campaign Video</DialogTitle>
-          <div className="relative aspect-video w-full group">
+          <div className="relative aspect-video w-full bg-black">
             <iframe
               width="100%"
               height="100%"
-              src={`https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&rel=0`}
+              src={`https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&mute=1&rel=0&modestbranding=1`}
               title="YouTube video player"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
