@@ -15,6 +15,13 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { X } from "lucide-react"
 
 import Lightbox from "yet-another-react-lightbox"
 import "yet-another-react-lightbox/styles.css"
@@ -24,7 +31,8 @@ export function HeroSection() {
   if (!campaign) return null
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
-  const [textboxOpen, setTextboxOpen] = React.useState(false)
+  const [lightboxOpen, setLightboxOpen] = React.useState(false)
+  const [videoOpen, setVideoOpen] = React.useState(false)
 
   // Combine hero and gallery into one list for the slider
   const allImages = [campaign.images.hero, ...campaign.images.gallery]
@@ -53,7 +61,13 @@ export function HeroSection() {
               <CarouselItem key={index}>
                 <div
                   className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5 cursor-zoom-in"
-                  onClick={() => setTextboxOpen(true)}
+                  onClick={() => {
+                    if (index === 0) {
+                      setVideoOpen(true)
+                    } else {
+                      setLightboxOpen(true)
+                    }
+                  }}
                 >
                   {/* In a real app, use next/image here. For mock, we use a placeholder if src is invalid */}
                   {src.startsWith('/') ? (
@@ -70,8 +84,8 @@ export function HeroSection() {
 
                   {/* Play Button Overlay (Mock for video) */}
                   {index === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110 cursor-pointer">
                         <Play className="h-6 w-6 text-white fill-white ml-1" />
                       </div>
                     </div>
@@ -90,8 +104,21 @@ export function HeroSection() {
 
         {/* Full Screen Button Overlay */}
         <div className="absolute bottom-4 right-4 z-10">
-          <Button size="sm" variant="secondary" className="gap-2 shadow-sm" onClick={() => setTextboxOpen(true)}>
-            <Play className="h-4 w-4" /> View Fullscreen
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-2 shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (current === 0) {
+                setVideoOpen(true)
+              } else {
+                setLightboxOpen(true)
+              }
+            }}
+          >
+            {current === 0 ? <Play className="h-4 w-4" /> : null}
+            {current === 0 ? "Play Video" : "View Fullscreen"}
           </Button>
         </div>
 
@@ -99,13 +126,38 @@ export function HeroSection() {
       </div>
 
       <Lightbox
-        open={textboxOpen}
-        close={() => setTextboxOpen(false)}
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
         index={current}
         slides={allImages.map(src => ({
           src
         }))}
       />
+
+      {/* Video Dialog */}
+      <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
+        <DialogContent className="max-w-5xl p-0 border-none bg-black/95 overflow-hidden shadow-2xl transition-all duration-300">
+          <DialogTitle className="sr-only">Campaign Video</DialogTitle>
+          <div className="relative aspect-video w-full group">
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&rel=0`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            ></iframe>
+            <button
+              onClick={() => setVideoOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors z-50"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Thumbnails Strip */}
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
