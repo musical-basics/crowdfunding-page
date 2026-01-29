@@ -21,6 +21,7 @@ export interface Reward {
     limitedQuantity?: number; // If null, unlimited
     timeLeft?: string; // For scarcity logic
     isSoldOut: boolean;
+    imageUrl?: string;
 }
 
 export interface FAQItem {

@@ -53,6 +53,12 @@ export function RewardsPage() {
               </Button>
             </div>
 
+            {reward.imageUrl && (
+              <div className="mb-6 rounded-xl overflow-hidden aspect-video relative bg-slate-100 border border-slate-100">
+                <img src={reward.imageUrl} alt={reward.title} className="w-full h-full object-cover" />
+              </div>
+            )}
+
             {/* Description */}
             <p className="text-muted-foreground mb-6">{reward.description}</p>
 

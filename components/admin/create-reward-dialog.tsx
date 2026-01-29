@@ -24,6 +24,15 @@ export function CreateRewardDialog() {
     const [open, setOpen] = useState(false)
     const { toast } = useToast()
     const { refreshCampaign } = useCampaign()
+    const [preview, setPreview] = useState("")
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const url = URL.createObjectURL(file)
+            setPreview(url)
+        }
+    }
 
     async function handleSubmit(formData: FormData) {
         const result = await createReward(null, formData)
@@ -72,6 +81,25 @@ export function CreateRewardDialog() {
                         <Input id="title" name="title" placeholder="e.g. Early Bird Special" required />
                     </div>
 
+                    <div className="grid gap-2">
+                        <Label>Reward Image</Label>
+                        <div className="flex items-center gap-4">
+                            {preview && (
+                                <div className="relative w-24 h-16 rounded overflow-hidden border border-border">
+                                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            <Input
+                                id="imageFile"
+                                name="imageFile"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="cursor-pointer"
+                            />
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="price">Price ($)</Label>
@@ -81,6 +109,17 @@ export function CreateRewardDialog() {
                             <Label htmlFor="delivery">Est. Delivery</Label>
                             <Input id="delivery" name="delivery" placeholder="Feb 2026" required />
                         </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="quantity">Quantity Limit (Optional)</Label>
+                        <Input
+                            id="quantity"
+                            name="quantity"
+                            type="number"
+                            min="1"
+                            placeholder="Leave empty for unlimited"
+                        />
                     </div>
 
                     <div className="grid gap-2">
@@ -98,6 +137,6 @@ export function CreateRewardDialog() {
                     </DialogFooter>
                 </form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }

@@ -112,8 +112,10 @@ export async function createReward(prevState: any, formData: FormData) {
             description: formData.get("description"),
             items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
             estimated_delivery: formData.get("delivery"),
+            limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
             ships_to: ["Anywhere in the world"], // Default to worldwide
-            is_sold_out: false
+            is_sold_out: false,
+            image_url: await uploadRewardImage(formData.get("imageFile") as File, supabase)
         })
 
     if (error) return { error: error.message }
@@ -135,14 +137,36 @@ export async function updateReward(prevState: any, formData: FormData) {
             items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
             estimated_delivery: formData.get("delivery"),
             limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
+            image_url: await uploadRewardImage(formData.get("imageFile") as File, supabase, formData.get("imageUrl") as string)
         })
         .eq("id", id)
 
     if (error) return { error: error.message }
 
-    revalidatePath("/admin/rewards")
-    revalidatePath("/")
     return { success: true }
+}
+
+async function uploadRewardImage(file: File, supabase: any, existingUrl?: string) {
+    if (!file || file.size === 0) return existingUrl || null
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `reward-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+    const filePath = `rewards/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+        .from('campaign-assets')
+        .upload(filePath, file)
+
+    if (uploadError) {
+        console.error("Upload failed:", uploadError)
+        return existingUrl || null
+    }
+
+    const { data: urlData } = supabase.storage
+        .from('campaign-assets')
+        .getPublicUrl(filePath)
+
+    return urlData.publicUrl
 }
 
 // --- FAQ ACTIONS ---

@@ -28,6 +28,15 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
     const [open, setOpen] = useState(false)
     const { toast } = useToast()
     const { refreshCampaign } = useCampaign()
+    const [preview, setPreview] = useState(reward.imageUrl || "")
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const url = URL.createObjectURL(file)
+            setPreview(url)
+        }
+    }
 
     async function handleSubmit(formData: FormData) {
         formData.append("id", reward.id) // Ensure ID is passed
@@ -69,6 +78,25 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                     <div className="grid gap-2">
                         <Label htmlFor="title">Reward Title</Label>
                         <Input id="title" name="title" defaultValue={reward.title} required />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Reward Image</Label>
+                        <div className="flex items-center gap-4">
+                            {preview && (
+                                <div className="relative w-24 h-16 rounded overflow-hidden border border-border">
+                                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            <Input
+                                id="imageFile"
+                                name="imageFile"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="cursor-pointer"
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
