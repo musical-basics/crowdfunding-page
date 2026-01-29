@@ -2,11 +2,9 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Heart, Share2, Play } from "lucide-react"
+import { Play, X } from "lucide-react" // Consolidated imports
 import { useCampaign } from "@/context/campaign-context"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
   Carousel,
   CarouselContent,
@@ -18,24 +16,24 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { X } from "lucide-react"
 
 import Lightbox from "yet-another-react-lightbox"
 import "yet-another-react-lightbox/styles.css"
 
 export function HeroSection() {
-  const { campaign } = useCampaign() // Fixes lint: 'campaign' is possibly 'null'
-  if (!campaign) return null
+  const { campaign } = useCampaign()
+
+  // Hooks must be called unconditionally. 
+  // We handle the null check after hook initialization or use optional chaining in render.
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
   const [lightboxOpen, setLightboxOpen] = React.useState(false)
   const [videoOpen, setVideoOpen] = React.useState(false)
 
-  // Combine hero and gallery into one list for the slider
-  const allImages = [campaign.images.hero, ...campaign.images.gallery]
+  // Safe fallback if campaign isn't loaded yet
+  const allImages = campaign ? [campaign.images.hero, ...campaign.images.gallery] : []
 
   React.useEffect(() => {
     if (!api) return
@@ -46,6 +44,8 @@ export function HeroSection() {
       setCurrent(api.selectedScrollSnap())
     })
   }, [api])
+
+  if (!campaign) return null
 
   const handleThumbnailClick = (index: number) => {
     if (api) api.scrollTo(index)
@@ -69,8 +69,8 @@ export function HeroSection() {
                     }
                   }}
                 >
-                  {/* In a real app, use next/image here. For mock, we use a placeholder if src is invalid */}
-                  {src.startsWith('/') ? (
+                  {/* Image Render */}
+                  {src && src.startsWith('/') ? (
                     <Image
                       src={src}
                       alt={`Product view ${index + 1}`}
@@ -82,7 +82,7 @@ export function HeroSection() {
                     <span className="text-muted-foreground">Image {index + 1}</span>
                   )}
 
-                  {/* Play Button Overlay (Mock for video) */}
+                  {/* Play Button Overlay (For first slide/video) */}
                   {index === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110 cursor-pointer">
@@ -102,7 +102,7 @@ export function HeroSection() {
           </div>
         </Carousel>
 
-        {/* Full Screen Button Overlay */}
+        {/* Action Button Overlay */}
         <div className="absolute bottom-4 right-4 z-10">
           <Button
             size="sm"
@@ -121,20 +121,16 @@ export function HeroSection() {
             {current === 0 ? "Play Video" : "View Fullscreen"}
           </Button>
         </div>
-
-
       </div>
 
       <Lightbox
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
         index={current}
-        slides={allImages.map(src => ({
-          src
-        }))}
+        slides={allImages.map(src => ({ src }))}
       />
 
-      {/* Video Dialog */}
+      {/* Video Dialog - FIX APPLIED HERE */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
         <DialogContent
           className="sm:max-w-5xl p-0 border-none bg-black overflow-hidden shadow-2xl"
@@ -145,16 +141,20 @@ export function HeroSection() {
             <iframe
               width="100%"
               height="100%"
-              src={`https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&mute=1&rel=0&modestbranding=1`}
+              // Added bg-black and style to prevent white flash during load
+              className="absolute inset-0 w-full h-full bg-black"
+              style={{ background: 'black' }}
+              src={`https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&mute=0&rel=0&modestbranding=1`}
               title="YouTube video player"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
-              className="absolute inset-0 w-full h-full"
             ></iframe>
+
             <button
               onClick={() => setVideoOpen(false)}
               className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors z-50"
+              aria-label="Close video"
             >
               <X className="h-6 w-6" />
             </button>
