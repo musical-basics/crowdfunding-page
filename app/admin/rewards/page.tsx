@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Edit, Trash } from "lucide-react" // Removed 'Plus' import as it's inside the dialog now
+import { Trash } from "lucide-react" // Removed 'Plus' import as it's inside the dialog now
 import {
     Table,
     TableBody,
@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { useCampaign } from "@/context/campaign-context"
-import { CreateRewardDialog } from "@/components/admin/create-reward-dialog" // <--- Import the new component
+import { CreateRewardDialog } from "@/components/admin/create-reward-dialog"
+import { EditRewardDialog } from "@/components/admin/edit-reward-dialog" // <--- Import the new component
 import { deleteReward } from "../actions"
 
 import { ImportRewardsButton } from "@/components/admin/import-rewards-button"
@@ -74,9 +75,7 @@ export default function AdminRewardsPage() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon">
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
+                                        <EditRewardDialog reward={reward} />
 
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>

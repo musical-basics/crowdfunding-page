@@ -122,6 +122,28 @@ export async function createReward(prevState: any, formData: FormData) {
     return { success: true }
 }
 
+export async function updateReward(prevState: any, formData: FormData) {
+    const id = formData.get("id") as string
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from("cf_reward")
+        .update({
+            title: formData.get("title"),
+            price: Number(formData.get("price")),
+            description: formData.get("description"),
+            items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
+            estimated_delivery: formData.get("delivery"),
+        })
+        .eq("id", id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath("/admin/rewards")
+    revalidatePath("/")
+    return { success: true }
+}
+
 // --- FAQ ACTIONS ---
 
 export async function deleteFAQ(faqId: string) {
