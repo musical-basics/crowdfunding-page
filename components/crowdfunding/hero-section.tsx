@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Play, X } from "lucide-react" // Consolidated imports
+import { Play, X, Loader2 } from "lucide-react" // Added Loader2
 import { useCampaign } from "@/context/campaign-context"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,21 +25,26 @@ import "yet-another-react-lightbox/styles.css"
 export function HeroSection() {
   const { campaign } = useCampaign()
 
-  // Hooks must be called unconditionally. 
-  // We handle the null check after hook initialization or use optional chaining in render.
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
   const [lightboxOpen, setLightboxOpen] = React.useState(false)
   const [videoOpen, setVideoOpen] = React.useState(false)
 
-  // Safe fallback if campaign isn't loaded yet
+  // State to track when video is ready to show
+  const [isVideoLoaded, setIsVideoLoaded] = React.useState(false)
+
+  // Reset video loaded state when dialog closes
+  React.useEffect(() => {
+    if (!videoOpen) {
+      setIsVideoLoaded(false)
+    }
+  }, [videoOpen])
+
   const allImages = campaign ? [campaign.images.hero, ...campaign.images.gallery] : []
 
   React.useEffect(() => {
     if (!api) return
-
     setCurrent(api.selectedScrollSnap())
-
     api.on("select", () => {
       setCurrent(api.selectedScrollSnap())
     })
@@ -69,7 +74,6 @@ export function HeroSection() {
                     }
                   }}
                 >
-                  {/* Image Render */}
                   {src && src.startsWith('/') ? (
                     <Image
                       src={src}
@@ -82,7 +86,6 @@ export function HeroSection() {
                     <span className="text-muted-foreground">Image {index + 1}</span>
                   )}
 
-                  {/* Play Button Overlay (For first slide/video) */}
                   {index === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110 cursor-pointer">
@@ -95,14 +98,12 @@ export function HeroSection() {
             ))}
           </CarouselContent>
 
-          {/* Navigation Arrows */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-between p-4">
             <CarouselPrevious className="pointer-events-auto relative left-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
             <CarouselNext className="pointer-events-auto relative right-0 translate-x-0 h-10 w-10 bg-white/80 hover:bg-white text-black border-none shadow-sm" />
           </div>
         </Carousel>
 
-        {/* Action Button Overlay */}
         <div className="absolute bottom-4 right-4 z-10">
           <Button
             size="sm"
@@ -130,26 +131,40 @@ export function HeroSection() {
         slides={allImages.map(src => ({ src }))}
       />
 
-      {/* Video Dialog - FIX APPLIED HERE */}
+      {/* Video Dialog */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
         <DialogContent
           className="sm:max-w-5xl p-0 border-none bg-black overflow-hidden shadow-2xl"
           showCloseButton={false}
         >
           <DialogTitle className="sr-only">Campaign Video</DialogTitle>
-          <div className="relative aspect-video w-full bg-black">
+
+          <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
+
+            {/* iframe is always rendered when dialog is open so autoplay works */}
             <iframe
               width="100%"
               height="100%"
-              // Added bg-black and style to prevent white flash during load
-              className="absolute inset-0 w-full h-full bg-black"
+              className="absolute inset-0 w-full h-full"
               style={{ background: 'black' }}
-              src={`https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&mute=0&rel=0&modestbranding=1`}
+              src="https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&mute=0&rel=0&modestbranding=1"
               title="YouTube video player"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
-            ></iframe>
+              onLoad={() => {
+                // Give YouTube player time to fully render its UI
+                setTimeout(() => setIsVideoLoaded(true), 800)
+              }}
+            />
+
+            {/* Black overlay that covers the iframe until it's ready - prevents any flash */}
+            <div
+              className={`absolute inset-0 bg-black flex items-center justify-center z-20 transition-opacity duration-500 pointer-events-none ${isVideoLoaded ? 'opacity-0' : 'opacity-100'
+                }`}
+            >
+              <Loader2 className="h-10 w-10 text-white/50 animate-spin" />
+            </div>
 
             <button
               onClick={() => setVideoOpen(false)}
@@ -162,7 +177,6 @@ export function HeroSection() {
         </DialogContent>
       </Dialog>
 
-      {/* Thumbnails Strip */}
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {allImages.map((src, index) => (
           <button

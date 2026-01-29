@@ -133,17 +133,26 @@ export async function updateReward(prevState: any, formData: FormData) {
     const existingImageUrl = formData.get("imageUrl") as string
     let imageUrl = existingImageUrl || null
 
+    console.log("[updateReward] File info:", {
+        hasFile: !!imageFile,
+        size: imageFile?.size,
+        name: imageFile?.name,
+        existingUrl: existingImageUrl
+    })
+
     if (imageFile && imageFile.size > 0) {
-        const fileExt = imageFile.name.split('.').pop()
+        const fileExt = imageFile.name?.split('.').pop() || 'jpg'
         const fileName = `reward-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
         const filePath = `rewards/${fileName}`
+
+        console.log("[updateReward] Uploading to:", filePath)
 
         const { error: uploadError } = await supabase.storage
             .from('campaign-assets')
             .upload(filePath, imageFile)
 
         if (uploadError) {
-            console.error("Upload failed:", uploadError)
+            console.error("[updateReward] Upload failed:", uploadError)
             return { error: `Image upload failed: ${uploadError.message}` }
         }
 
@@ -152,7 +161,10 @@ export async function updateReward(prevState: any, formData: FormData) {
             .getPublicUrl(filePath)
 
         imageUrl = urlData.publicUrl
+        console.log("[updateReward] Upload successful, new URL:", imageUrl)
     }
+
+    console.log("[updateReward] Updating DB with image_url:", imageUrl)
 
     const { error } = await supabase
         .from("cf_reward")
@@ -167,8 +179,12 @@ export async function updateReward(prevState: any, formData: FormData) {
         })
         .eq("id", id)
 
-    if (error) return { error: error.message }
+    if (error) {
+        console.error("[updateReward] DB update failed:", error)
+        return { error: error.message }
+    }
 
+    console.log("[updateReward] Success!")
     revalidatePath("/admin/rewards")
     revalidatePath("/")
     return { success: true }
