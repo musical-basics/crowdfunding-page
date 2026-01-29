@@ -136,7 +136,10 @@ export function HeroSection() {
 
       {/* Video Dialog */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
-        <DialogContent className="max-w-5xl p-0 border-none bg-black/95 overflow-hidden shadow-2xl transition-all duration-300">
+        <DialogContent
+          className="sm:max-w-5xl p-0 border-none bg-black/95 overflow-hidden shadow-2xl"
+          showCloseButton={false}
+        >
           <DialogTitle className="sr-only">Campaign Video</DialogTitle>
           <div className="relative aspect-video w-full group">
             <iframe
