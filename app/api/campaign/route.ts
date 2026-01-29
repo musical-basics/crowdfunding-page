@@ -91,7 +91,9 @@ export async function GET() {
             category: f.category,
             question: f.question,
             answer: f.answer
-        })) || []
+        })) || [],
+        keyFeatures: campaignData.key_features || [],
+        techSpecs: campaignData.tech_specs || []
     }
 
     return NextResponse.json(formattedCampaign)
