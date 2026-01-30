@@ -11,6 +11,23 @@ import { updateCampaignDetails } from "../actions" // <--- Import the action
 import { useCampaign } from "@/context/campaign-context"
 import { KeyFeature, TechSpec } from "@/types/campaign"
 import { Plus, Trash2 } from "lucide-react"
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from "@dnd-kit/core"
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+} from "@dnd-kit/sortable"
+import { SortableGalleryImage } from "@/components/admin/sortable-gallery-image"
+import { compressImageFile } from "@/lib/image-utils"
 
 export default function CampaignDetailsEditor() {
     const { toast } = useToast()
@@ -18,6 +35,25 @@ export default function CampaignDetailsEditor() {
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
     const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
     const [techSpecs, setTechSpecs] = useState<TechSpec[]>(campaign?.techSpecs || [])
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    )
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event
+
+        if (active.id !== over?.id) {
+            setGalleryImages((items) => {
+                const oldIndex = items.indexOf(active.id as string)
+                const newIndex = items.indexOf(over?.id as string)
+                return arrayMove(items, oldIndex, newIndex)
+            })
+        }
+    }
 
     // Wrapper to handle the server action response
     async function handleSubmit(formData: FormData) {
@@ -128,47 +164,85 @@ export default function CampaignDetailsEditor() {
                     <CardHeader>
                         <CardTitle>Gallery Images</CardTitle>
                         <CardDescription>
-                            Min 1920x1080 recommended. Drag to reorder is not supported yet (files upload in selection order).
+                            Min 1920x1080 recommended. Drag to reorder.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Existing Images Grid */}
-                        {galleryImages.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {galleryImages.map((src, index) => (
-                                    <div key={index} className="group relative aspect-video bg-muted rounded-md overflow-hidden border">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={src} alt={`Gallery ${index}`} className="w-full h-full object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
+                        {/* DnD Context for Reordering */}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={galleryImages}
+                                strategy={rectSortingStrategy}
+                            >
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {galleryImages.map((src, index) => (
+                                        <SortableGalleryImage
+                                            key={src}
+                                            id={src}
+                                            src={src}
+                                            index={index}
+                                            onRemove={() => {
                                                 const newImages = [...galleryImages]
                                                 newImages.splice(index, 1)
                                                 setGalleryImages(newImages)
                                             }}
-                                            className="absolute top-1 right-1 bg-destructive text-white p-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                                            aria-label="Remove image"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
 
-                        {/* File Input for New Images */}
+                        {/* File Input for New Images (with Compression) */}
                         <div className="grid gap-2">
                             <Label htmlFor="new_gallery_images">Upload New Images</Label>
                             <Input
                                 id="new_gallery_images"
-                                name="new_gallery_images"
                                 type="file"
                                 multiple
                                 accept="image/*"
+                                onChange={async (e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                        const files = Array.from(e.target.files)
+                                        const compressedFiles: File[] = []
+
+                                        // Compress each file
+                                        for (const file of files) {
+                                            try {
+                                                const compressed = await compressImageFile(file)
+                                                compressedFiles.push(compressed)
+                                                console.log(`Compressed ${file.name}: ${(file.size / 1024).toFixed(1)}kb -> ${(compressed.size / 1024).toFixed(1)}kb`)
+                                            } catch (err) {
+                                                console.error("Compression failed for", file.name, err)
+                                                compressedFiles.push(file) // Fallback to original
+                                            }
+                                        }
+
+                                        // We have to use a DataTransfer to set the files back to the input
+                                        // OR just append them to a FormData manually later?
+                                        // The action uses formData.getAll("new_gallery_images"), which reads from the input.
+                                        // So we DO need to update the input's files property if we want standard form submission to work
+                                        const dataTransfer = new DataTransfer()
+                                        compressedFiles.forEach(f => dataTransfer.items.add(f))
+                                        e.target.files = dataTransfer.files
+
+                                        toast({
+                                            title: "Images Processed",
+                                            description: `Compressed ${compressedFiles.length} images. Ready to save.`,
+                                        })
+                                    }
+                                }}
+                                name="new_gallery_images"
                             />
+                            <p className="text-xs text-muted-foreground">
+                                Large images will be automatically compressed before upload.
+                            </p>
                         </div>
 
-                        {/* Hidden Input to pass the specific list of KEPT existing images */}
+                        {/* Hidden Input to pass the specific list of KEPT existing images in correct order */}
                         <input
                             type="hidden"
                             name="existing_gallery_images"
