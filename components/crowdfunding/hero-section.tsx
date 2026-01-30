@@ -74,7 +74,7 @@ export function HeroSection() {
                     }
                   }}
                 >
-                  {src && src.startsWith('/') ? (
+                  {src && (src.startsWith('/') || src.startsWith('http')) ? (
                     <Image
                       src={src}
                       alt={`Product view ${index + 1}`}
@@ -189,7 +189,7 @@ export function HeroSection() {
                 : "border-transparent opacity-60 hover:opacity-100"}
             `}
           >
-            {src.startsWith('/') ? (
+            {src.startsWith('/') || src.startsWith('http') ? (
               <Image src={src} alt="thumbnail" fill className="object-cover" />
             ) : (
               <div className="w-full h-full bg-muted flex items-center justify-center text-xs">
