@@ -106,6 +106,23 @@ export default function CampaignDetailsEditor() {
                     </CardContent>
                 </Card>
 
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Shipping Info (HTML)</CardTitle>
+                        <CardDescription>
+                            Shipping details, delivery estimates, and regional information
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea
+                            id="shipping"
+                            name="shipping"
+                            className="min-h-[200px]"
+                            defaultValue={campaign.shipping}
+                        />
+                    </CardContent>
+                </Card>
+
                 {/* Gallery Images Management */}
                 <Card>
                     <CardHeader>

@@ -156,6 +156,19 @@ export function CampaignPage() {
           </div>
         </section>
 
+        {/* Shipping */}
+        <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">
+          <h3 className="text-2xl font-bold mb-6">Shipping & Delivery</h3>
+          {campaign.shipping ? (
+            <div
+              className="prose dark:prose-invert max-w-none text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: campaign.shipping }}
+            />
+          ) : (
+            <p className="text-muted-foreground">Shipping details coming soon.</p>
+          )}
+        </section>
+
         {/* Risks */}
         <section id="risks" className="scroll-mt-24 pt-8 border-t border-border">
           <h3 className="text-2xl font-bold mb-6">Risks & Challenges</h3>

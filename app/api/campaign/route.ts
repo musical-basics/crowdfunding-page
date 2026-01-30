@@ -52,6 +52,7 @@ export async function GET() {
         subtitle: campaignData.subtitle,
         story: campaignData.story,
         risks: campaignData.risks,
+        shipping: campaignData.shipping || '',
         images: {
             hero: campaignData.hero_image,
             gallery: campaignData.gallery_images || []
