@@ -156,11 +156,15 @@ export function CheckoutDialog() {
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Full Name</Label>
-                                    <Input id="name" name="name" required placeholder="Cardholder Name" className="h-11" />
+                                    <Input id="name" name="name" required placeholder="Cardholder Name" className="h-11" autoComplete="name" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="address">Shipping Address</Label>
+                                    <Input id="address" name="address" required placeholder="123 Main St, Apt 4B" className="h-11" autoComplete="street-address" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="email">Email Address</Label>
-                                    <Input id="email" name="email" type="email" required placeholder="you@example.com" className="h-11" />
+                                    <Input id="email" name="email" type="email" required placeholder="you@example.com" className="h-11" autoComplete="email" />
                                 </div>
                             </div>
 
