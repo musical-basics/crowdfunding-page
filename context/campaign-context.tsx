@@ -49,9 +49,15 @@ export function CampaignProvider({ children, initialData }: { children: ReactNod
     }
 
     // CHANGE: Only fetch on mount if we DON'T have initialData
+    // ALSO: If initialData changes (e.g. from live preview parent), update our state
     useEffect(() => {
         if (!initialData) {
             fetchCampaign()
+        } else {
+            setCampaign(initialData)
+            // Also update stats if we want them to reflect live changes instantly
+            setTotalPledged(initialData.stats.totalPledged)
+            setBackersCount(initialData.stats.totalBackers)
         }
     }, [initialData])
 
