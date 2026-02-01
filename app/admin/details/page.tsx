@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { updateCampaignDetails } from "../actions" // <--- Import the action
-import { useCampaign } from "@/context/campaign-context"
-import { KeyFeature, TechSpec } from "@/types/campaign"
-import { Plus, Trash2 } from "lucide-react"
+import { updateCampaignDetails } from "../actions"
+import { useCampaign, CampaignProvider } from "@/context/campaign-context" // Import CampaignProvider
+import { KeyFeature, TechSpec, Campaign } from "@/types/campaign"
+import { Plus, Trash2, Smartphone, Monitor } from "lucide-react"
 import {
     DndContext,
     closestCenter,
@@ -28,13 +28,47 @@ import {
 } from "@dnd-kit/sortable"
 import { SortableGalleryImage } from "@/components/admin/sortable-gallery-image"
 import { compressImageFile } from "@/lib/image-utils"
+import { CrowdfundingPage } from "@/components/crowdfunding-page" // Import the public page component
 
 export default function CampaignDetailsEditor() {
     const { toast } = useToast()
     const { campaign, refreshCampaign } = useCampaign() // Load current data to populate defaults
+
+    // Controlled inputs for all editable fields
+    const [title, setTitle] = useState(campaign?.title || "")
+    const [subtitle, setSubtitle] = useState(campaign?.subtitle || "")
+    const [goalAmount, setGoalAmount] = useState(campaign?.stats.goalAmount || 0)
+    // For date, assuming campaign has an endDate which might need parsing/formatting
+    // Just using a placeholder state for now if it's not strictly typed in Campaign yet, or if it is.
+    // Looking at Campaign interface, I don't see endDate in top level, maybe it's missing or I should just handle it if it exists.
+    // The previous code had an input for it but no default value from campaign object. I'll add a state for it.
+    const [endDate, setEndDate] = useState("")
+
+    const [story, setStory] = useState(campaign?.story || "")
+    const [risks, setRisks] = useState(campaign?.risks || "")
+    const [shipping, setShipping] = useState(campaign?.shipping || "")
+
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
     const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
     const [techSpecs, setTechSpecs] = useState<TechSpec[]>(campaign?.techSpecs || [])
+
+    // Preview mode state (desktop vs mobile) - purely visual scaling if we wanted, 
+    // but for now we'll just show standard responsive view in a container.
+
+    // Update state when campaign loads
+    useEffect(() => {
+        if (campaign) {
+            setTitle(campaign.title)
+            setSubtitle(campaign.subtitle)
+            setGoalAmount(campaign.stats.goalAmount)
+            setStory(campaign.story)
+            setRisks(campaign.risks)
+            setShipping(campaign.shipping)
+            setGalleryImages(campaign.images.gallery)
+            setKeyFeatures(campaign.keyFeatures)
+            setTechSpecs(campaign.techSpecs)
+        }
+    }, [campaign])
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -55,11 +89,14 @@ export default function CampaignDetailsEditor() {
         }
     }
 
-    // Wrapper to handle the server action response
     async function handleSubmit(formData: FormData) {
+        // Because we are using controlled inputs, we might need to ensure the FormData 
+        // has the correct values if the inputs weren't updating the DOM attributes (they should be though).
+        // Since we are passing name attributes and value attributes, FormData will pick up current values.
+
         try {
             await updateCampaignDetails(formData)
-            await refreshCampaign() // Refresh client state immediately
+            await refreshCampaign()
             toast({
                 title: "Success",
                 description: "Campaign updated successfully",
@@ -76,326 +113,401 @@ export default function CampaignDetailsEditor() {
 
     if (!campaign) return <div>Loading...</div>
 
+    // Construct the preview object
+    const previewCampaign: Campaign = {
+        ...campaign,
+        title,
+        subtitle,
+        story,
+        risks,
+        shipping,
+        // Update stats goal amount visually
+        stats: {
+            ...campaign.stats,
+            goalAmount
+        },
+        images: {
+            ...campaign.images,
+            gallery: galleryImages
+        },
+        keyFeatures,
+        techSpecs
+    }
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Edit Campaign Details</h1>
+        <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-4rem)]">
+            {/* Editor Column - Scrollable */}
+            <div className="flex-1 overflow-y-auto pr-2 pb-20">
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-3xl font-bold">Edit Campaign Details</h1>
+                    </div>
+
+                    <form action={handleSubmit} className="space-y-8">
+
+                        {/* Basic Info */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Basic Information</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="title">Campaign Title</Label>
+                                    <Input
+                                        id="title"
+                                        name="title"
+                                        value={title}
+                                        onChange={e => setTitle(e.target.value)}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="subtitle">Subtitle</Label>
+                                    <Textarea
+                                        id="subtitle"
+                                        name="subtitle"
+                                        value={subtitle}
+                                        onChange={e => setSubtitle(e.target.value)}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="goal">Goal Amount ($)</Label>
+                                        <Input
+                                            id="goal"
+                                            name="goal"
+                                            type="number"
+                                            value={goalAmount}
+                                            onChange={e => setGoalAmount(Number(e.target.value))}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="endDate">End Date</Label>
+                                        <Input
+                                            id="endDate"
+                                            name="endDate"
+                                            type="date"
+                                            value={endDate}
+                                            onChange={e => setEndDate(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Story Editor */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Campaign Story (HTML)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    id="story"
+                                    name="story"
+                                    className="min-h-[300px] font-mono text-sm"
+                                    value={story}
+                                    onChange={e => setStory(e.target.value)}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Risks (HTML)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    id="risks"
+                                    name="risks"
+                                    className="min-h-[200px]"
+                                    value={risks}
+                                    onChange={e => setRisks(e.target.value)}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Shipping Info (HTML)</CardTitle>
+                                <CardDescription>
+                                    Shipping details, delivery estimates, and regional information
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    id="shipping"
+                                    name="shipping"
+                                    className="min-h-[200px]"
+                                    value={shipping}
+                                    onChange={e => setShipping(e.target.value)}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        {/* Gallery Images Management */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Gallery Images</CardTitle>
+                                <CardDescription>
+                                    Min 1920x1080 recommended. Drag to reorder.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* DnD Context for Reordering */}
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext
+                                        items={galleryImages}
+                                        strategy={rectSortingStrategy}
+                                    >
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {galleryImages.map((src, index) => (
+                                                <SortableGalleryImage
+                                                    key={src}
+                                                    id={src}
+                                                    src={src}
+                                                    index={index}
+                                                    onRemove={() => {
+                                                        const newImages = [...galleryImages]
+                                                        newImages.splice(index, 1)
+                                                        setGalleryImages(newImages)
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+
+                                {/* File Input for New Images (with Compression) */}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="new_gallery_images">Upload New Images</Label>
+                                    <Input
+                                        id="new_gallery_images"
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                const files = Array.from(e.target.files)
+                                                const compressedFiles: File[] = []
+
+                                                // Compress each file
+                                                for (const file of files) {
+                                                    try {
+                                                        const compressed = await compressImageFile(file)
+                                                        compressedFiles.push(compressed)
+                                                        console.log(`Compressed ${file.name}: ${(file.size / 1024).toFixed(1)}kb -> ${(compressed.size / 1024).toFixed(1)}kb`)
+                                                    } catch (err) {
+                                                        console.error("Compression failed for", file.name, err)
+                                                        compressedFiles.push(file) // Fallback to original
+                                                    }
+                                                }
+
+                                                const dataTransfer = new DataTransfer()
+                                                compressedFiles.forEach(f => dataTransfer.items.add(f))
+                                                e.target.files = dataTransfer.files
+
+                                                toast({
+                                                    title: "Images Processed",
+                                                    description: `Compressed ${compressedFiles.length} images. Ready to save.`,
+                                                })
+                                            }
+                                        }}
+                                        name="new_gallery_images"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Large images will be automatically compressed before upload.
+                                    </p>
+                                </div>
+
+                                <input
+                                    type="hidden"
+                                    name="existing_gallery_images"
+                                    value={JSON.stringify(galleryImages)}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        {/* Key Features Editor */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Key Features</CardTitle>
+                                    <CardDescription>Add the main selling points (Icon + Title + Desc)</CardDescription>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setKeyFeatures([...keyFeatures, { icon: "✨", title: "", desc: "" }])}
+                                >
+                                    <Plus className="h-4 w-4 mr-2" /> Add Feature
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {keyFeatures.map((feature, idx) => (
+                                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-md bg-muted/20">
+                                        <div className="w-16">
+                                            <Label className="text-xs">Icon</Label>
+                                            <Input
+                                                value={feature.icon}
+                                                onChange={(e) => {
+                                                    const newFeatures = [...keyFeatures]
+                                                    newFeatures[idx].icon = e.target.value
+                                                    setKeyFeatures(newFeatures)
+                                                }}
+                                                className="text-center text-xl"
+                                            />
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <div>
+                                                <Label className="text-xs">Title</Label>
+                                                <Input
+                                                    value={feature.title}
+                                                    onChange={(e) => {
+                                                        const newFeatures = [...keyFeatures]
+                                                        newFeatures[idx].title = e.target.value
+                                                        setKeyFeatures(newFeatures)
+                                                    }}
+                                                    placeholder="Feature Title"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">Description</Label>
+                                                <Input
+                                                    value={feature.desc}
+                                                    onChange={(e) => {
+                                                        const newFeatures = [...keyFeatures]
+                                                        newFeatures[idx].desc = e.target.value
+                                                        setKeyFeatures(newFeatures)
+                                                    }}
+                                                    placeholder="Short description"
+                                                />
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => {
+                                                const newFeatures = [...keyFeatures]
+                                                newFeatures.splice(idx, 1)
+                                                setKeyFeatures(newFeatures)
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                {keyFeatures.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No features added yet.</p>}
+                            </CardContent>
+                        </Card>
+
+                        {/* Tech Specs Editor */}
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Technical Specs</CardTitle>
+                                    <CardDescription>Add specification details (Label + Value)</CardDescription>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setTechSpecs([...techSpecs, { label: "", value: "" }])}
+                                >
+                                    <Plus className="h-4 w-4 mr-2" /> Add Spec
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {techSpecs.map((spec, idx) => (
+                                    <div key={idx} className="flex gap-4 items-end border p-4 rounded-md bg-muted/20">
+                                        <div className="flex-1">
+                                            <Label className="text-xs">Label</Label>
+                                            <Input
+                                                value={spec.label}
+                                                onChange={(e) => {
+                                                    const newSpecs = [...techSpecs]
+                                                    newSpecs[idx].label = e.target.value
+                                                    setTechSpecs(newSpecs)
+                                                }}
+                                                placeholder="e.g. Weight"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <Label className="text-xs">Value</Label>
+                                            <Input
+                                                value={spec.value}
+                                                onChange={(e) => {
+                                                    const newSpecs = [...techSpecs]
+                                                    newSpecs[idx].value = e.target.value
+                                                    setTechSpecs(newSpecs)
+                                                }}
+                                                placeholder="e.g. 12kg"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => {
+                                                const newSpecs = [...techSpecs]
+                                                newSpecs.splice(idx, 1)
+                                                setTechSpecs(newSpecs)
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                {techSpecs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added yet.</p>}
+                            </CardContent>
+                        </Card>
+
+                        <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
+                        <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
+
+                        <Button type="submit" className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700">
+                            Save All Changes
+                        </Button>
+                    </form>
+                </div>
             </div>
 
-            {/* Connect the form to the Server Action */}
-            <form action={handleSubmit} className="space-y-8">
+            {/* Preview Column - Sticky/Fixed */}
+            <div className="hidden xl:block w-[500px] border-l bg-background pl-4">
+                <div className="flex items-center justify-between mb-4 mt-2">
+                    <h2 className="font-semibold text-lg flex items-center gap-2">
+                        <Monitor className="h-4 w-4" /> Live Preview
+                    </h2>
+                    <div className="text-xs text-muted-foreground">
+                        Updates as you type
+                    </div>
+                </div>
 
-                {/* Basic Info */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Basic Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="title">Campaign Title</Label>
-                            <Input id="title" name="title" defaultValue={campaign.title} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="subtitle">Subtitle</Label>
-                            <Textarea id="subtitle" name="subtitle" defaultValue={campaign.subtitle} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="goal">Goal Amount ($)</Label>
-                                <Input id="goal" name="goal" type="number" defaultValue={campaign.stats.goalAmount} />
+                {/* Preview Container - simulating a window or allowing scroll */}
+                <div className="border rounded-xl overflow-hidden shadow-2xl h-[calc(100vh-8rem)] bg-white relative">
+                    {/* Scale the content if needed, or just let it scroll. 
+                         For a 'preview', we might want to scale it down to fit more, 
+                         or just present it as a mobile/tablet view. 
+                     */}
+                    <div className="h-full w-full overflow-y-auto bg-white" style={{ isolation: 'isolate' }}>
+                        <CampaignProvider initialData={previewCampaign}>
+                            <div className="pointer-events-none select-none [&_a]:pointer-events-none [&_button]:pointer-events-none transform origin-top-left">
+                                {/* We disable pointer events to prevent accidental navigation, 
+                                     since it's just a visual preview. 
+                                     If we want it interactive, we can remove the pointer-events-none class.
+                                 */}
+                                <CrowdfundingPage />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="endDate">End Date</Label>
-                                {/* Note: You might need to format the date string properly for the input */}
-                                <Input id="endDate" name="endDate" type="date" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Story Editor */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Campaign Story (HTML)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Textarea
-                            id="story"
-                            name="story"
-                            className="min-h-[300px] font-mono text-sm"
-                            defaultValue={campaign.story}
-                        />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Risks (HTML)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Textarea
-                            id="risks"
-                            name="risks"
-                            className="min-h-[200px]"
-                            defaultValue={campaign.risks}
-                        />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Shipping Info (HTML)</CardTitle>
-                        <CardDescription>
-                            Shipping details, delivery estimates, and regional information
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Textarea
-                            id="shipping"
-                            name="shipping"
-                            className="min-h-[200px]"
-                            defaultValue={campaign.shipping}
-                        />
-                    </CardContent>
-                </Card>
-
-                {/* Gallery Images Management */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Gallery Images</CardTitle>
-                        <CardDescription>
-                            Min 1920x1080 recommended. Drag to reorder.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* DnD Context for Reordering */}
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <SortableContext
-                                items={galleryImages}
-                                strategy={rectSortingStrategy}
-                            >
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {galleryImages.map((src, index) => (
-                                        <SortableGalleryImage
-                                            key={src}
-                                            id={src}
-                                            src={src}
-                                            index={index}
-                                            onRemove={() => {
-                                                const newImages = [...galleryImages]
-                                                newImages.splice(index, 1)
-                                                setGalleryImages(newImages)
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            </SortableContext>
-                        </DndContext>
-
-                        {/* File Input for New Images (with Compression) */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="new_gallery_images">Upload New Images</Label>
-                            <Input
-                                id="new_gallery_images"
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                onChange={async (e) => {
-                                    if (e.target.files && e.target.files.length > 0) {
-                                        const files = Array.from(e.target.files)
-                                        const compressedFiles: File[] = []
-
-                                        // Compress each file
-                                        for (const file of files) {
-                                            try {
-                                                const compressed = await compressImageFile(file)
-                                                compressedFiles.push(compressed)
-                                                console.log(`Compressed ${file.name}: ${(file.size / 1024).toFixed(1)}kb -> ${(compressed.size / 1024).toFixed(1)}kb`)
-                                            } catch (err) {
-                                                console.error("Compression failed for", file.name, err)
-                                                compressedFiles.push(file) // Fallback to original
-                                            }
-                                        }
-
-                                        // We have to use a DataTransfer to set the files back to the input
-                                        // OR just append them to a FormData manually later?
-                                        // The action uses formData.getAll("new_gallery_images"), which reads from the input.
-                                        // So we DO need to update the input's files property if we want standard form submission to work
-                                        const dataTransfer = new DataTransfer()
-                                        compressedFiles.forEach(f => dataTransfer.items.add(f))
-                                        e.target.files = dataTransfer.files
-
-                                        toast({
-                                            title: "Images Processed",
-                                            description: `Compressed ${compressedFiles.length} images. Ready to save.`,
-                                        })
-                                    }
-                                }}
-                                name="new_gallery_images"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Large images will be automatically compressed before upload.
-                            </p>
-                        </div>
-
-                        {/* Hidden Input to pass the specific list of KEPT existing images in correct order */}
-                        <input
-                            type="hidden"
-                            name="existing_gallery_images"
-                            value={JSON.stringify(galleryImages)}
-                        />
-                    </CardContent>
-                </Card>
-
-                {/* Key Features Editor */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Key Features</CardTitle>
-                            <CardDescription>Add the main selling points (Icon + Title + Desc)</CardDescription>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setKeyFeatures([...keyFeatures, { icon: "✨", title: "", desc: "" }])}
-                        >
-                            <Plus className="h-4 w-4 mr-2" /> Add Feature
-                        </Button>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {keyFeatures.map((feature, idx) => (
-                            <div key={idx} className="flex gap-4 items-start border p-4 rounded-md bg-muted/20">
-                                <div className="w-16">
-                                    <Label className="text-xs">Icon</Label>
-                                    <Input
-                                        value={feature.icon}
-                                        onChange={(e) => {
-                                            const newFeatures = [...keyFeatures]
-                                            newFeatures[idx].icon = e.target.value
-                                            setKeyFeatures(newFeatures)
-                                        }}
-                                        className="text-center text-xl"
-                                    />
-                                </div>
-                                <div className="flex-1 space-y-2">
-                                    <div>
-                                        <Label className="text-xs">Title</Label>
-                                        <Input
-                                            value={feature.title}
-                                            onChange={(e) => {
-                                                const newFeatures = [...keyFeatures]
-                                                newFeatures[idx].title = e.target.value
-                                                setKeyFeatures(newFeatures)
-                                            }}
-                                            placeholder="Feature Title"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs">Description</Label>
-                                        <Input
-                                            value={feature.desc}
-                                            onChange={(e) => {
-                                                const newFeatures = [...keyFeatures]
-                                                newFeatures[idx].desc = e.target.value
-                                                setKeyFeatures(newFeatures)
-                                            }}
-                                            placeholder="Short description"
-                                        />
-                                    </div>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => {
-                                        const newFeatures = [...keyFeatures]
-                                        newFeatures.splice(idx, 1)
-                                        setKeyFeatures(newFeatures)
-                                    }}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                        {keyFeatures.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No features added yet.</p>}
-                    </CardContent>
-                </Card>
-
-                {/* Tech Specs Editor */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Technical Specs</CardTitle>
-                            <CardDescription>Add specification details (Label + Value)</CardDescription>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setTechSpecs([...techSpecs, { label: "", value: "" }])}
-                        >
-                            <Plus className="h-4 w-4 mr-2" /> Add Spec
-                        </Button>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {techSpecs.map((spec, idx) => (
-                            <div key={idx} className="flex gap-4 items-end border p-4 rounded-md bg-muted/20">
-                                <div className="flex-1">
-                                    <Label className="text-xs">Label</Label>
-                                    <Input
-                                        value={spec.label}
-                                        onChange={(e) => {
-                                            const newSpecs = [...techSpecs]
-                                            newSpecs[idx].label = e.target.value
-                                            setTechSpecs(newSpecs)
-                                        }}
-                                        placeholder="e.g. Weight"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <Label className="text-xs">Value</Label>
-                                    <Input
-                                        value={spec.value}
-                                        onChange={(e) => {
-                                            const newSpecs = [...techSpecs]
-                                            newSpecs[idx].value = e.target.value
-                                            setTechSpecs(newSpecs)
-                                        }}
-                                        placeholder="e.g. 12kg"
-                                    />
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => {
-                                        const newSpecs = [...techSpecs]
-                                        newSpecs.splice(idx, 1)
-                                        setTechSpecs(newSpecs)
-                                    }}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                        {techSpecs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added yet.</p>}
-                    </CardContent>
-                </Card>
-
-                <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
-                <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
-
-                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
-                    Save All Changes
-                </Button>
-            </form>
+                        </CampaignProvider>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
