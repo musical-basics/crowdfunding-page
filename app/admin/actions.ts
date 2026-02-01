@@ -88,6 +88,16 @@ export async function updateCampaignDetails(formData: FormData) {
 
 export async function deleteReward(rewardId: string) {
     const supabase = createAdminClient()
+
+    // 1. Delete associated pledges first (Nuclear Option)
+    const { error: pledgeError } = await supabase
+        .from("cf_pledge")
+        .delete()
+        .eq("reward_id", rewardId)
+
+    if (pledgeError) throw new Error(`Failed to delete associated pledges: ${pledgeError.message}`)
+
+    // 2. Delete the reward
     const { error } = await supabase
         .from("cf_reward")
         .delete()

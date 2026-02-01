@@ -91,7 +91,7 @@ export default function AdminRewardsPage() {
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                                     <AlertDialogDescription>
-                                                        This action cannot be undone. This will permanently delete the reward "{reward.title}" and remove it from the campaign.
+                                                        This action cannot be undone. This will permanently delete the reward "{reward.title}" AND REMOVE ALL associated backers/pledges.
                                                     </AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
@@ -99,8 +99,13 @@ export default function AdminRewardsPage() {
                                                     <AlertDialogAction
                                                         className="bg-red-600 hover:bg-red-700"
                                                         onClick={async () => {
-                                                            await deleteReward(reward.id)
-                                                            await refreshCampaign()
+                                                            try {
+                                                                await deleteReward(reward.id)
+                                                                await refreshCampaign()
+                                                                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                                                            } catch (error: any) {
+                                                                alert("Failed to delete reward. " + error.message)
+                                                            }
                                                         }}
                                                     >
                                                         Delete
