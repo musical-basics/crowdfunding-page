@@ -72,16 +72,7 @@ export function FAQPage() {
 
       {/* Right Sidebar */}
       <div className="lg:col-span-1 space-y-6">
-        {/* Question Form Block */}
-        <div className="border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/30 rounded-lg p-6">
-          <p className="text-foreground font-semibold mb-3">Don't see the answer to your question?</p>
-          <p className="text-muted-foreground text-sm mb-4">
-            Ask the project creator directly.
-          </p>
-          <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
-            Verify your email address to ask a question.
-          </a>
-        </div>
+        {/* Question Form Block - Removed */}
 
         {/* Need Help Block */}
         <div className="p-6 bg-muted/30 rounded-lg border border-border">
