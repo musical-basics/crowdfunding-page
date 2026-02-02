@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@/lib/supabase/client"
 import {
     Table,
     TableBody,
@@ -35,7 +35,7 @@ export default function BackersPage() {
 
     useEffect(() => {
         const fetchBackers = async () => {
-            const supabase = createClient()
+            const supabase = createBrowserClient()
             const { data, error } = await supabase
                 .from('cf_pledge')
                 .select(`
