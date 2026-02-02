@@ -23,7 +23,6 @@ export function CampaignPage() {
     { id: "story", label: "Story" },
     { id: "features", label: "Features" },
     { id: "specs", label: "Technical Details" },
-    { id: "risks", label: "Risks" },
     { id: "shipping", label: "Shipping" },
   ]
 
@@ -157,14 +156,7 @@ export function CampaignPage() {
           )}
         </section>
 
-        {/* Risks */}
-        <section id="risks" className="scroll-mt-24 pt-8 border-t border-border">
-          <h3 className="text-2xl font-bold mb-6">Risks & Challenges</h3>
-          <div
-            className="prose dark:prose-invert max-w-none text-muted-foreground"
-            dangerouslySetInnerHTML={{ __html: campaign.risks }}
-          />
-        </section>
+
 
         {/* Shipping */}
         <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">
