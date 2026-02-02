@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+
 import { useCampaign } from "@/context/campaign-context"
 import { Button } from "@/components/ui/button"
 
@@ -15,14 +15,7 @@ export function RewardsPage() {
   }
 
   // Pre-select the featured reward if available
-  useEffect(() => {
-    if (campaign?.rewards) {
-      const featuredReward = campaign.rewards.find(r => r.isFeatured && !r.isSoldOut)
-      if (featuredReward && !selectedRewardId) {
-        selectReward(featuredReward.id)
-      }
-    }
-  }, [campaign])
+
 
   return (
     <div className="space-y-8">

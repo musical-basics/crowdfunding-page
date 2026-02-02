@@ -202,90 +202,107 @@ export function CampaignPage() {
         <div className="space-y-6">
           <h4 className="font-bold text-lg">Support</h4>
 
-          {campaign.rewards.map(reward => (
-            <Card
-              key={reward.id}
-              className={`overflow-hidden transition-all duration-200 border ${reward.isSoldOut ? "opacity-70" : "hover:border-emerald-500 hover:shadow-md"
-                }`}
-            >
-              <div className="p-6 space-y-4">
-                {/* Header */}
-                <div className="space-y-1">
-                  <h3 className="font-bold text-lg leading-tight">{reward.title}</h3>
-                  <p className="text-2xl font-bold text-emerald-600">
-                    ${reward.price} <span className="text-xs font-normal text-muted-foreground text-black">approx. ¥{(reward.price * 150).toLocaleString()}</span>
-                  </p>
-                </div>
-
-                {/* Reward Image */}
-                {reward.imageUrl && (
-                  <div className="rounded-lg overflow-hidden aspect-video relative bg-slate-100">
-                    <img src={reward.imageUrl} alt={reward.title} className="w-full h-full object-cover" />
+          {campaign.rewards.map(reward => {
+            const isFeatured = reward.isFeatured
+            return (
+              <Card
+                key={reward.id}
+                className={`overflow-hidden transition-all duration-200 border relative ${reward.isSoldOut
+                  ? "opacity-70"
+                  : isFeatured
+                    ? "border-2 border-emerald-500 shadow-xl scale-[1.02] z-10 bg-emerald-50/10"
+                    : "hover:border-emerald-500 hover:shadow-md"
+                  }`}
+              >
+                {/* Featured Badge */}
+                {isFeatured && !reward.isSoldOut && (
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20">
+                    MOST POPULAR
                   </div>
                 )}
 
-                {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {reward.description}
-                </p>
-
-                {/* Meta Data Grid */}
-                <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-muted-foreground py-2">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Estimated Delivery</span>
-                    <span>{reward.estimatedDelivery}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Ships To</span>
-                    <span>{reward.shipsTo.length > 1 ? "Worldwide" : reward.shipsTo[0]}</span>
+                <div className="p-6 space-y-4">
+                  {/* Header */}
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-lg leading-tight flex items-center gap-2 flex-wrap">
+                      {reward.title}
+                      {isFeatured && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">Best Value</Badge>}
+                    </h3>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      ${reward.price} <span className="text-xs font-normal text-muted-foreground text-black">approx. ¥{(reward.price * 150).toLocaleString()}</span>
+                    </p>
                   </div>
 
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Backers</span>
-                    <span>{reward.backersCount}</span>
-                  </div>
-                  {reward.limitedQuantity && (
+                  {/* Reward Image */}
+                  {reward.imageUrl && (
+                    <div className="rounded-lg overflow-hidden aspect-video relative bg-slate-100 border border-slate-100/50">
+                      <img src={reward.imageUrl} alt={reward.title} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {reward.description}
+                  </p>
+
+                  {/* Meta Data Grid */}
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-muted-foreground py-2">
                     <div className="flex flex-col">
-                      <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Limited</span>
-                      <span className="text-orange-600 font-medium">
-                        {Math.max(0, reward.limitedQuantity - reward.backersCount)} left of {reward.limitedQuantity}
-                      </span>
+                      <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Estimated Delivery</span>
+                      <span>{reward.estimatedDelivery}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Ships To</span>
+                      <span>{reward.shipsTo.length > 1 ? "Worldwide" : reward.shipsTo[0]}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Backers</span>
+                      <span>{reward.backersCount}</span>
+                    </div>
+                    {reward.limitedQuantity && (
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Limited</span>
+                        <span className="text-orange-600 font-medium">
+                          {Math.max(0, reward.limitedQuantity - reward.backersCount)} left of {reward.limitedQuantity}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Items Included */}
+                  {reward.itemsIncluded.length > 0 && (
+                    <div className="pt-2 border-t border-dashed">
+                      <span className="font-semibold text-xs uppercase tracking-wider block mb-2">Includes:</span>
+                      <ul className="text-sm space-y-1">
+                        {reward.itemsIncluded.map((item, i) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <span className="h-1 w-1 rounded-full bg-foreground" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
 
-                {/* Items Included */}
-                {reward.itemsIncluded.length > 0 && (
-                  <div className="pt-2 border-t border-dashed">
-                    <span className="font-semibold text-xs uppercase tracking-wider block mb-2">Includes:</span>
-                    <ul className="text-sm space-y-1">
-                      {reward.itemsIncluded.map((item, i) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <span className="h-1 w-1 rounded-full bg-foreground" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Button */}
-              <div className="p-4 bg-muted/30 border-t border-border group cursor-pointer"
-                onClick={() => !reward.isSoldOut && selectReward(reward.id)}>
-                {reward.isSoldOut ? (
-                  <Button disabled className="w-full" variant="outline">Sold Out</Button>
-                ) : (
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-emerald-600 opacity-0 group-hover:opacity-10 transition-opacity rounded-md" />
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-                      Pledge ${reward.price}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Card>
-          ))}
+                {/* Action Button */}
+                <div className="p-4 bg-muted/30 border-t border-border group cursor-pointer"
+                  onClick={() => !reward.isSoldOut && selectReward(reward.id)}>
+                  {reward.isSoldOut ? (
+                    <Button disabled className="w-full" variant="outline">Sold Out</Button>
+                  ) : (
+                    <div className="relative">
+                      <div className={`absolute inset-0 bg-emerald-600 opacity-0 group-hover:opacity-10 transition-opacity rounded-md ${isFeatured ? 'opacity-5' : ''}`} />
+                      <Button className={`w-full text-white shadow-sm ${isFeatured ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200 shadow-md" : "bg-emerald-600 hover:bg-emerald-700"}`}>
+                        Pledge ${reward.price}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )
+          })}
         </div>
       </aside>
 
