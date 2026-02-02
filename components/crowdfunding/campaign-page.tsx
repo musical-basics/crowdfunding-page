@@ -22,7 +22,7 @@ export function CampaignPage() {
   const sections = [
     { id: "story", label: "Story" },
     { id: "features", label: "Features" },
-    { id: "specs", label: "Tech Specs" },
+    { id: "specs", label: "Technical Details" },
     { id: "risks", label: "Risks" },
     { id: "shipping", label: "Shipping" },
   ]
@@ -145,34 +145,15 @@ export function CampaignPage() {
 
         {/* Specs */}
         <section id="specs" className="scroll-mt-24 pt-8 border-t border-border">
-          <h3 className="text-2xl font-bold mb-6">Technical Specs</h3>
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <tbody className="divide-y divide-border">
-                {campaign.techSpecs?.length > 0 ? (
-                  campaign.techSpecs.map((spec, idx) => (
-                    <tr key={idx} className={idx % 2 === 0 ? "bg-muted/30" : ""}>
-                      <td className="p-4 font-medium">{spec.label}</td>
-                      <td className="p-4 text-muted-foreground">{spec.value}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <>
-                    <tr className="bg-muted/30"><td className="p-4 font-medium">Dimensions</td><td className="p-4 text-muted-foreground">120cm x 30cm x 10cm</td></tr>
-                    <tr><td className="p-4 font-medium">Weight</td><td className="p-4 text-muted-foreground">12kg (26 lbs)</td></tr>
-                    <tr className="bg-muted/30"><td className="p-4 font-medium">Connectivity</td><td className="p-4 text-muted-foreground">USB-C, Bluetooth 5.0, MIDI</td></tr>
-                    <tr><td className="p-4 font-medium">Power</td><td className="p-4 text-muted-foreground">Internal Battery (8hrs) or AC Adapter</td></tr>
-                  </>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <h3 className="text-2xl font-bold mb-6">Technical Details</h3>
 
-          {campaign.technicalDetails && (
+          {campaign.technicalDetails ? (
             <div
-              className="mt-8 prose dark:prose-invert max-w-none text-muted-foreground"
+              className="prose dark:prose-invert max-w-none text-muted-foreground"
               dangerouslySetInnerHTML={{ __html: campaign.technicalDetails }}
             />
+          ) : (
+            <p className="text-muted-foreground">Detailed specifications coming soon.</p>
           )}
         </section>
 

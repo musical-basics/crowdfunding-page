@@ -49,7 +49,7 @@ export default function CampaignDetailsEditor() {
     const [shipping, setShipping] = useState(campaign?.shipping || "")
     const [technicalDetails, setTechnicalDetails] = useState(campaign?.technicalDetails || `
 <div style="font-family: sans-serif; color: #111; margin-top: 40px;">
-  <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Technical Specs</h2>
+  <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Technical Details</h2>
   <div style="border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
     <div style="display: flex; background: #f9f9f9; padding: 15px; border-bottom: 1px solid #eee;">
       <div style="width: 40%; font-weight: bold;">Keyboard Versions</div>
@@ -86,7 +86,6 @@ export default function CampaignDetailsEditor() {
 
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
     const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
-    const [techSpecs, setTechSpecs] = useState<TechSpec[]>(campaign?.techSpecs || [])
 
     // Preview mode state (desktop vs mobile) - purely visual scaling if we wanted, 
     // but for now we'll just show standard responsive view in a container.
@@ -105,7 +104,6 @@ export default function CampaignDetailsEditor() {
             }
             setGalleryImages(campaign.images.gallery)
             setKeyFeatures(campaign.keyFeatures)
-            setTechSpecs(campaign.techSpecs)
         }
     }, [campaign])
 
@@ -172,7 +170,6 @@ export default function CampaignDetailsEditor() {
             gallery: galleryImages
         },
         keyFeatures,
-        techSpecs
     }
 
     return (
@@ -414,67 +411,7 @@ export default function CampaignDetailsEditor() {
                             </CardContent>
                         </Card>
 
-                        {/* Tech Specs Editor */}
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle>Technical Specs</CardTitle>
-                                    <CardDescription>Add specification details (Label + Value)</CardDescription>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setTechSpecs([...techSpecs, { label: "", value: "" }])}
-                                >
-                                    <Plus className="h-4 w-4 mr-2" /> Add Spec
-                                </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {techSpecs.map((spec, idx) => (
-                                    <div key={idx} className="flex gap-4 items-end border p-4 rounded-md bg-muted/20">
-                                        <div className="flex-1">
-                                            <Label className="text-xs">Label</Label>
-                                            <Input
-                                                value={spec.label}
-                                                onChange={(e) => {
-                                                    const newSpecs = [...techSpecs]
-                                                    newSpecs[idx].label = e.target.value
-                                                    setTechSpecs(newSpecs)
-                                                }}
-                                                placeholder="e.g. Weight"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <Label className="text-xs">Value</Label>
-                                            <Input
-                                                value={spec.value}
-                                                onChange={(e) => {
-                                                    const newSpecs = [...techSpecs]
-                                                    newSpecs[idx].value = e.target.value
-                                                    setTechSpecs(newSpecs)
-                                                }}
-                                                placeholder="e.g. 12kg"
-                                            />
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => {
-                                                const newSpecs = [...techSpecs]
-                                                newSpecs.splice(idx, 1)
-                                                setTechSpecs(newSpecs)
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                                {techSpecs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added yet.</p>}
-                            </CardContent>
-                        </Card>
+
 
                         <Card>
                             <CardHeader>
@@ -526,7 +463,6 @@ export default function CampaignDetailsEditor() {
                         </Card>
 
                         <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
-                        <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
 
                         <Button type="submit" className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700">
                             Save All Changes
@@ -565,6 +501,6 @@ export default function CampaignDetailsEditor() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
