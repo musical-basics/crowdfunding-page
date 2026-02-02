@@ -32,6 +32,12 @@ export interface FAQItem {
     category: string;
 }
 
+export interface FAQPageContent {
+    needHelpHtml: string;
+    quickLinksHtml: string;
+    sidebarImageUrl: string;
+}
+
 export interface CampaignStats {
     totalPledged: number;
     goalAmount: number;
@@ -66,6 +72,7 @@ export interface Campaign {
     creator: Creator;
     rewards: Reward[];
     faqs: FAQItem[];
+    faqPageContent?: FAQPageContent;
     keyFeatures: KeyFeature[];
     techSpecs: TechSpec[];
 }

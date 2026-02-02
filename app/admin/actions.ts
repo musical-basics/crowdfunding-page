@@ -320,6 +320,27 @@ export async function uploadCreatorAsset(formData: FormData) {
     return { success: true, url: urlData.publicUrl }
 }
 
+// --- FAQ PAGE CONTENT ACTIONS ---
+
+export async function updateFAQPageContent(formData: FormData) {
+    const id = "dreamplay-one" // Hardcoded for single-campaign app
+
+    const faqPageContent = formData.get("faqPageContent") as string
+
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from("cf_campaign")
+        .update({ faq_page_content: faqPageContent })
+        .eq("id", id)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/faqs")
+    revalidatePath("/")
+    return { success: true }
+}
+
 // Helper to parse CSV respecting quotes
 function parseCSVLine(line: string): string[] {
     const result = [];

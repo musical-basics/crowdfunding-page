@@ -78,6 +78,7 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             question: f.question,
             answer: f.answer
         })) || [],
+        faqPageContent: campaignData.faq_page_content ? JSON.parse(campaignData.faq_page_content) : undefined,
         keyFeatures: campaignData.key_features || [],
         techSpecs: campaignData.tech_specs || []
     }
