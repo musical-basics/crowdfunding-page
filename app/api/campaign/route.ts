@@ -88,7 +88,8 @@ export async function GET() {
             isSoldOut: r.is_sold_out,
             imageUrl: r.image_url,
             isFeatured: r.is_featured,
-            checkoutUrl: r.checkout_url
+            checkoutUrl: r.checkout_url,
+            shopifyVariantId: r.shopify_variant_id
         })) || [],
         faqs: faqData?.map((f: any) => ({
             id: f.id,

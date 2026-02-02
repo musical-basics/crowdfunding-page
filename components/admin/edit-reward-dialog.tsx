@@ -14,7 +14,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Edit } from "lucide-react"
+import { Edit, HelpCircle } from "lucide-react"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { updateReward } from "@/app/admin/actions"
 import { useToast } from "@/hooks/use-toast"
 import { useCampaign } from "@/context/campaign-context"
@@ -178,6 +184,38 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                     <div className="grid gap-2">
                         <Label htmlFor="items">Items Included (comma separated)</Label>
                         <Input id="items" name="items" defaultValue={reward.itemsIncluded.join(", ")} required />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="shopifyVariantId">Shopify Variant Config</Label>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-[300px]">
+                                        <p>For single items: Paste the Variant ID (e.g. 444333222).</p>
+                                        <p className="mt-2">For items with options (Size/Color), paste a JSON map:</p>
+                                        <pre className="mt-1 bg-black/10 p-1 rounded text-[10px]">
+                                            {`{
+  "DS5.5_Midnight Black": "111...",
+  "DS5.5_Pearl White": "222...",
+  "DS6.0_Midnight Black": "333..."
+}`}
+                                        </pre>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+
+                        <Textarea
+                            id="shopifyVariantId"
+                            name="shopifyVariantId"
+                            placeholder='444333222 OR {"DS5.5_Midnight Black": "..."}'
+                            className="font-mono text-xs"
+                            defaultValue={reward.shopifyVariantId || ""}
+                        />
                     </div>
 
                     <DialogFooter>

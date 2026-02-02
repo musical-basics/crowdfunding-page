@@ -25,6 +25,7 @@ export interface Reward {
     imageUrl?: string;
     isFeatured?: boolean;
     checkoutUrl?: string; // External checkout URL
+    shopifyVariantId?: string; // Shopify Variant ID or JSON map
 }
 
 export interface FAQItem {
