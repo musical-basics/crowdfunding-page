@@ -7,10 +7,13 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Lightbox from "yet-another-react-lightbox"
+import "yet-another-react-lightbox/styles.css"
 
 export function CampaignPage() {
   const { campaign, isLoading, selectReward } = useCampaign()
   const [activeSection, setActiveSection] = useState("story")
+  const [lightboxIndex, setLightboxIndex] = useState(-1)
 
   if (isLoading || !campaign) {
     return <div className="py-12 text-center text-muted-foreground">Loading campaign...</div>
@@ -20,8 +23,8 @@ export function CampaignPage() {
     { id: "story", label: "Story" },
     { id: "features", label: "Features" },
     { id: "specs", label: "Tech Specs" },
-    { id: "shipping", label: "Shipping" },
     { id: "risks", label: "Risks" },
+    { id: "shipping", label: "Shipping" },
   ]
 
   // Scroll Spy Logic
@@ -57,6 +60,12 @@ export function CampaignPage() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 relative">
+      <Lightbox
+        open={lightboxIndex >= 0}
+        index={lightboxIndex}
+        close={() => setLightboxIndex(-1)}
+        slides={campaign.images.gallery.map((src: string) => ({ src }))}
+      />
 
       {/* --- LEFT COLUMN: Table of Contents (Sticky) --- */}
       {/* Hidden on mobile, visible on desktop (2 cols wide) */}
@@ -99,7 +108,11 @@ export function CampaignPage() {
           {/* Gallery Insert */}
           <div className="grid grid-cols-2 gap-4 my-8">
             {campaign.images.gallery.map((img, idx) => (
-              <div key={idx} className="relative aspect-video bg-muted rounded-lg border border-border overflow-hidden">
+              <div
+                key={idx}
+                className="relative aspect-video bg-muted rounded-lg border border-border overflow-hidden cursor-pointer"
+                onClick={() => setLightboxIndex(idx)}
+              >
                 <Image
                   src={img}
                   alt={`Gallery Image ${idx + 1}`}
@@ -156,6 +169,15 @@ export function CampaignPage() {
           </div>
         </section>
 
+        {/* Risks */}
+        <section id="risks" className="scroll-mt-24 pt-8 border-t border-border">
+          <h3 className="text-2xl font-bold mb-6">Risks & Challenges</h3>
+          <div
+            className="prose dark:prose-invert max-w-none text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: campaign.risks }}
+          />
+        </section>
+
         {/* Shipping */}
         <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">
           <h3 className="text-2xl font-bold mb-6">Shipping & Delivery</h3>
@@ -167,15 +189,6 @@ export function CampaignPage() {
           ) : (
             <p className="text-muted-foreground">Shipping details coming soon.</p>
           )}
-        </section>
-
-        {/* Risks */}
-        <section id="risks" className="scroll-mt-24 pt-8 border-t border-border">
-          <h3 className="text-2xl font-bold mb-6">Risks & Challenges</h3>
-          <div
-            className="prose dark:prose-invert max-w-none text-muted-foreground"
-            dangerouslySetInnerHTML={{ __html: campaign.risks }}
-          />
         </section>
       </main>
 

@@ -101,6 +101,7 @@ export default function CampaignDetailsEditor() {
                 title: "Success",
                 description: "Campaign updated successfully",
                 variant: "default",
+                duration: 3000,
             })
         } catch (error) {
             toast({
@@ -206,39 +207,6 @@ export default function CampaignDetailsEditor() {
                                     className="min-h-[300px] font-mono text-sm"
                                     value={story}
                                     onChange={e => setStory(e.target.value)}
-                                />
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Risks (HTML)</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Textarea
-                                    id="risks"
-                                    name="risks"
-                                    className="min-h-[200px]"
-                                    value={risks}
-                                    onChange={e => setRisks(e.target.value)}
-                                />
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Shipping Info (HTML)</CardTitle>
-                                <CardDescription>
-                                    Shipping details, delivery estimates, and regional information
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <Textarea
-                                    id="shipping"
-                                    name="shipping"
-                                    className="min-h-[200px]"
-                                    value={shipping}
-                                    onChange={e => setShipping(e.target.value)}
                                 />
                             </CardContent>
                         </Card>
@@ -465,6 +433,39 @@ export default function CampaignDetailsEditor() {
                                     </div>
                                 ))}
                                 {techSpecs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added yet.</p>}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Risks (HTML)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    id="risks"
+                                    name="risks"
+                                    className="min-h-[200px]"
+                                    value={risks}
+                                    onChange={e => setRisks(e.target.value)}
+                                />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Shipping Info (HTML)</CardTitle>
+                                <CardDescription>
+                                    Shipping details, delivery estimates, and regional information
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    id="shipping"
+                                    name="shipping"
+                                    className="min-h-[200px]"
+                                    value={shipping}
+                                    onChange={e => setShipping(e.target.value)}
+                                />
                             </CardContent>
                         </Card>
 
