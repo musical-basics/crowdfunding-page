@@ -14,9 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { ChevronLeft, ExternalLink, ShieldCheck } from "lucide-react"
 
-// --- CONFIGURATION ---
-
-const SHOPIFY_DOMAIN = "your-shop-name.myshopify.com"
+// 🔧 CONFIGURATION
+const SHOPIFY_DOMAIN = "dreamplay-pianos.myshopify.com"
 
 export function CheckoutDialog() {
     const { campaign, selectedRewardId, selectReward } = useCampaign()
@@ -33,18 +32,12 @@ export function CheckoutDialog() {
 
     const { toast } = useToast()
     const reward = campaign?.rewards.find(r => r.id === selectedRewardId)
-
-    // Check if this reward needs customization options
     const hasOptions = reward?.itemsIncluded.some(item => item.toLowerCase().includes("keyboard")) || false
 
     useEffect(() => {
         if (selectedRewardId && reward) {
             setIsOpen(true)
-            // If reward has options, start at Step 1 (Customize). 
-            // If it's a fixed digital reward, skip to Step 2 (Review).
-            setStep(hasOptions ? 1 : 2)
-
-            // Reset defaults
+            setStep(hasOptions ? 1 : 2) // Step 1 = Customize, Step 2 = Review
             setKeySize("DS5.5")
             setVariantColor("Midnight Black")
             setAgreedToTerms(false)
@@ -69,49 +62,23 @@ export function CheckoutDialog() {
 
         setIsRedirecting(true)
 
-        // 0. Use direct override if custom URL is set
-        if (reward?.checkoutUrl) {
-            window.location.href = reward.checkoutUrl
-            return
+        // 1. Get the base Variant ID for this reward
+        // This relies on the new field we added to the Admin/DB.
+        // Fallback is for safety during testing.
+        const variantId = reward?.shopifyVariantId || "REPLACE_WITH_DEFAULT_ID";
+
+        // 2. Construct the Base URL
+        // We use the cart/add endpoint because it supports properties easily
+        let checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/add?id=${variantId}&quantity=1&return_to=/checkout`
+
+        // 3. Append Properties (Option A Logic)
+        if (hasOptions) {
+            const sizeParam = encodeURIComponent(keySize)
+            const colorParam = encodeURIComponent(variantColor)
+
+            // This matches exactly what your old Webflow site was doing
+            checkoutUrl += `&properties[Size]=${sizeParam}&properties[Finish]=${colorParam}`
         }
-
-        // 1. Get the config from the DB Reward
-        const variantConfig = reward?.shopifyVariantId
-
-        let variantId = ""
-
-        if (!variantConfig) {
-            // Fallback for simple items if no config is present (optional, or just error out)
-            // For now, let's error to encourage configuration
-            toast({ title: "Configuration Error", description: "Shopify ID missing for this reward.", variant: "destructive" })
-            setIsRedirecting(false)
-            return
-        }
-
-        // 2. Determine if it's a Single ID or a JSON Map
-        if (variantConfig.trim().startsWith("{")) {
-            // It's a JSON Map (Bundle Logic)
-            try {
-                const map = JSON.parse(variantConfig)
-                const lookupKey = `${keySize}_${variantColor}` // e.g., "DS5.5_Midnight Black"
-                variantId = map[lookupKey]
-            } catch (e) {
-                console.error("Invalid JSON in reward config")
-            }
-        } else {
-            // It's a simple String ID (Single Item Logic)
-            variantId = variantConfig.trim()
-        }
-
-        if (!variantId) {
-            toast({ title: "Out of Stock", description: "This specific combination is not available.", variant: "destructive" })
-            setIsRedirecting(false)
-            return
-        }
-
-        // 3. Construct Cart Permalink
-        // This will create a checkout with 1 unit of the variant
-        const checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/${variantId}:1`
 
         // 4. Redirect
         window.location.href = checkoutUrl
@@ -140,7 +107,7 @@ export function CheckoutDialog() {
                 {/* Body */}
                 <div className="p-6 overflow-y-auto max-h-[70vh]">
 
-                    {/* STEP 1: CUSTOMIZE (Only if hasOptions) */}
+                    {/* STEP 1: CUSTOMIZE */}
                     {step === 1 && hasOptions && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
                             <div className="space-y-4">
@@ -181,11 +148,9 @@ export function CheckoutDialog() {
                         </div>
                     )}
 
-                    {/* STEP 2: REVIEW & REDIRECT */}
+                    {/* STEP 2: REVIEW */}
                     {step === 2 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-
-                            {/* Summary Card */}
                             <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
@@ -199,11 +164,10 @@ export function CheckoutDialog() {
                                 <div className="h-px bg-border/50" />
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                                    <span>Shipping & Taxes calculated at checkout</span>
+                                    <span>Processed securely by Shopify</span>
                                 </div>
                             </div>
 
-                            {/* Terms */}
                             <div className="flex items-start space-x-3 pt-2">
                                 <Checkbox
                                     id="terms"
@@ -216,12 +180,11 @@ export function CheckoutDialog() {
                                         I agree to the Terms of Use
                                     </label>
                                     <p className="text-xs text-muted-foreground text-balance leading-relaxed">
-                                        I understand that I am pledging to a project in development. Shipping dates are estimates.
+                                        I understand this is a pre-order for August 2026 delivery.
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Action Button */}
                             <Button
                                 onClick={handleShopifyRedirect}
                                 disabled={isRedirecting}
