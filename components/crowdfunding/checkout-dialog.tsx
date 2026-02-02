@@ -13,37 +13,69 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { submitPledge } from "@/app/actions"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, ExternalLink, ShieldCheck } from "lucide-react"
+
+// ------------------------------------------------------------------
+// 🔧 CONFIGURATION: Map your selections to Shopify Variant IDs
+// You can find these IDs in your Shopify Admin URL for each variant
+// ------------------------------------------------------------------
+const SHOPIFY_VARIANTS: Record<string, string> = {
+    // FORMAT: "RewardID_Size_Color" : "ShopifyVariantID"
+
+    // BUNDLE VARIANTS
+    "bundle_DS5.5_Midnight Black": "44444444444", // Replace with real ID
+    "bundle_DS5.5_Pearl White": "44444444445",
+    "bundle_DS6.0_Midnight Black": "44444444446",
+    "bundle_DS6.0_Pearl White": "44444444447",
+
+    // KEYBOARD ONLY VARIANTS
+    "solo_DS5.5_Midnight Black": "55555555555",
+    "solo_DS5.5_Pearl White": "55555555556",
+    "solo_DS6.0_Midnight Black": "55555555557",
+    "solo_DS6.0_Pearl White": "55555555558",
+
+    // DEFAULT FALLBACK (for testing)
+    "default": "123456789"
+}
+
+const SHOPIFY_DOMAIN = "your-shop-name.myshopify.com"
+// ------------------------------------------------------------------
 
 export function CheckoutDialog() {
-    const { campaign, selectedRewardId, selectReward, pledge } = useCampaign()
+    const { campaign, selectedRewardId, selectReward } = useCampaign()
     const [isOpen, setIsOpen] = useState(false)
-    const [step, setStep] = useState<1 | 2 | 3>(1) // Step 1: Shipping/Amount, Step 2: Options, Step 3: User Details
+    const [step, setStep] = useState<1 | 2 | 3>(1)
     const [pledgeAmount, setPledgeAmount] = useState(0)
-    const [shippingLocation, setShippingLocation] = useState("United States")
+
+    // Customization State
     const [keySize, setKeySize] = useState<"DS5.5" | "DS6.0">("DS5.5")
     const [variantColor, setVariantColor] = useState<"Midnight Black" | "Pearl White">("Midnight Black")
-    const [isSubmitting, setIsSubmitting] = useState(false)
+
+    // Form State
+    const [isRedirecting, setIsRedirecting] = useState(false)
+    const [agreedToTerms, setAgreedToTerms] = useState(false)
+
     const { toast } = useToast()
 
     const reward = campaign?.rewards.find(r => r.id === selectedRewardId)
+    // Check if this reward needs customization
     const hasOptions = reward?.itemsIncluded.some(item => item.toLowerCase().includes("keyboard")) || false
 
     useEffect(() => {
         if (selectedRewardId && reward) {
             setIsOpen(true)
-            setPledgeAmount(reward.price) // Reset to reward price
-            setStep(1)
+            setPledgeAmount(reward.price)
+            setStep(hasOptions ? 2 : 3) // Skip step 1 if price is fixed, or adjust logic as needed
             // Reset defaults
             setKeySize("DS5.5")
             setVariantColor("Midnight Black")
+            setAgreedToTerms(false)
         } else {
             setIsOpen(false)
         }
-    }, [selectedRewardId, reward])
+    }, [selectedRewardId, reward, hasOptions])
 
     const handleClose = (open: boolean) => {
         if (!open) {
@@ -52,229 +84,183 @@ export function CheckoutDialog() {
         }
     }
 
-    const handleContinueFromPledge = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (pledgeAmount < (reward?.price || 0)) {
-            toast({ title: "Error", description: "Pledge cannot be lower than reward price", variant: "destructive" })
+    const handleShopifyRedirect = () => {
+        if (!agreedToTerms) {
+            toast({ title: "Agreement Required", description: "Please agree to the crowdfunding terms to continue.", variant: "destructive" })
             return
         }
-        if (hasOptions) {
-            setStep(2)
-        } else {
-            setStep(3)
-        }
-    }
 
-    const handleContinueFromOptions = (e: React.FormEvent) => {
-        e.preventDefault()
-        setStep(3)
-    }
+        setIsRedirecting(true)
 
-    const handleBack = () => {
-        if (step === 3) {
-            setStep(hasOptions ? 2 : 1)
-        } else if (step === 2) {
-            setStep(1)
-        }
-    }
+        // 1. Construct the lookup key
+        // Note: Make sure your reward IDs in 'mock-data.ts' match the keys here (e.g., 'bundle', 'solo')
+        const lookupKey = `${selectedRewardId}_${keySize}_${variantColor}`
 
-    const handleFinalSubmit = async (formData: FormData) => {
-        setIsSubmitting(true)
-        try {
-            formData.append("amount", pledgeAmount.toString())
-            formData.append("rewardId", reward?.id || "")
-            formData.append("shippingLocation", shippingLocation)
+        // 2. Find the variant ID
+        const variantId = SHOPIFY_VARIANTS[lookupKey] || SHOPIFY_VARIANTS["default"]
 
-            if (hasOptions) {
-                formData.append("keySize", keySize)
-                formData.append("variantColor", variantColor)
-            }
+        // 3. Construct Shopify Cart Permalink
+        // Logic: https://domain/cart/{variant_id}:{quantity}
+        const checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/${variantId}:1`
 
-            await submitPledge(formData)
-            pledge(pledgeAmount)
-
-            toast({
-                title: "Pledge Successful!",
-                description: `You successfully backed this project!`,
-                variant: "default" // Green success
-            })
-
-            handleClose(false)
-        } catch (error) {
-            toast({ title: "Error", description: "Transaction failed", variant: "destructive" })
-        } finally {
-            setIsSubmitting(false)
-        }
+        // 4. Redirect
+        window.location.href = checkoutUrl
     }
 
     if (!reward) return null
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden gap-0">
+            <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden gap-0 bg-background">
 
                 {/* Header */}
-                <div className="p-6 pb-4 border-b border-border bg-muted/10">
+                <div className="p-6 pb-4 border-b border-border bg-muted/5">
                     <div className="flex items-center gap-2">
                         {step > 1 && (
-                            <button onClick={handleBack} className="text-muted-foreground hover:text-foreground">
+                            <button
+                                onClick={() => setStep(prev => (prev - 1) as 1 | 2 | 3)}
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
                         )}
-                        <DialogTitle className="text-xl">
-                            {step === 1 && `Pledge for ${reward.title}`}
-                            {step === 2 && "Customize Your Reward"}
-                            {step === 3 && "Complete Payment"}
+                        <DialogTitle className="text-lg font-semibold">
+                            {step === 1 && `Back this project`}
+                            {step === 2 && "Customize your reward"}
+                            {step === 3 && "Review & Checkout"}
                         </DialogTitle>
                     </div>
-                    <DialogDescription className="mt-1">
-                        {step === 1 && "Choose shipping and confirm amount."}
-                        {step === 2 && "Select your preferred model and finish."}
-                        {step === 3 && "Enter your details to finalize."}
-                    </DialogDescription>
                 </div>
 
                 {/* Body */}
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto max-h-[70vh]">
+
+                    {/* STEP 1: AMOUNT (Optional, can be skipped if fixed price) */}
                     {step === 1 && (
-                        <form onSubmit={handleContinueFromPledge} className="space-y-6">
-                            {/* Shipping */}
-                            <div className="space-y-3">
-                                <Label>Shipping destination</Label>
-                                <Select value={shippingLocation} onValueChange={setShippingLocation}>
-                                    <SelectTrigger className="h-11">
-                                        <SelectValue placeholder="Select Country" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="United States">United States</SelectItem>
-                                        <SelectItem value="Canada">Canada</SelectItem>
-                                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                                        <SelectItem value="Germany">Germany</SelectItem>
-                                        <SelectItem value="Australia">Australia</SelectItem>
-                                        <SelectItem value="Rest of World">Rest of World</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                        <div className="space-y-6">
+                            <div className="p-4 border rounded-lg bg-muted/20">
+                                <h4 className="font-medium text-sm mb-1">{reward.title}</h4>
+                                <p className="text-xs text-muted-foreground">{reward.description}</p>
                             </div>
-
-                            {/* Amount */}
                             <div className="space-y-3">
-                                <Label>Pledge amount</Label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
-                                    <Input
-                                        type="number"
-                                        value={pledgeAmount}
-                                        onChange={(e) => setPledgeAmount(Number(e.target.value))}
-                                        className="pl-7 h-11 text-lg font-medium"
-                                        min={reward.price}
-                                    />
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Minimum pledge is ${reward.price} for this reward.
-                                </p>
+                                <Label>Pledge Amount</Label>
+                                <Input
+                                    type="number"
+                                    value={pledgeAmount}
+                                    onChange={(e) => setPledgeAmount(Number(e.target.value))}
+                                    className="h-12 text-lg font-medium"
+                                    min={reward.price}
+                                />
                             </div>
-
-                            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-base">
+                            <Button onClick={() => setStep(hasOptions ? 2 : 3)} className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700">
                                 Continue
                             </Button>
-                        </form>
+                        </div>
                     )}
 
+                    {/* STEP 2: OPTIONS */}
                     {step === 2 && (
-                        <form onSubmit={handleContinueFromOptions} className="space-y-8">
-                            {/* Key Size */}
-                            <div className="space-y-3">
-                                <Label className="text-base font-semibold">Key Size</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setKeySize("DS5.5")}
-                                        className={`h-14 rounded-full border-2 font-medium transition-all ${keySize === "DS5.5"
-                                                ? "border-black bg-black text-white"
-                                                : "border-border hover:border-black/50"
-                                            }`}
-                                    >
-                                        DS5.5
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setKeySize("DS6.0")}
-                                        className={`h-14 rounded-full border-2 font-medium transition-all ${keySize === "DS6.0"
-                                                ? "border-black bg-black text-white"
-                                                : "border-border hover:border-black/50"
-                                            }`}
-                                    >
-                                        DS6.0
-                                    </button>
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <Label className="text-base">Keyboard Size</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {["DS5.5", "DS6.0"].map((size) => (
+                                        <div
+                                            key={size}
+                                            onClick={() => setKeySize(size as any)}
+                                            className={`cursor-pointer border-2 rounded-xl p-4 text-center transition-all ${keySize === size ? 'border-emerald-600 bg-emerald-50/50' : 'border-border hover:border-gray-300'}`}
+                                        >
+                                            <div className="font-bold">{size}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                                {size === "DS5.5" ? "Small Hands (< 8.5\")" : "Standard Fit"}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
-
-                            {/* Color */}
-                            <div className="space-y-3">
-                                <Label className="text-base font-semibold">Color</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setVariantColor("Midnight Black")}
-                                        className={`h-14 rounded-full border-2 font-medium transition-all ${variantColor === "Midnight Black"
-                                                ? "border-black bg-black text-white"
-                                                : "border-border hover:border-black/50"
-                                            }`}
-                                    >
-                                        Midnight Black
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setVariantColor("Pearl White")}
-                                        className={`h-14 rounded-full border-2 font-medium transition-all ${variantColor === "Pearl White"
-                                                ? "border-black bg-black text-white"
-                                                : "border-border hover:border-black/50"
-                                            }`}
-                                    >
-                                        Pearl White
-                                    </button>
-                                </div>
-                            </div>
-
-                            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-base mt-4">
-                                Continue
-                            </Button>
-                        </form>
-                    )}
-
-                    {step === 3 && (
-                        <form action={handleFinalSubmit} className="space-y-6">
-                            <div className="p-4 bg-muted/30 rounded-lg border border-border flex justify-between items-center mb-6">
-                                <div className="flex flex-col">
-                                    <span className="font-medium text-sm">Total Pledge</span>
-                                    {hasOptions && (
-                                        <span className="text-xs text-muted-foreground">
-                                            {keySize}, {variantColor}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="text-xl font-bold text-emerald-600">${pledgeAmount}</span>
                             </div>
 
                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Full Name</Label>
-                                    <Input id="name" name="name" required placeholder="Cardholder Name" className="h-11" autoComplete="name" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="address">Shipping Address</Label>
-                                    <Input id="address" name="address" required placeholder="123 Main St, Apt 4B" className="h-11" autoComplete="street-address" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email Address</Label>
-                                    <Input id="email" name="email" type="email" required placeholder="you@example.com" className="h-11" autoComplete="email" />
+                                <Label className="text-base">Finish</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {["Midnight Black", "Pearl White"].map((color) => (
+                                        <div
+                                            key={color}
+                                            onClick={() => setVariantColor(color as any)}
+                                            className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-3 transition-all ${variantColor === color ? 'border-emerald-600 bg-emerald-50/50' : 'border-border hover:border-gray-300'}`}
+                                        >
+                                            <div className={`h-6 w-6 rounded-full border border-gray-200 ${color === "Midnight Black" ? "bg-neutral-900" : "bg-white"}`} />
+                                            <span className="font-medium text-sm">{color}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            <Button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-base">
-                                {isSubmitting ? "Processing..." : "Confirm Payment"}
+                            <Button onClick={() => setStep(3)} className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700">
+                                Review Selection
                             </Button>
-                        </form>
+                        </div>
+                    )}
+
+                    {/* STEP 3: REVIEW & REDIRECT */}
+                    {step === 3 && (
+                        <div className="space-y-6">
+
+                            {/* Summary Card */}
+                            <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h4 className="font-bold text-base">{reward.title}</h4>
+                                        {hasOptions && (
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                                {keySize} • {variantColor}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <span className="font-bold text-lg">${pledgeAmount}</span>
+                                </div>
+                                <div className="h-px bg-border/50" />
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                                    <span>Secure checkout via Shopify</span>
+                                </div>
+                            </div>
+
+                            {/* Terms Checkbox */}
+                            <div className="flex items-start space-x-3 pt-2">
+                                <Checkbox
+                                    id="terms"
+                                    checked={agreedToTerms}
+                                    onCheckedChange={(c) => setAgreedToTerms(c as boolean)}
+                                    className="mt-1"
+                                />
+                                <div className="grid gap-1.5 leading-none">
+                                    <label
+                                        htmlFor="terms"
+                                        className="text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                    >
+                                        I agree to the Terms of Use
+                                    </label>
+                                    <p className="text-xs text-muted-foreground text-balance leading-relaxed">
+                                        I understand that I am pledging to a project in development. Shipping dates (August 2026) are estimates. Shipping fees and taxes will be calculated at checkout.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Button
+                                onClick={handleShopifyRedirect}
+                                disabled={isRedirecting}
+                                className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700 shadow-md group"
+                            >
+                                {isRedirecting ? (
+                                    "Redirecting to Checkout..."
+                                ) : (
+                                    <>
+                                        Proceed to Checkout
+                                        <ExternalLink className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     )}
                 </div>
             </DialogContent>
