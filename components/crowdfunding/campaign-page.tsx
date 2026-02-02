@@ -167,6 +167,13 @@ export function CampaignPage() {
               </tbody>
             </table>
           </div>
+
+          {campaign.technicalDetails && (
+            <div
+              className="mt-8 prose dark:prose-invert max-w-none text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: campaign.technicalDetails }}
+            />
+          )}
         </section>
 
         {/* Risks */}

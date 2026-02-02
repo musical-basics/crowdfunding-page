@@ -13,6 +13,7 @@ export async function updateCampaignDetails(formData: FormData) {
     const story = formData.get("story") as string
     const risks = formData.get("risks") as string
     const shipping = formData.get("shipping") as string
+    const technicalDetails = formData.get("technicalDetails") as string
     const goalAmount = formData.get("goal")
     const endsAt = formData.get("endDate")
 
@@ -68,6 +69,7 @@ export async function updateCampaignDetails(formData: FormData) {
             story,
             risks,
             shipping,
+            technical_details: technicalDetails,
             goal_amount: goalAmount,
             ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined,
             gallery_images: galleryImages,

@@ -47,6 +47,42 @@ export default function CampaignDetailsEditor() {
     const [story, setStory] = useState(campaign?.story || "")
     const [risks, setRisks] = useState(campaign?.risks || "")
     const [shipping, setShipping] = useState(campaign?.shipping || "")
+    const [technicalDetails, setTechnicalDetails] = useState(campaign?.technicalDetails || `
+<div style="font-family: sans-serif; color: #111; margin-top: 40px;">
+  <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Technical Specs</h2>
+  <div style="border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+    <div style="display: flex; background: #f9f9f9; padding: 15px; border-bottom: 1px solid #eee;">
+      <div style="width: 40%; font-weight: bold;">Keyboard Versions</div>
+      <div style="width: 60%;">DS5.5 (7/8ths size) or DS6.0 (15/16ths size)</div>
+    </div>
+    <div style="display: flex; padding: 15px; border-bottom: 1px solid #eee;">
+      <div style="width: 40%; font-weight: bold;">Overall Dimensions<br><span style="font-size: 12px; font-weight: normal; color: #666;">(LxWxH)</span></div>
+      <div style="width: 60%;">
+        48.27" x 11.65" x 5.9"<br>
+        <span style="font-size: 12px; color: #666;">(1226 mm x 296 mm x 150 mm)</span>
+      </div>
+    </div>
+    <div style="display: flex; background: #f9f9f9; padding: 15px; border-bottom: 1px solid #eee;">
+      <div style="width: 40%; font-weight: bold;">Active Key Width</div>
+      <div style="width: 60%;">
+        <strong>DS 6.0:</strong> 44.53" (1131 mm)<br>
+        <strong>DS 5.5:</strong> 41.1" (1044 mm)
+      </div>
+    </div>
+    <div style="display: flex; padding: 15px; border-bottom: 1px solid #eee;">
+      <div style="width: 40%; font-weight: bold;">Action</div>
+      <div style="width: 60%;">Graded Hammer Action (Weighted)</div>
+    </div>
+    <div style="display: flex; background: #f9f9f9; padding: 15px; border-bottom: 1px solid #eee;">
+      <div style="width: 40%; font-weight: bold;">Polyphony</div>
+      <div style="width: 60%;">256 Notes (Never cut off a sound)</div>
+    </div>
+    <div style="display: flex; padding: 15px;">
+      <div style="width: 40%; font-weight: bold;">Connectivity</div>
+      <div style="width: 60%;">USB-MIDI, Bluetooth Audio, 2x Headphone Jacks, Aux In/Out, Sustain Pedal</div>
+    </div>
+  </div>
+</div>`)
 
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
     const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
@@ -64,6 +100,9 @@ export default function CampaignDetailsEditor() {
             setStory(campaign.story)
             setRisks(campaign.risks)
             setShipping(campaign.shipping)
+            if (campaign.technicalDetails) {
+                setTechnicalDetails(campaign.technicalDetails)
+            }
             setGalleryImages(campaign.images.gallery)
             setKeyFeatures(campaign.keyFeatures)
             setTechSpecs(campaign.techSpecs)
@@ -122,6 +161,7 @@ export default function CampaignDetailsEditor() {
         story,
         risks,
         shipping,
+        technicalDetails,
         // Update stats goal amount visually
         stats: {
             ...campaign.stats,
@@ -433,6 +473,22 @@ export default function CampaignDetailsEditor() {
                                     </div>
                                 ))}
                                 {techSpecs.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No specs added yet.</p>}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Technical Details (HTML)</CardTitle>
+                                <CardDescription>Custom HTML block for detailed specs</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea
+                                    id="technicalDetails"
+                                    name="technicalDetails"
+                                    className="min-h-[300px] font-mono text-sm"
+                                    value={technicalDetails}
+                                    onChange={e => setTechnicalDetails(e.target.value)}
+                                />
                             </CardContent>
                         </Card>
 

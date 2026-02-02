@@ -56,6 +56,7 @@ export interface Campaign {
     story: string; // HTML or Markdown content
     risks: string; // HTML or Markdown content
     shipping: string; // HTML content for shipping info
+    technicalDetails: string; // HTML content for technical details
     images: {
         hero: string;
         gallery: string[];
