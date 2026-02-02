@@ -37,6 +37,7 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
         story: campaignData.story,
         risks: campaignData.risks,
         shipping: campaignData.shipping || '',
+        technicalDetails: campaignData.technical_details || '',
         images: {
             hero: campaignData.hero_image,
             gallery: campaignData.gallery_images || []
