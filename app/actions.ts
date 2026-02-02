@@ -11,6 +11,8 @@ export async function submitPledge(formData: FormData) {
     const amount = Number(formData.get("amount"))
     const email = formData.get("email") as string
     const name = formData.get("name") as string
+    const shippingAddress = formData.get("address") as string
+    const shippingLocation = formData.get("shippingLocation") as string
 
     // 1. Find or Create Customer
     // We try to find a customer by email first
@@ -48,6 +50,8 @@ export async function submitPledge(formData: FormData) {
             reward_id: rewardId,
             customer_id: customerId,
             amount: amount,
+            shipping_address: shippingAddress,
+            shipping_location: shippingLocation,
             status: 'succeeded' // In a real Stripe app, this would be 'pending' until webhook fires
         })
 
