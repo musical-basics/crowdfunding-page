@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { uploadCreatorAsset } from "@/app/admin/actions"
 import { useToast } from "@/hooks/use-toast"
+import { compressImageFile } from "@/lib/image-utils"
 
 interface ImageFrameProps {
     label: string
@@ -33,8 +34,11 @@ export function ImageFrame({
 
         setIsUploading(true)
         try {
+            // Compress image
+            const compressedFile = await compressImageFile(file)
+
             const formData = new FormData()
-            formData.append("file", file)
+            formData.append("file", compressedFile)
 
             const result = await uploadCreatorAsset(formData)
 
