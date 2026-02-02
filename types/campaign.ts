@@ -6,6 +6,7 @@ export interface Creator {
     location: string;
     projectsCreated: number;
     projectsBacked: number;
+    pageContent?: string; // HTML content for Creator page
 }
 
 export interface Reward {

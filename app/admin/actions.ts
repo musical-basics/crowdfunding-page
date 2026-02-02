@@ -252,6 +252,8 @@ export async function updateCreatorProfile(formData: FormData) {
     const bio = formData.get("bio") as string
     const location = formData.get("location") as string
 
+    const pageContent = formData.get("pageContent") as string
+
     const supabase = createAdminClient() // Move to top scope
 
     // Handle File Upload
@@ -285,6 +287,7 @@ export async function updateCreatorProfile(formData: FormData) {
             bio,
             location,
             avatar_url: avatarUrl,
+            page_content: pageContent
         })
         .eq("id", id)
 
@@ -293,6 +296,28 @@ export async function updateCreatorProfile(formData: FormData) {
     revalidatePath("/admin/creator")
     revalidatePath("/") // Update public page immediately
     return { success: true }
+}
+
+export async function uploadCreatorAsset(formData: FormData) {
+    const file = formData.get("file") as File
+    if (!file || file.size === 0) return { error: "No file provided" }
+
+    const supabase = createAdminClient()
+    const fileExt = file.name.split('.').pop()
+    const fileName = `creator-asset-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+    const filePath = `creators/content/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+        .from('campaign-assets')
+        .upload(filePath, file)
+
+    if (uploadError) return { error: uploadError.message }
+
+    const { data: urlData } = supabase.storage
+        .from('campaign-assets')
+        .getPublicUrl(filePath)
+
+    return { success: true, url: urlData.publicUrl }
 }
 
 // Helper to parse CSV respecting quotes

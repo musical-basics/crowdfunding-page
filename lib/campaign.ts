@@ -55,7 +55,8 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             bio: campaignData.creator.bio,
             location: campaignData.creator.location,
             projectsCreated: campaignData.creator.projects_created,
-            projectsBacked: campaignData.creator.projects_backed
+            projectsBacked: campaignData.creator.projects_backed,
+            pageContent: campaignData.creator.page_content || ''
         },
         rewards: rewardsData?.map((r: any) => ({
             id: r.id,
