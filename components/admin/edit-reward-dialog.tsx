@@ -148,6 +148,17 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                         />
                     </div>
 
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            id="isFeatured"
+                            name="isFeatured"
+                            defaultChecked={reward.isFeatured}
+                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <Label htmlFor="isFeatured">Featured Reward (Most Popular)</Label>
+                    </div>
+
                     <div className="grid gap-2">
                         <Label htmlFor="description">Description</Label>
                         <Textarea id="description" name="description" defaultValue={reward.description} required />
@@ -165,15 +176,17 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
             </DialogContent>
 
             {/* Cropper Modal */}
-            {originalImageSrc && (
-                <ImageCropper
-                    isOpen={isCropperOpen}
-                    imageSrc={originalImageSrc}
-                    onClose={() => setIsCropperOpen(false)}
-                    onCropComplete={handleCropComplete}
-                    aspect={16 / 9} // Landscape for rewards
-                />
-            )}
-        </Dialog>
+            {
+                originalImageSrc && (
+                    <ImageCropper
+                        isOpen={isCropperOpen}
+                        imageSrc={originalImageSrc}
+                        onClose={() => setIsCropperOpen(false)}
+                        onCropComplete={handleCropComplete}
+                        aspect={16 / 9} // Landscape for rewards
+                    />
+                )
+            }
+        </Dialog >
     )
 }

@@ -143,8 +143,17 @@ export function CreateRewardDialog() {
                             name="quantity"
                             type="number"
                             min="1"
-                            placeholder="Leave empty for unlimited"
                         />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            id="isFeatured"
+                            name="isFeatured"
+                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <Label htmlFor="isFeatured">Featured Reward (Most Popular)</Label>
                     </div>
 
                     <div className="grid gap-2">

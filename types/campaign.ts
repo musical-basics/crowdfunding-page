@@ -23,6 +23,7 @@ export interface Reward {
     timeLeft?: string; // For scarcity logic
     isSoldOut: boolean;
     imageUrl?: string;
+    isFeatured?: boolean;
 }
 
 export interface FAQItem {

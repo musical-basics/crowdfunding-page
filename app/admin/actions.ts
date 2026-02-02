@@ -129,7 +129,8 @@ export async function createReward(prevState: any, formData: FormData) {
             limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
             ships_to: ["Anywhere in the world"], // Default to worldwide
             is_sold_out: false,
-            image_url: await uploadRewardImage(formData.get("imageFile") as File, supabase)
+            image_url: await uploadRewardImage(formData.get("imageFile") as File, supabase),
+            is_featured: formData.get("isFeatured") === "on"
         })
 
     if (error) return { error: error.message }
@@ -189,7 +190,8 @@ export async function updateReward(prevState: any, formData: FormData) {
             items_included: (formData.get("items") as string).split(",").map(i => i.trim()),
             estimated_delivery: formData.get("delivery"),
             limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
-            image_url: imageUrl
+            image_url: imageUrl,
+            is_featured: formData.get("isFeatured") === "on"
         })
         .eq("id", id)
 

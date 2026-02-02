@@ -70,7 +70,8 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             backersCount: r.backers_count,
             limitedQuantity: r.limit_quantity,
             isSoldOut: r.is_sold_out,
-            imageUrl: r.image_url
+            imageUrl: r.image_url,
+            isFeatured: r.is_featured
         })) || [],
         faqs: faqData?.map((f: any) => ({
             id: f.id,
