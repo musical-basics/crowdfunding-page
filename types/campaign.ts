@@ -24,6 +24,7 @@ export interface Reward {
     isSoldOut: boolean;
     imageUrl?: string;
     isFeatured?: boolean;
+    checkoutUrl?: string; // External checkout URL
 }
 
 export interface FAQItem {

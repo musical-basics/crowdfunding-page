@@ -92,6 +92,12 @@ export function CheckoutDialog() {
 
         setIsRedirecting(true)
 
+        // 0. Use direct override if custom URL is set
+        if (reward?.checkoutUrl) {
+            window.location.href = reward.checkoutUrl
+            return
+        }
+
         // 1. Construct the lookup key
         // Note: Make sure your reward IDs in 'mock-data.ts' match the keys here (e.g., 'bundle', 'solo')
         const lookupKey = `${selectedRewardId}_${keySize}_${variantColor}`

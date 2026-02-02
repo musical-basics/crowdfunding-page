@@ -130,7 +130,8 @@ export async function createReward(prevState: any, formData: FormData) {
             ships_to: ["Anywhere in the world"], // Default to worldwide
             is_sold_out: false,
             image_url: await uploadRewardImage(formData.get("imageFile") as File, supabase),
-            is_featured: formData.get("isFeatured") === "on"
+            is_featured: formData.get("isFeatured") === "on",
+            checkout_url: formData.get("checkoutUrl") as string
         })
 
     if (error) return { error: error.message }
@@ -191,7 +192,8 @@ export async function updateReward(prevState: any, formData: FormData) {
             estimated_delivery: formData.get("delivery"),
             limit_quantity: formData.get("quantity") ? Number(formData.get("quantity")) : null,
             image_url: imageUrl,
-            is_featured: formData.get("isFeatured") === "on"
+            is_featured: formData.get("isFeatured") === "on",
+            checkout_url: formData.get("checkoutUrl") as string
         })
         .eq("id", id)
 

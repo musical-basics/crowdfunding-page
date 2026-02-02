@@ -157,6 +157,16 @@ export function CreateRewardDialog() {
                     </div>
 
                     <div className="grid gap-2">
+                        <Label htmlFor="checkoutUrl">Checkout URL (Optional)</Label>
+                        <Input
+                            id="checkoutUrl"
+                            name="checkoutUrl"
+                            placeholder="https://your-shop.com/cart/..."
+                        />
+                        <p className="text-xs text-muted-foreground">Overrides the default checkout logic if set.</p>
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="description">Description</Label>
                         <Textarea id="description" name="description" placeholder="What do they get?" required />
                     </div>

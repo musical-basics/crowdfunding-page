@@ -57,6 +57,7 @@ export async function GET() {
             hero: campaignData.hero_image,
             gallery: campaignData.gallery_images || []
         },
+        technicalDetails: campaignData.technical_details || '',
         stats: {
             totalPledged: Number(campaignData.total_pledged),
             goalAmount: Number(campaignData.goal_amount),
@@ -85,7 +86,9 @@ export async function GET() {
             backersCount: r.backers_count,
             limitedQuantity: r.limit_quantity,
             isSoldOut: r.is_sold_out,
-            imageUrl: r.image_url
+            imageUrl: r.image_url,
+            isFeatured: r.is_featured,
+            checkoutUrl: r.checkout_url
         })) || [],
         faqs: faqData?.map((f: any) => ({
             id: f.id,

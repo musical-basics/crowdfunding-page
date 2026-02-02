@@ -160,6 +160,17 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                     </div>
 
                     <div className="grid gap-2">
+                        <Label htmlFor="checkoutUrl">Checkout URL (Optional)</Label>
+                        <Input
+                            id="checkoutUrl"
+                            name="checkoutUrl"
+                            defaultValue={reward.checkoutUrl || ""}
+                            placeholder="https://your-shop.com/cart/..."
+                        />
+                        <p className="text-xs text-muted-foreground">Overrides the default checkout logic if set.</p>
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="description">Description</Label>
                         <Textarea id="description" name="description" defaultValue={reward.description} required />
                     </div>
