@@ -42,6 +42,7 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             hero: campaignData.hero_image,
             gallery: campaignData.gallery_images || []
         },
+        mediaGallery: campaignData.media_gallery || [],
         stats: {
             totalPledged: Number(campaignData.total_pledged),
             goalAmount: Number(campaignData.goal_amount),

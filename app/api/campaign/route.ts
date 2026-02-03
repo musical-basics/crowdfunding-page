@@ -57,6 +57,7 @@ export async function GET() {
             hero: campaignData.hero_image,
             gallery: campaignData.gallery_images || []
         },
+        mediaGallery: campaignData.media_gallery || [],
         technicalDetails: campaignData.technical_details || '',
         stats: {
             totalPledged: Number(campaignData.total_pledged),
