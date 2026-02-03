@@ -98,19 +98,37 @@ export async function submitPledge(formData: FormData) {
 
 // 1. ADMIN: Post an Update
 export async function postCampaignUpdate(formData: FormData) {
+    console.log("🚀 Starting Post Update Action...")
+
+    // 1. Check if the Key exists
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error("❌ CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing!")
+        return { success: false, error: "Server misconfiguration: Missing Key" }
+    }
+
     const supabase = createAdminClient()
     const title = formData.get("title") as string
     const content = formData.get("content") as string
-    const image = formData.get("image") as string // Assuming you upload via your existing upload tool first
+    const image = formData.get("image") as string
 
-    const { error } = await supabase.from("cf_update").insert({
+    console.log("📝 Payload:", { title, content, image })
+
+    // 2. Perform Insert
+    const { data, error } = await supabase.from("cf_update").insert({
         campaign_id: "dreamplay-one",
         title,
         content,
-        image
+        image: image || null // Ensure we don't send undefined
     })
+        .select()
 
-    if (error) return { success: false, error: error.message }
+    // 3. Log Result
+    if (error) {
+        console.error("❌ Database Error:", error.message, error.details)
+        return { success: false, error: error.message }
+    }
+
+    console.log("✅ Success! Row created:", data)
     revalidatePath("/")
     return { success: true }
 }
