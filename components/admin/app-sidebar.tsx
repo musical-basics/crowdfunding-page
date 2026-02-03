@@ -8,7 +8,8 @@ import {
     HelpCircle,
     Settings,
     LogOut,
-    ExternalLink // <--- Import this icon
+    ExternalLink,
+    Users // <--- Import Users icon
 } from "lucide-react"
 import {
     Sidebar,
@@ -34,6 +35,11 @@ const items = [
         title: "Campaign Details",
         url: "/admin/details",
         icon: FileText,
+    },
+    {
+        title: "Backers", // <--- Add Backers
+        url: "/admin/backers",
+        icon: Users,
     },
     {
         title: "Rewards",
