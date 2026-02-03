@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { updateCampaignDetails } from "../actions"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog" // Import Dialog parts
+import { updateCampaignDetails, uploadCreatorAsset } from "../actions"
 import { useCampaign, CampaignProvider } from "@/context/campaign-context" // Import CampaignProvider
-import { KeyFeature, TechSpec, Campaign } from "@/types/campaign"
-import { Plus, Trash2, Smartphone, Monitor } from "lucide-react"
+import { KeyFeature, TechSpec, Campaign, MediaItem } from "@/types/campaign"
+import { Plus, Trash2, Smartphone, Monitor, Video, Image as ImageIcon, PlayCircle } from "lucide-react"
 import {
     DndContext,
     closestCenter,
@@ -25,10 +26,60 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
     rectSortingStrategy,
+    useSortable
 } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { SortableGalleryImage } from "@/components/admin/sortable-gallery-image"
 import { compressImageFile } from "@/lib/image-utils"
 import { CrowdfundingPage } from "@/components/crowdfunding-page" // Import the public page component
+
+// --- NEW COMPONENT: Sortable Media Item ---
+function SortableMediaItem({ item, onRemove }: { item: MediaItem, onRemove: () => void }) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id })
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    }
+
+    return (
+        <div ref={setNodeRef} style={style} className="relative group aspect-video bg-muted rounded-md overflow-hidden border touch-none">
+            {/* Thumbnail Display */}
+            <img
+                src={item.type === 'video' ? (item.thumbnail || item.src) : item.src}
+                alt="Media"
+                className="w-full h-full object-cover"
+            />
+
+            {/* Video Indicator Overlay */}
+            {item.type === 'video' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <PlayCircle className="w-8 h-8 text-white opacity-80" />
+                </div>
+            )}
+
+            {/* Drag Handle Overlay */}
+            <div {...attributes} {...listeners} className="absolute inset-0 cursor-grab active:cursor-grabbing" />
+
+            {/* Delete Button */}
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation() // Prevent drag
+                    onRemove()
+                }}
+                className="absolute top-1 right-1 bg-destructive text-white p-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/90 z-10"
+            >
+                <Trash2 className="h-4 w-4" />
+            </button>
+
+            {/* Type Badge */}
+            <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded uppercase font-bold pointer-events-none">
+                {item.type}
+            </div>
+        </div>
+    )
+}
 
 export default function CampaignDetailsEditor() {
     const { toast } = useToast()
@@ -86,6 +137,15 @@ export default function CampaignDetailsEditor() {
 
     const [heroImage, setHeroImage] = useState(campaign?.images?.hero || "")
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
+
+    // NEW: Media Gallery State
+    const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([])
+
+    // NEW: Video Dialog State
+    const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
+    const [newVideoUrl, setNewVideoUrl] = useState("")
+    const [newVideoThumb, setNewVideoThumb] = useState<File | null>(null)
+    const [isUploadingVideo, setIsUploadingVideo] = useState(false)
     const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
 
     // Preview mode state (desktop vs mobile) - purely visual scaling if we wanted, 
@@ -108,6 +168,18 @@ export default function CampaignDetailsEditor() {
             }
             setGalleryImages(campaign.images.gallery)
             setKeyFeatures(campaign.keyFeatures)
+
+            // LOAD GALLERY: 
+            if (campaign.mediaGallery && campaign.mediaGallery.length > 0) {
+                setMediaGallery(campaign.mediaGallery)
+            } else if (campaign.images.gallery.length > 0) {
+                // Convert legacy string array to new object structure
+                setMediaGallery(campaign.images.gallery.map(url => ({
+                    id: url,
+                    type: 'image',
+                    src: url
+                })))
+            }
         }
     }, [campaign])
 
@@ -118,19 +190,85 @@ export default function CampaignDetailsEditor() {
         })
     )
 
-    function handleDragEnd(event: DragEndEvent) {
+    function handleMediaDragEnd(event: DragEndEvent) {
         const { active, over } = event
-
         if (active.id !== over?.id) {
-            setGalleryImages((items) => {
-                const oldIndex = items.indexOf(active.id as string)
-                const newIndex = items.indexOf(over?.id as string)
+            setMediaGallery((items) => {
+                const oldIndex = items.findIndex(i => i.id === active.id)
+                const newIndex = items.findIndex(i => i.id === over?.id)
                 return arrayMove(items, oldIndex, newIndex)
             })
         }
     }
 
+    // Handle Standard Image Uploads (Multi-select)
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files?.length) return
+
+        const files = Array.from(e.target.files)
+        const newItems: MediaItem[] = []
+
+        toast({ title: "Uploading images...", description: "Please wait." })
+
+        for (const file of files) {
+            const formData = new FormData()
+            formData.append("file", await compressImageFile(file))
+
+            // Reuse the creator asset upload action (it just returns a URL)
+            const result = await uploadCreatorAsset(formData)
+
+            if (result.success && result.url) {
+                newItems.push({
+                    id: result.url as string, // Use URL as ID
+                    type: 'image',
+                    src: result.url as string
+                })
+            }
+        }
+
+        setMediaGallery(prev => [...prev, ...newItems])
+        toast({ title: "Images added", description: "Don't forget to save changes." })
+    }
+
+    // Handle New Video Addition
+    const handleAddVideo = async () => {
+        if (!newVideoUrl) return
+
+        setIsUploadingVideo(true)
+        let thumbUrl = ""
+
+        // Upload thumbnail if present
+        if (newVideoThumb) {
+            const formData = new FormData()
+            formData.append("file", await compressImageFile(newVideoThumb))
+            const result = await uploadCreatorAsset(formData)
+            if (result.success && result.url) thumbUrl = result.url as string
+        }
+
+        // Add to gallery
+        const newItem: MediaItem = {
+            id: `video-${Date.now()}`, // Temporary ID
+            type: 'video',
+            src: newVideoUrl,
+            thumbnail: thumbUrl || "/images/video-placeholder.jpg" // Fallback
+        }
+
+        setMediaGallery(prev => [...prev, newItem])
+
+        // Reset & Close
+        setIsVideoDialogOpen(false)
+        setNewVideoUrl("")
+        setNewVideoThumb(null)
+        setIsUploadingVideo(false)
+    }
+
     async function handleSubmit(formData: FormData) {
+        // Convert our rich MediaGallery state to JSON string for the DB
+        formData.set("media_gallery_json", JSON.stringify(mediaGallery))
+        // Maintain legacy galleryImages for backward compatibility if needed, using the 'image' type items
+        const legacyImages = mediaGallery.filter(i => i.type === 'image').map(i => i.src)
+        formData.set("existing_gallery_images", JSON.stringify(legacyImages))
+
         // Because we are using controlled inputs, we might need to ensure the FormData 
         // has the correct values if the inputs weren't updating the DOM attributes (they should be though).
         // Since we are passing name attributes and value attributes, FormData will pick up current values.
@@ -253,90 +391,97 @@ export default function CampaignDetailsEditor() {
                         </Card>
 
                         {/* Gallery Images Management */}
+                        {/* Media Gallery Management */}
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Gallery Images</CardTitle>
-                                <CardDescription>
-                                    Min 1920x1080 recommended. Drag to reorder.
-                                </CardDescription>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Media Gallery</CardTitle>
+                                    <CardDescription>Images & Videos for the main carousel. First item can be Hero.</CardDescription>
+                                </div>
+                                <div className="flex gap-2">
+                                    {/* Add Video Button */}
+                                    <Dialog open={isVideoDialogOpen} onOpenChange={setIsVideoDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm" className="gap-2">
+                                                <Video className="h-4 w-4" /> Add Video
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Add Video to Carousel</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div className="grid gap-2">
+                                                    <Label>Video URL (Cloudflare R2 or Direct MP4)</Label>
+                                                    <Input
+                                                        placeholder="https://pub-xyz.r2.dev/video.mp4"
+                                                        value={newVideoUrl}
+                                                        onChange={e => setNewVideoUrl(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Thumbnail Image (Required for Carousel)</Label>
+                                                    <Input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={e => setNewVideoThumb(e.target.files?.[0] || null)}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button onClick={handleAddVideo} disabled={isUploadingVideo}>
+                                                    {isUploadingVideo ? "Uploading..." : "Add to Gallery"}
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+
+                                    {/* Add Images Button (Hidden Input Trick) */}
+                                    <div className="relative">
+                                        <Button variant="outline" size="sm" className="gap-2 pointer-events-none">
+                                            <ImageIcon className="h-4 w-4" /> Add Images
+                                        </Button>
+                                        <Input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={handleImageUpload}
+                                        />
+                                    </div>
+                                </div>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {/* DnD Context for Reordering */}
                                 <DndContext
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
+                                    onDragEnd={handleMediaDragEnd}
                                 >
                                     <SortableContext
-                                        items={galleryImages}
+                                        items={mediaGallery.map(i => i.id)}
                                         strategy={rectSortingStrategy}
                                     >
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            {galleryImages.map((src, index) => (
-                                                <SortableGalleryImage
-                                                    key={src}
-                                                    id={src}
-                                                    src={src}
-                                                    index={index}
-                                                    onRemove={() => {
-                                                        const newImages = [...galleryImages]
-                                                        newImages.splice(index, 1)
-                                                        setGalleryImages(newImages)
-                                                    }}
+                                            {mediaGallery.map((item) => (
+                                                <SortableMediaItem
+                                                    key={item.id}
+                                                    item={item}
+                                                    onRemove={() => setMediaGallery(prev => prev.filter(i => i.id !== item.id))}
                                                 />
                                             ))}
                                         </div>
                                     </SortableContext>
                                 </DndContext>
 
-                                {/* File Input for New Images (with Compression) */}
-                                <div className="grid gap-2">
-                                    <Label htmlFor="new_gallery_images">Upload New Images</Label>
-                                    <Input
-                                        id="new_gallery_images"
-                                        type="file"
-                                        multiple
-                                        accept="image/*"
-                                        onChange={async (e) => {
-                                            if (e.target.files && e.target.files.length > 0) {
-                                                const files = Array.from(e.target.files)
-                                                const compressedFiles: File[] = []
-
-                                                // Compress each file
-                                                for (const file of files) {
-                                                    try {
-                                                        const compressed = await compressImageFile(file)
-                                                        compressedFiles.push(compressed)
-                                                        console.log(`Compressed ${file.name}: ${(file.size / 1024).toFixed(1)}kb -> ${(compressed.size / 1024).toFixed(1)}kb`)
-                                                    } catch (err) {
-                                                        console.error("Compression failed for", file.name, err)
-                                                        compressedFiles.push(file) // Fallback to original
-                                                    }
-                                                }
-
-                                                const dataTransfer = new DataTransfer()
-                                                compressedFiles.forEach(f => dataTransfer.items.add(f))
-                                                e.target.files = dataTransfer.files
-
-                                                toast({
-                                                    title: "Images Processed",
-                                                    description: `Compressed ${compressedFiles.length} images. Ready to save.`,
-                                                })
-                                            }
-                                        }}
-                                        name="new_gallery_images"
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        Large images will be automatically compressed before upload.
-                                    </p>
-                                </div>
-                                <input
-                                    type="hidden"
-                                    name="existing_gallery_images"
-                                    value={JSON.stringify(galleryImages)}
-                                />
+                                {mediaGallery.length === 0 && (
+                                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg mt-4">
+                                        No media added. Upload images or add videos.
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
+
+
 
                         {/* Hero Image Management */}
                         <Card>
@@ -533,10 +678,10 @@ export default function CampaignDetailsEditor() {
                         </Button>
                     </form>
                 </div>
-            </div>
+            </div >
 
             {/* Preview Column - Sticky/Fixed */}
-            <div className="hidden xl:block w-[500px] border-l bg-background pl-4">
+            < div className="hidden xl:block w-[500px] border-l bg-background pl-4" >
                 <div className="flex items-center justify-between mb-4 mt-2">
                     <h2 className="font-semibold text-lg flex items-center gap-2">
                         <Monitor className="h-4 w-4" /> Live Preview
@@ -564,7 +709,7 @@ export default function CampaignDetailsEditor() {
                         </CampaignProvider>
                     </div>
                 </div>
-            </div>
+            </div >
         </div >
     )
 }

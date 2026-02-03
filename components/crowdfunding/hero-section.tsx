@@ -40,7 +40,22 @@ export function HeroSection() {
     }
   }, [videoOpen])
 
-  const allImages = campaign ? [campaign.images.hero, ...campaign.images.gallery] : []
+  const allItems = React.useMemo(() => {
+    if (!campaign) return []
+    // Prefer the new structured media gallery
+    if (campaign.mediaGallery && campaign.mediaGallery.length > 0) {
+      return campaign.mediaGallery
+    }
+    // Fallback to legacy structure
+    const items = []
+    if (campaign.images.hero) {
+      items.push({ id: 'hero', type: 'image', src: campaign.images.hero } as const)
+    }
+    campaign.images.gallery.forEach(src => {
+      items.push({ id: src, type: 'image', src } as const)
+    })
+    return items
+  }, [campaign])
 
   React.useEffect(() => {
     if (!api) return
@@ -62,31 +77,27 @@ export function HeroSection() {
       <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted">
         <Carousel setApi={setApi} className="w-full h-full">
           <CarouselContent>
-            {allImages.map((src, index) => (
+            {allItems.map((item, index) => (
               <CarouselItem key={index}>
                 <div
                   className="relative aspect-video w-full h-full flex items-center justify-center bg-black/5 cursor-zoom-in"
                   onClick={() => {
-                    if (index === 0) {
+                    if (item.type === 'video') {
                       setVideoOpen(true)
                     } else {
                       setLightboxOpen(true)
                     }
                   }}
                 >
-                  {src && (src.startsWith('/') || src.startsWith('http')) ? (
-                    <Image
-                      src={src}
-                      alt={`Product view ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      priority={index === 0}
+                  <div className="relative w-full h-full">
+                    <img
+                      src={item.type === 'video' ? (item.thumbnail || item.src) : item.src}
+                      alt={`View ${index + 1}`}
+                      className="w-full h-full object-contain"
                     />
-                  ) : (
-                    <span className="text-muted-foreground">Image {index + 1}</span>
-                  )}
+                  </div>
 
-                  {index === 0 && (
+                  {item.type === 'video' && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 transition-transform hover:scale-110 cursor-pointer">
                         <Play className="h-6 w-6 text-white fill-white ml-1" />
@@ -111,15 +122,15 @@ export function HeroSection() {
             className="gap-2 shadow-sm"
             onClick={(e) => {
               e.stopPropagation()
-              if (current === 0) {
+              if (allItems[current]?.type === 'video') {
                 setVideoOpen(true)
               } else {
                 setLightboxOpen(true)
               }
             }}
           >
-            {current === 0 ? <Play className="h-4 w-4" /> : null}
-            {current === 0 ? "Play Video" : "View Fullscreen"}
+            {allItems[current]?.type === 'video' ? <Play className="h-4 w-4" /> : null}
+            {allItems[current]?.type === 'video' ? "Play Video" : "View Fullscreen"}
           </Button>
         </div>
       </div>
@@ -128,7 +139,11 @@ export function HeroSection() {
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
         index={current}
-        slides={allImages.map(src => ({ src }))}
+        slides={allItems.map(item =>
+          item.type === 'video'
+            ? { src: item.thumbnail || item.src }
+            : { src: item.src }
+        )}
       />
 
       {/* Video Dialog */}
@@ -141,22 +156,28 @@ export function HeroSection() {
 
           <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
 
-            {/* iframe is always rendered when dialog is open so autoplay works */}
-            <iframe
-              width="100%"
-              height="100%"
-              className="absolute inset-0 w-full h-full"
-              style={{ background: 'black' }}
-              src="https://www.youtube.com/embed/r_FxvWH32DM?autoplay=1&mute=0&rel=0&modestbranding=1"
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              onLoad={() => {
-                // Give YouTube player time to fully render its UI
-                setTimeout(() => setIsVideoLoaded(true), 800)
-              }}
-            />
+            {/* Video Player - Handles both YouTube and Direct MP4 if needed (simplified for now to assume iframe/video tag based on src) */}
+            {allItems[current]?.src.includes('youtube') || allItems[current]?.src.includes('youtu.be') ? (
+              <iframe
+                width="100%"
+                height="100%"
+                className="absolute inset-0 w-full h-full"
+                src={allItems[current]?.src.replace('watch?v=', 'embed/')}
+                title="Video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                onLoad={() => setIsVideoLoaded(true)}
+              />
+            ) : (
+              <video
+                className="w-full h-full"
+                controls
+                autoPlay
+                src={allItems[current]?.src}
+                onLoadedData={() => setIsVideoLoaded(true)}
+              />
+            )}
 
             {/* Black overlay that covers the iframe until it's ready - prevents any flash */}
             <div
@@ -178,7 +199,7 @@ export function HeroSection() {
       </Dialog>
 
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {allImages.map((src, index) => (
+        {allItems.map((item, index) => (
           <button
             key={index}
             onClick={() => handleThumbnailClick(index)}
@@ -189,13 +210,19 @@ export function HeroSection() {
                 : "border-transparent opacity-60 hover:opacity-100"}
             `}
           >
-            {src.startsWith('/') || src.startsWith('http') ? (
-              <Image src={src} alt="thumbnail" fill className="object-cover" />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center text-xs">
-                {index + 1}
-              </div>
-            )}
+            {/* Thumbnail Content */}
+            <div className="w-full h-full relative">
+              <img
+                src={item.type === 'video' ? (item.thumbnail || item.src) : item.src}
+                alt="thumbnail"
+                className="w-full h-full object-cover"
+              />
+              {item.type === 'video' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <Play className="w-4 h-4 text-white fill-white" />
+                </div>
+              )}
+            </div>
           </button>
         ))}
       </div>

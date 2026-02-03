@@ -9,6 +9,13 @@ export interface Creator {
     pageContent?: string; // HTML content for Creator page
 }
 
+export interface MediaItem {
+    id: string;
+    type: 'image' | 'video';
+    src: string;
+    thumbnail?: string;
+}
+
 export interface Reward {
     id: string;
     title: string;
@@ -71,6 +78,7 @@ export interface Campaign {
         hero: string;
         gallery: string[];
     };
+    mediaGallery?: MediaItem[];
     stats: CampaignStats;
     creator: Creator;
     rewards: Reward[];

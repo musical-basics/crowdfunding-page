@@ -7,13 +7,12 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import Lightbox from "yet-another-react-lightbox"
-import "yet-another-react-lightbox/styles.css"
+import { HeroSection } from "@/components/crowdfunding/hero-section" // Import HeroSection
 
 export function CampaignPage() {
   const { campaign, isLoading, selectReward } = useCampaign()
   const [activeSection, setActiveSection] = useState("story")
-  const [lightboxIndex, setLightboxIndex] = useState(-1)
+
 
   if (isLoading || !campaign) {
     return <div className="py-12 text-center text-muted-foreground">Loading campaign...</div>
@@ -59,12 +58,7 @@ export function CampaignPage() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8 relative">
-      <Lightbox
-        open={lightboxIndex >= 0}
-        index={lightboxIndex}
-        close={() => setLightboxIndex(-1)}
-        slides={campaign.images.gallery.map((src: string) => ({ src }))}
-      />
+
 
       {/* --- LEFT COLUMN: Table of Contents (Sticky) --- */}
       {/* Hidden on mobile, visible on desktop (2 cols wide) */}
@@ -104,35 +98,9 @@ export function CampaignPage() {
             dangerouslySetInnerHTML={{ __html: campaign.story }}
           />
 
-          {/* Hero Image */}
-          {campaign.images?.hero && (
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 border border-border">
-              <Image
-                src={campaign.images.hero}
-                alt="Campaign Hero"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-
-          {/* Gallery Insert */}
-          <div className="grid grid-cols-2 gap-4 my-8">
-            {campaign.images.gallery.map((img, idx) => (
-              <div
-                key={idx}
-                className="relative aspect-video bg-muted rounded-lg border border-border overflow-hidden cursor-pointer"
-                onClick={() => setLightboxIndex(idx)}
-              >
-                <Image
-                  src={img}
-                  alt={`Gallery Image ${idx + 1}`}
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-            ))}
+          {/* Hero Section (Mixed Media Gallery) */}
+          <div className="mb-8">
+            <HeroSection />
           </div>
         </section>
 

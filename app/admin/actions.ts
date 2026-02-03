@@ -25,6 +25,10 @@ export async function updateCampaignDetails(formData: FormData) {
     const keyFeatures = keyFeaturesJson ? JSON.parse(keyFeaturesJson) : []
     const techSpecs = techSpecsJson ? JSON.parse(techSpecsJson) : []
 
+    // Parse Media Gallery (New)
+    const mediaGalleryJson = formData.get("media_gallery_json") as string
+    const mediaGallery = mediaGalleryJson ? JSON.parse(mediaGalleryJson) : []
+
     // Handle Gallery Images
     // 1. Parse existing (kept) images
     const existingImagesJson = formData.get("existing_gallery_images") as string
@@ -98,6 +102,7 @@ export async function updateCampaignDetails(formData: FormData) {
             shipping,
             technical_details: technicalDetails,
             goal_amount: goalAmount,
+            media_gallery: mediaGallery,
             ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined,
             gallery_images: galleryImages,
             hero_image: heroImageUrl,
