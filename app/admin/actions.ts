@@ -111,7 +111,10 @@ export async function updateCampaignDetails(formData: FormData) {
         })
         .eq("id", id)
 
-    if (error) throw new Error(error.message)
+    if (error) {
+        console.error("Supabase Update Error:", error.message)
+        throw new Error(`Database error: ${error.message}`)
+    }
 
     // Refresh the data on the site immediately
     revalidatePath("/")

@@ -263,30 +263,33 @@ export default function CampaignDetailsEditor() {
     }
 
     async function handleSubmit(formData: FormData) {
-        // Convert our rich MediaGallery state to JSON string for the DB
+        // 1. Prepare the JSON data
         formData.set("media_gallery_json", JSON.stringify(mediaGallery))
         // Maintain legacy galleryImages for backward compatibility if needed, using the 'image' type items
         const legacyImages = mediaGallery.filter(i => i.type === 'image').map(i => i.src)
         formData.set("existing_gallery_images", JSON.stringify(legacyImages))
 
-        // Because we are using controlled inputs, we might need to ensure the FormData 
-        // has the correct values if the inputs weren't updating the DOM attributes (they should be though).
-        // Since we are passing name attributes and value attributes, FormData will pick up current values.
+        toast({ title: "Saving...", description: "Updating campaign details." })
 
         try {
+            // 2. Call Server Action
             await updateCampaignDetails(formData)
-            await refreshCampaign()
+
+            // 3. Success!
             toast({
                 title: "Success",
-                description: "Campaign updated successfully",
-                variant: "default",
-                duration: 3000,
+                description: "Campaign details saved successfully.",
+                variant: "default"
             })
+
+            await refreshCampaign()
         } catch (error) {
+            // 4. ERROR CAUGHT! Show it to the user.
+            console.error("Save failed:", error)
             toast({
-                title: "Error",
-                description: "Failed to update campaign",
-                variant: "destructive",
+                title: "Save Failed",
+                description: error instanceof Error ? error.message : "An unknown error occurred. Check server logs.",
+                variant: "destructive"
             })
         }
     }
