@@ -84,6 +84,7 @@ export default function CampaignDetailsEditor() {
   </div>
 </div>`)
 
+    const [heroImage, setHeroImage] = useState(campaign?.images?.hero || "")
     const [galleryImages, setGalleryImages] = useState<string[]>(campaign?.images?.gallery || [])
     const [keyFeatures, setKeyFeatures] = useState<KeyFeature[]>(campaign?.keyFeatures || [])
 
@@ -101,6 +102,9 @@ export default function CampaignDetailsEditor() {
             setShipping(campaign.shipping)
             if (campaign.technicalDetails) {
                 setTechnicalDetails(campaign.technicalDetails)
+            }
+            if (campaign.images?.hero) {
+                setHeroImage(campaign.images.hero)
             }
             setGalleryImages(campaign.images.gallery)
             setKeyFeatures(campaign.keyFeatures)
@@ -166,7 +170,7 @@ export default function CampaignDetailsEditor() {
             goalAmount
         },
         images: {
-            ...campaign.images,
+            hero: heroImage,
             gallery: galleryImages
         },
         keyFeatures,
@@ -326,12 +330,72 @@ export default function CampaignDetailsEditor() {
                                         Large images will be automatically compressed before upload.
                                     </p>
                                 </div>
-
                                 <input
                                     type="hidden"
                                     name="existing_gallery_images"
                                     value={JSON.stringify(galleryImages)}
                                 />
+                            </CardContent>
+                        </Card>
+
+                        {/* Hero Image Management */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Hero Image</CardTitle>
+                                <CardDescription>
+                                    Displayed at the top of the Story tab. Min 1920px width recommended.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {heroImage && (
+                                    <div className="relative aspect-video w-full rounded-md overflow-hidden border border-border">
+                                        <img src={heroImage} alt="Hero Preview" className="w-full h-full object-cover" />
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute top-2 right-2 h-8 w-8"
+                                            onClick={() => setHeroImage("")}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="hero_image_file">Upload Hero Image</Label>
+                                    <Input
+                                        id="hero_image_file"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                            if (e.target.files && e.target.files.length > 0) {
+                                                const file = e.target.files[0]
+                                                try {
+                                                    const compressed = await compressImageFile(file)
+
+                                                    // Create a local preview URL
+                                                    const previewUrl = URL.createObjectURL(compressed)
+                                                    setHeroImage(previewUrl)
+
+                                                    // Use DataTransfer to update the file input with compressed file
+                                                    const dataTransfer = new DataTransfer()
+                                                    dataTransfer.items.add(compressed)
+                                                    e.target.files = dataTransfer.files
+
+                                                    toast({
+                                                        title: "Image Processed",
+                                                        description: "Hero image ready to upload.",
+                                                    })
+                                                } catch (err) {
+                                                    console.error("Compression failed", err)
+                                                }
+                                            }
+                                        }}
+                                        name="hero_image_file"
+                                    />
+                                </div>
+                                <input type="hidden" name="hero_image_url" value={heroImage} />
                             </CardContent>
                         </Card>
 

@@ -61,6 +61,33 @@ export async function updateCampaignDetails(formData: FormData) {
         }
     }
 
+    // Handle Hero Image
+    const heroImageFile = formData.get("hero_image_file") as File
+    let heroImageUrl = formData.get("hero_image_url") as string
+
+    // If it's a blob URL (preview), we must ignore it and rely on file upload
+    // But if we cleared it (empty string), we respect that.
+    if (heroImageUrl && heroImageUrl.startsWith("blob:")) {
+        heroImageUrl = "" // Will be replaced by new upload or remains empty if upload fails
+    }
+
+    if (heroImageFile && heroImageFile.size > 0) {
+        const fileExt = heroImageFile.name.split('.').pop()
+        const fileName = `hero-${Date.now()}.${fileExt}`
+        const filePath = `campaign-hero/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+            .from('campaign-assets')
+            .upload(filePath, heroImageFile)
+
+        if (!uploadError) {
+            const { data: urlData } = supabase.storage
+                .from('campaign-assets')
+                .getPublicUrl(filePath)
+            heroImageUrl = urlData.publicUrl
+        }
+    }
+
     const { error } = await supabase
         .from("cf_campaign")
         .update({
@@ -73,6 +100,7 @@ export async function updateCampaignDetails(formData: FormData) {
             goal_amount: goalAmount,
             ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined,
             gallery_images: galleryImages,
+            hero_image: heroImageUrl,
             key_features: keyFeatures,
             tech_specs: techSpecs
         })

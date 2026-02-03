@@ -104,6 +104,19 @@ export function CampaignPage() {
             dangerouslySetInnerHTML={{ __html: campaign.story }}
           />
 
+          {/* Hero Image */}
+          {campaign.images?.hero && (
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-8 border border-border">
+              <Image
+                src={campaign.images.hero}
+                alt="Campaign Hero"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
+
           {/* Gallery Insert */}
           <div className="grid grid-cols-2 gap-4 my-8">
             {campaign.images.gallery.map((img, idx) => (
