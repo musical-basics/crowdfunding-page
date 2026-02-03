@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { MessageSquare, CheckCircle2, Send, Image as ImageIcon } from "lucide-react"
-import { getCommunityFeed, postComment, postCampaignUpdate } from "@/app/actions" // Update path if needed
+import { MessageSquare, CheckCircle2, Send, Image as ImageIcon, Trash2, Edit2, X, Save } from "lucide-react"
+import { getCommunityFeed, postComment, postCampaignUpdate, deleteCampaignUpdate, editCampaignUpdate } from "@/app/actions" // Update path if needed
 import { useToast } from "@/hooks/use-toast"
 import { formatDistanceToNow } from "date-fns"
 
@@ -94,6 +94,33 @@ export function CommunityTab({ isAdmin = false }: { isAdmin?: boolean }) {
         )
     }
 
+    // State for editing
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const [editingId, setEditingId] = useState<string | null>(null)
+
+    async function handleDelete(id: string) {
+        if (!confirm("Are you sure you want to delete this update?")) return
+        const res = await deleteCampaignUpdate(id)
+        if (res.success) {
+            toast({ title: "Update Deleted" })
+            loadFeed()
+        } else {
+            toast({ title: "Error", description: "Failed to delete update", variant: "destructive" })
+        }
+    }
+
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    async function handleEditSubmit(formData: FormData) {
+        const res = await editCampaignUpdate(formData)
+        if (res.success) {
+            toast({ title: "Update Edited" })
+            setEditingId(null)
+            loadFeed()
+        } else {
+            toast({ title: "Error", description: "Failed to edit update", variant: "destructive" })
+        }
+    }
+
     return (
         <div className="max-w-3xl mx-auto py-8">
             <AdminPostForm />
@@ -106,30 +133,68 @@ export function CommunityTab({ isAdmin = false }: { isAdmin?: boolean }) {
                 )}
 
                 {updates.map((update) => (
-                    <Card key={update.id} className="overflow-hidden">
-                        {update.image && (
-                            <div className="w-full h-64 bg-gray-100 relative">
-                                <img src={update.image} alt="Update" className="w-full h-full object-cover" />
-                            </div>
-                        )}
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="text-sm text-emerald-600 font-bold uppercase tracking-wider mb-1">
-                                        Update from Creator
+                    <Card key={update.id} className="overflow-hidden group">
+                        {editingId === update.id ? (
+                            // --- EDIT MODE ---
+                            <form action={handleEditSubmit}>
+                                <input type="hidden" name="id" value={update.id} />
+                                <div className="p-4 space-y-4">
+                                    <Input name="title" defaultValue={update.title} required />
+                                    <Textarea name="content" defaultValue={update.content} required className="min-h-[150px]" />
+                                    <Input name="image" defaultValue={update.image || ""} placeholder="Image URL" />
+                                    <div className="flex gap-2 justify-end">
+                                        <Button type="button" variant="outline" onClick={() => setEditingId(null)}>
+                                            <X className="h-4 w-4 mr-2" /> Cancel
+                                        </Button>
+                                        <Button type="submit" className="bg-emerald-600">
+                                            <Save className="h-4 w-4 mr-2" /> Save Changes
+                                        </Button>
                                     </div>
-                                    <CardTitle className="text-2xl">{update.title}</CardTitle>
                                 </div>
-                                <span className="text-sm text-muted-foreground">
-                                    {formatDistanceToNow(new Date(update.created_at))} ago
-                                </span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-wrap">
-                                {update.content}
-                            </div>
-                        </CardContent>
+                            </form>
+                        ) : (
+                            // --- VIEW MODE ---
+                            <>
+                                {update.image && (
+                                    <div className="w-full h-64 bg-gray-100 relative">
+                                        <img src={update.image} alt="Update" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                                <CardHeader>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="text-sm text-emerald-600 font-bold uppercase tracking-wider mb-1">
+                                                Update from Creator
+                                            </div>
+                                            <CardTitle className="text-2xl">{update.title}</CardTitle>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-sm text-muted-foreground">
+                                                {formatDistanceToNow(new Date(update.created_at))} ago
+                                            </span>
+
+                                            {/* Admin Actions */}
+                                            {isAdmin && (
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => setEditingId(update.id)}>
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600" onClick={() => handleDelete(update.id)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-wrap">
+                                        {update.content}
+                                    </div>
+                                </CardContent>
+                            </>
+                        )}
+
 
                         <Separator />
 

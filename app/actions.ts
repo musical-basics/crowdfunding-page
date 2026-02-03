@@ -133,6 +133,43 @@ export async function postCampaignUpdate(formData: FormData) {
     return { success: true }
 }
 
+// 2. ADMIN: Delete an Update
+export async function deleteCampaignUpdate(id: string) {
+    const supabase = createAdminClient()
+    const { error } = await supabase.from("cf_update").delete().eq("id", id)
+
+    if (error) {
+        console.error("Delete Error:", error)
+        return { success: false, error: error.message }
+    }
+
+    revalidatePath("/")
+    return { success: true }
+}
+
+// 3. ADMIN: Edit an Update
+export async function editCampaignUpdate(formData: FormData) {
+    const supabase = createAdminClient()
+    const id = formData.get("id") as string
+    const title = formData.get("title") as string
+    const content = formData.get("content") as string
+    const image = formData.get("image") as string
+
+    const { error } = await supabase.from("cf_update").update({
+        title,
+        content,
+        image: image || null
+    }).eq("id", id)
+
+    if (error) {
+        console.error("Edit Error:", error)
+        return { success: false, error: error.message }
+    }
+
+    revalidatePath("/")
+    return { success: true }
+}
+
 // 2. PUBLIC: Post a Comment
 export async function postComment(formData: FormData) {
     const supabase = createAdminClient()
