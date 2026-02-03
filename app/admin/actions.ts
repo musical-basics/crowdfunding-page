@@ -635,3 +635,122 @@ export async function createManualPledge(formData: FormData) {
     revalidatePath("/admin/backers")
     return { success: true }
 }
+
+export async function getBackers() {
+    const supabase = createAdminClient()
+
+    // Fetch pledges with related Customer and Reward data
+    const { data: pledges, error } = await supabase
+        .from('cf_pledge')
+        .select(`
+            id,
+            amount,
+            created_at,
+            status,
+            shipping_address,
+            shipping_location,
+            Customer ( name, email ),
+            cf_reward ( title )
+        `)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error("Error fetching backers:", error)
+        return []
+    }
+
+    return pledges
+}
+
+export async function bulkImportPledges(rows: any[]) {
+    const supabase = createAdminClient()
+    const campaignId = "dreamplay-one"
+
+    let successCount = 0
+    let errors: string[] = []
+
+    // 1. Fetch rewards lookup map
+    const { data: rewards } = await supabase
+        .from("cf_reward")
+        .select("id, title, price")
+        .eq("campaign_id", campaignId)
+
+    const rewardMap = new Map(rewards?.map(r => [r.title.toLowerCase().trim(), r.id]))
+
+    for (const [index, row] of rows.entries()) {
+        const rowNum = index + 1
+        try {
+            // --- DATA CLEANING ---
+            // Remove '$' and ',' from amounts (e.g. "$1,200.00" -> 1200.00)
+            const cleanAmount = row.amount ? parseFloat(row.amount.toString().replace(/[$,]/g, '')) : 0
+
+            if (!row.email || !cleanAmount) {
+                errors.push(`Row ${rowNum}: Skipped (Missing email or invalid amount)`)
+                continue
+            }
+
+            // --- REWARD MATCHING ---
+            let rewardId = null
+            if (row.reward) {
+                rewardId = rewardMap.get(row.reward.toLowerCase().trim())
+                // Fallback: Match by price if title fails
+                if (!rewardId) {
+                    const priceMatch = rewards?.find(r => Math.abs(r.price - cleanAmount) < 1)
+                    if (priceMatch) rewardId = priceMatch.id
+                }
+            }
+
+            // --- CUSTOMER LOOKUP/CREATE ---
+            let customerId
+            const { data: existingUser } = await supabase.from("Customer").select("id").eq("email", row.email).single()
+
+            if (existingUser) {
+                customerId = existingUser.id
+            } else {
+                const { data: newUser, error: userError } = await supabase.from("Customer").insert({
+                    id: crypto.randomUUID(),
+                    email: row.email,
+                    name: row.name || "Backer"
+                }).select("id").single()
+
+                if (userError) {
+                    console.error("Customer Error:", userError)
+                    errors.push(`Row ${rowNum}: Failed to create customer (${userError.message})`)
+                    continue
+                }
+                customerId = newUser.id
+            }
+
+            // --- PLEDGE INSERTION ---
+            const fullAddress = row.address || ""
+            const { error: pledgeError } = await supabase.from("cf_pledge").insert({
+                campaign_id: campaignId,
+                reward_id: rewardId, // Can be null if no match found
+                customer_id: customerId,
+                amount: cleanAmount,
+                shipping_location: row.location || "Unknown",
+                shipping_address: fullAddress,
+                status: "succeeded",
+                // Handle date formats safely
+                created_at: row.date ? new Date(row.date).toISOString() : new Date().toISOString()
+            })
+
+            // --- CRITICAL ERROR CHECK ---
+            if (pledgeError) {
+                console.error("Pledge Error:", pledgeError)
+                errors.push(`Row ${rowNum}: Database rejected pledge (${pledgeError.message})`)
+            } else {
+                successCount++
+            }
+
+        } catch (err: any) {
+            console.error("System Error:", err)
+            errors.push(`Row ${rowNum}: System crash (${err.message})`)
+        }
+    }
+
+    revalidatePath("/")
+    revalidatePath("/admin/backers")
+
+    return { success: true, count: successCount, errors }
+}
