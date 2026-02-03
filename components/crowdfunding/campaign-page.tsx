@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { HeroSection } from "@/components/crowdfunding/hero-section" // Import HeroSection
+import { CommunityTab } from "@/components/crowdfunding/community-tab"
 
 export function CampaignPage() {
   const { campaign, isLoading, selectReward } = useCampaign()
@@ -23,6 +24,7 @@ export function CampaignPage() {
     { id: "features", label: "Features" },
     { id: "specs", label: "Technical Details" },
     { id: "shipping", label: "Shipping" },
+    { id: "community", label: "Community" },
   ]
 
   // Scroll Spy Logic
@@ -150,6 +152,12 @@ export function CampaignPage() {
           ) : (
             <p className="text-muted-foreground">Shipping details coming soon.</p>
           )}
+        </section>
+
+        {/* Community / Updates */}
+        <section id="community" className="scroll-mt-24 pt-8 border-t border-border">
+          <h3 className="text-2xl font-bold mb-6">Community & Updates</h3>
+          <CommunityTab isAdmin={false} />
         </section>
       </main>
 

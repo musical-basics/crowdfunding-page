@@ -93,3 +93,85 @@ export async function submitPledge(formData: FormData) {
 
     return { success: true }
 }
+
+// --- COMMUNITY ACTIONS ---
+
+// 1. ADMIN: Post an Update
+export async function postCampaignUpdate(formData: FormData) {
+    const supabase = createAdminClient()
+    const title = formData.get("title") as string
+    const content = formData.get("content") as string
+    const image = formData.get("image") as string // Assuming you upload via your existing upload tool first
+
+    const { error } = await supabase.from("cf_update").insert({
+        campaign_id: "dreamplay-one",
+        title,
+        content,
+        image
+    })
+
+    if (error) return { success: false, error: error.message }
+    revalidatePath("/")
+    return { success: true }
+}
+
+// 2. PUBLIC: Post a Comment
+export async function postComment(formData: FormData) {
+    const supabase = createAdminClient()
+    const updateId = formData.get("updateId") as string
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const content = formData.get("content") as string
+
+    const { error } = await supabase.from("cf_comment").insert({
+        update_id: updateId,
+        name,
+        email,
+        content
+    })
+
+    if (error) return { success: false, error: error.message }
+    revalidatePath("/")
+    return { success: true }
+}
+
+// 3. GET: Fetch Feed with "Verified" Logic
+export async function getCommunityFeed() {
+    const supabase = createAdminClient()
+
+    // Fetch Updates
+    const { data: updates } = await supabase
+        .from("cf_update")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+    if (!updates) return []
+
+    // Fetch Comments
+    const { data: comments } = await supabase
+        .from("cf_comment")
+        .select("*")
+        .order("created_at", { ascending: true })
+
+    // Fetch All Backer Emails (to check status)
+    // In a huge app, we'd do this differently, but for <10k backers this is instant.
+    const { data: pledges } = await supabase
+        .from("cf_pledge")
+        .select("customer_id, Customer(email)")
+        .eq("status", "succeeded")
+
+    // Create a Set of verified emails for O(1) lookup
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const verifiedEmails = new Set(pledges?.map((p: any) => p.Customer?.email).filter(Boolean))
+
+    // Merge Data
+    return updates.map(update => ({
+        ...update,
+        comments: comments
+            ?.filter(c => c.update_id === update.id)
+            .map(c => ({
+                ...c,
+                isVerified: verifiedEmails.has(c.email) // <--- MAGIC HAPPENS HERE
+            })) || []
+    }))
+}

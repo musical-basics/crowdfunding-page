@@ -30,6 +30,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { compressImageFile } from "@/lib/image-utils"
 import { CrowdfundingPage } from "@/components/crowdfunding-page"
+import { CommunityTab } from "@/components/crowdfunding/community-tab"
 
 // --- TYPES ---
 interface MediaItem {
@@ -564,6 +565,12 @@ export default function CampaignDetailsEditor() {
 
                     <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">Save Changes</Button>
                 </form>
+
+                {/* Community Updates Section */}
+                <div className="mt-12 pt-12 border-t">
+                    <h2 className="text-2xl font-bold mb-6">Community Updates</h2>
+                    <CommunityTab isAdmin={true} />
+                </div>
             </div>
 
             {/* Preview Column */}
