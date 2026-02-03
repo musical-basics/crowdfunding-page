@@ -57,6 +57,11 @@ const items = [
         icon: HelpCircle,
     },
     {
+        title: "Community",
+        url: "/admin/community",
+        icon: Users,
+    },
+    {
         title: "Settings",
         url: "/admin/settings",
         icon: Settings,

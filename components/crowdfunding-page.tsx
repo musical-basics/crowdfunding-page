@@ -15,6 +15,7 @@ import { FAQPage } from "./crowdfunding/faq-page"
 import { SectionPlaceholder } from "./crowdfunding/section-placeholder"
 import { MobilePledgeBar } from "./crowdfunding/mobile-pledge-bar"
 import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
+import { CommunityTab } from "./crowdfunding/community-tab" // <--- Import
 import { Skeleton } from "@/components/ui/skeleton" // <--- Import Skeleton
 
 function CrowdfundingContent() {
@@ -100,7 +101,7 @@ function CrowdfundingContent() {
             {activeTab === "faq" && <FAQPage />}
             {activeTab === "updates" && <SectionPlaceholder title="Updates" />}
             {activeTab === "comments" && <SectionPlaceholder title="Comments" />}
-            {activeTab === "community" && <SectionPlaceholder title="Community" />}
+            {activeTab === "community" && <CommunityTab isAdmin={false} />}
           </div>
 
         </div>
