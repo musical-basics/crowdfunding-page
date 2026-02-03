@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Trash } from "lucide-react" // Removed 'Plus' import as it's inside the dialog now
+import { Trash, Eye, EyeOff } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -25,13 +25,28 @@ import { Badge } from "@/components/ui/badge"
 import { useCampaign } from "@/context/campaign-context"
 import { CreateRewardDialog } from "@/components/admin/create-reward-dialog"
 import { EditRewardDialog } from "@/components/admin/edit-reward-dialog" // <--- Import the new component
-import { deleteReward } from "../actions"
+import { deleteReward, toggleRewardVisibility } from "../actions"
+import { useToast } from "@/hooks/use-toast"
 
 import { ImportRewardsButton } from "@/components/admin/import-rewards-button"
 import { BulkAddRewardsDialog } from "@/components/admin/bulk-add-rewards-dialog"
 
 export default function AdminRewardsPage() {
     const { campaign, refreshCampaign } = useCampaign()
+    const { toast } = useToast()
+
+    const handleToggleVisibility = async (reward: any) => {
+        try {
+            await toggleRewardVisibility(reward.id, reward.isVisible)
+            await refreshCampaign()
+            toast({
+                title: reward.isVisible ? "Reward Hidden" : "Reward Visible",
+                description: `"${reward.title}" is now ${reward.isVisible ? "hidden" : "live"}.`
+            })
+        } catch (e) {
+            toast({ title: "Error", description: "Failed to update visibility", variant: "destructive" })
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -60,12 +75,19 @@ export default function AdminRewardsPage() {
                     </TableHeader>
                     <TableBody>
                         {campaign?.rewards.map((reward) => (
-                            <TableRow key={reward.id}>
-                                <TableCell className="font-medium">{reward.title}</TableCell>
+                            <TableRow key={reward.id} className={!reward.isVisible ? "opacity-60 bg-muted/30" : ""}>
+                                <TableCell className="font-medium">
+                                    {reward.title}
+                                    {!reward.isVisible && (
+                                        <Badge variant="outline" className="ml-2 text-xs border-dashed">Hidden</Badge>
+                                    )}
+                                </TableCell>
                                 <TableCell>${reward.price}</TableCell>
                                 <TableCell>{reward.backersCount}</TableCell>
                                 <TableCell>
-                                    {reward.isSoldOut ? (
+                                    {!reward.isVisible ? (
+                                        <Badge variant="outline">Hidden</Badge>
+                                    ) : reward.isSoldOut ? (
                                         <Badge variant="destructive">Sold Out</Badge>
                                     ) : (
                                         <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
@@ -75,6 +97,19 @@ export default function AdminRewardsPage() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleToggleVisibility(reward)}
+                                            title={reward.isVisible ? "Hide from public" : "Show to public"}
+                                        >
+                                            {reward.isVisible ? (
+                                                <Eye className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                            )}
+                                        </Button>
+
                                         <EditRewardDialog reward={reward} />
 
                                         <AlertDialog>

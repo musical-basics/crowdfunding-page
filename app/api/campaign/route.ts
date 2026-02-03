@@ -90,7 +90,8 @@ export async function GET() {
             imageUrl: r.image_url,
             isFeatured: r.is_featured,
             checkoutUrl: r.checkout_url,
-            shopifyVariantId: r.shopify_variant_id
+            shopifyVariantId: r.shopify_variant_id,
+            isVisible: r.is_visible !== false
         })) || [],
         faqs: faqData?.map((f: any) => ({
             id: f.id,

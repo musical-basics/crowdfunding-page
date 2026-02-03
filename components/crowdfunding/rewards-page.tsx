@@ -22,7 +22,7 @@ export function RewardsPage() {
       <h2 className="text-2xl font-bold">Select a Reward</h2>
 
       <div className="grid grid-cols-1 gap-6">
-        {campaign.rewards.map((reward) => {
+        {campaign.rewards.filter(r => r.isVisible).map((reward) => {
           const isFeatured = reward.isFeatured
           return (
             <div

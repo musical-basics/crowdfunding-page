@@ -246,6 +246,21 @@ export async function updateReward(prevState: any, formData: FormData) {
     return { success: true }
 }
 
+export async function toggleRewardVisibility(rewardId: string, currentStatus: boolean) {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from("cf_reward")
+        .update({ is_visible: !currentStatus })
+        .eq("id", rewardId)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/rewards")
+    revalidatePath("/") // Update public page
+    return { success: true }
+}
+
 async function uploadRewardImage(file: File, supabase: any, existingUrl?: string) {
     if (!file || file.size === 0) return existingUrl || null
 
