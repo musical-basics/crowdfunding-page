@@ -62,22 +62,27 @@ export function CheckoutDialog() {
 
         setIsRedirecting(true)
 
-        // 1. Get the base Variant ID for this reward
-        // This relies on the new field we added to the Admin/DB.
-        // Fallback is for safety during testing.
         const variantId = reward?.shopifyVariantId || "REPLACE_WITH_DEFAULT_ID";
 
-        // 2. Construct the Base URL
-        // We use the cart/add endpoint because it supports properties easily
-        let checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/add?id=${variantId}&quantity=1&return_to=/checkout`
+        // --- NEW LOGIC: PERMALINK (REPLACES CART) ---
+        // Format: /cart/{variant_id}:{quantity}
+        let checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/${variantId}:1`
 
-        // 3. Append Properties (Option A Logic)
+        // We use 'attributes' instead of 'properties' because Permalinks 
+        // don't support line-item properties easily. 
+        // Attributes apply to the whole order (perfect for single-reward backers).
         if (hasOptions) {
             const sizeParam = encodeURIComponent(keySize)
             const colorParam = encodeURIComponent(variantColor)
 
-            // This matches exactly what your old Webflow site was doing
-            checkoutUrl += `&properties[Size]=${sizeParam}&properties[Finish]=${colorParam}`
+            // Append attributes with '?'
+            checkoutUrl += `?attributes[Size]=${sizeParam}&attributes[Finish]=${colorParam}`
+
+            // Add a "Source" attribute so you know it came from the Crowdfund App
+            checkoutUrl += `&attributes[Source]=CrowdfundingApp`
+        } else {
+            // For rewards without options, we still append source
+            checkoutUrl += `?attributes[Source]=CrowdfundingApp` // FIXED: Changed & to ? for first param
         }
 
         // 4. Redirect
