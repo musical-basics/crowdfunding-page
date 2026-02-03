@@ -394,7 +394,168 @@ export default function CampaignDetailsEditor() {
                         </CardContent>
                     </Card>
 
-                    {/* Other fields (hidden from view for brevity but required for form submission) */}
+                    {/* Key Features Editor */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Key Features</CardTitle>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setKeyFeatures([...keyFeatures, { icon: "✨", title: "New Feature", desc: "Description" }])}
+                            >
+                                <Plus className="h-4 w-4 mr-2" /> Add Feature
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {keyFeatures.map((feature, idx) => (
+                                <div key={idx} className="flex gap-4 items-start border p-4 rounded-lg">
+                                    <div className="w-16">
+                                        <Label>Icon</Label>
+                                        <Input
+                                            value={feature.icon}
+                                            onChange={e => {
+                                                const newFeatures = [...keyFeatures]
+                                                newFeatures[idx].icon = e.target.value
+                                                setKeyFeatures(newFeatures)
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div>
+                                            <Label>Title</Label>
+                                            <Input
+                                                value={feature.title}
+                                                onChange={e => {
+                                                    const newFeatures = [...keyFeatures]
+                                                    newFeatures[idx].title = e.target.value
+                                                    setKeyFeatures(newFeatures)
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Description</Label>
+                                            <Textarea
+                                                value={feature.desc}
+                                                onChange={e => {
+                                                    const newFeatures = [...keyFeatures]
+                                                    newFeatures[idx].desc = e.target.value
+                                                    setKeyFeatures(newFeatures)
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-destructive"
+                                        onClick={() => {
+                                            const newFeatures = [...keyFeatures]
+                                            newFeatures.splice(idx, 1)
+                                            setKeyFeatures(newFeatures)
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    {/* Tech Specs Editor */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Technical Specifications</CardTitle>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setTechSpecs([...techSpecs, { label: "Spec", value: "Value" }])}
+                            >
+                                <Plus className="h-4 w-4 mr-2" /> Add Spec
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            {techSpecs.map((spec, idx) => (
+                                <div key={idx} className="flex gap-4 items-center">
+                                    <Input
+                                        className="flex-1"
+                                        placeholder="Label (e.g. Weight)"
+                                        value={spec.label}
+                                        onChange={e => {
+                                            const newSpecs = [...techSpecs]
+                                            newSpecs[idx].label = e.target.value
+                                            setTechSpecs(newSpecs)
+                                        }}
+                                    />
+                                    <Input
+                                        className="flex-1"
+                                        placeholder="Value (e.g. 1.2kg)"
+                                        value={spec.value}
+                                        onChange={e => {
+                                            const newSpecs = [...techSpecs]
+                                            newSpecs[idx].value = e.target.value
+                                            setTechSpecs(newSpecs)
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-destructive"
+                                        onClick={() => {
+                                            const newSpecs = [...techSpecs]
+                                            newSpecs.splice(idx, 1)
+                                            setTechSpecs(newSpecs)
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    {/* HTML Content Editors */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Technical Details (HTML)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Textarea
+                                className="min-h-[200px] font-mono text-sm"
+                                value={technicalDetails}
+                                onChange={e => setTechnicalDetails(e.target.value)}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Shipping & Risks (HTML)</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label>Shipping Details</Label>
+                                <Textarea
+                                    className="min-h-[150px] font-mono text-sm"
+                                    value={shipping}
+                                    onChange={e => setShipping(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Risks & Challenges</Label>
+                                <Textarea
+                                    className="min-h-[150px] font-mono text-sm"
+                                    value={risks}
+                                    onChange={e => setRisks(e.target.value)}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Hidden inputs to pass JSON data to action */}
                     <input type="hidden" name="risks" value={risks} />
                     <input type="hidden" name="shipping" value={shipping} />
                     <input type="hidden" name="technicalDetails" value={technicalDetails} />
