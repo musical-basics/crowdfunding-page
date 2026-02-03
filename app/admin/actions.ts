@@ -588,3 +588,50 @@ export async function recalculateCampaignStats() {
         stats: { totalPledged, totalBackers }
     }
 }
+
+// --- MANUAL PLEDGE ACTIONS ---
+
+export async function createManualPledge(formData: FormData) {
+    const supabase = createAdminClient()
+
+    const rewardId = formData.get("rewardId") as string
+    const amount = Number(formData.get("amount"))
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const location = formData.get("location") as string
+    const date = formData.get("date") as string // "YYYY-MM-DD"
+
+    // 1. Create/Find Customer
+    // (Simplified: Just creates a placeholder if email doesn't exist)
+    let customerId
+    const { data: existing } = await supabase.from("Customer").select("id").eq("email", email).single()
+
+    if (existing) {
+        customerId = existing.id
+    } else {
+        const { data: newCustomer } = await supabase.from("Customer").insert({
+            id: crypto.randomUUID(),
+            email,
+            name
+        }).select("id").single()
+        customerId = newCustomer?.id
+    }
+
+    // 2. Create Pledge
+    // We override 'created_at' so the chart shows the correct historical date
+    const { error } = await supabase.from("cf_pledge").insert({
+        campaign_id: "dreamplay-one",
+        reward_id: rewardId,
+        customer_id: customerId,
+        amount: amount,
+        shipping_location: location,
+        status: "succeeded",
+        created_at: new Date(date).toISOString() // <--- Critical for history
+    })
+
+    if (error) return { success: false, error: error.message }
+
+    revalidatePath("/")
+    revalidatePath("/admin/backers")
+    return { success: true }
+}

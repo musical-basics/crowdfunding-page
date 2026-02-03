@@ -29,6 +29,8 @@ interface PledgeWithDetails {
     }
 }
 
+import { ManualPledgeDialog } from "@/components/admin/manual-pledge-dialog"
+
 export default function BackersPage() {
     const [pledges, setPledges] = useState<PledgeWithDetails[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -71,8 +73,9 @@ export default function BackersPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Backers & Pledges</h1>
-                <div className="text-muted-foreground">
-                    Total Transactions: {pledges.length}
+                <div className="flex gap-4 items-center">
+                    <div className="text-muted-foreground">Total: {pledges.length}</div>
+                    <ManualPledgeDialog />
                 </div>
             </div>
 
