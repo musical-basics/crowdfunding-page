@@ -62,27 +62,48 @@ export function CheckoutDialog() {
 
         setIsRedirecting(true)
 
-        const variantId = reward?.shopifyVariantId || "REPLACE_WITH_DEFAULT_ID";
+        // 1. Get the Raw Config from Database
+        // This relies on the new field we added to the Admin/DB.
+        const rawConfig = reward?.shopifyVariantId || "";
+        let finalVariantId = "";
 
-        // --- NEW LOGIC: PERMALINK (REPLACES CART) ---
+        // 2. Determine if it's a Simple ID or a Smart Map
+        if (rawConfig.trim().startsWith("{")) {
+            try {
+                // Parse the JSON Map
+                const variantMap = JSON.parse(rawConfig);
+
+                // Construct the Key based on user selection
+                // Format: "SIZE_COLOR" (Must match your JSON keys exactly)
+                const lookupKey = `${keySize}_${variantColor}`;
+
+                // Find the ID, or fall back to 'default', or take the first value found
+                finalVariantId = variantMap[lookupKey] || variantMap["default"] || Object.values(variantMap)[0];
+
+            } catch (e) {
+                console.error("Failed to parse Variant Map", e);
+                toast({ title: "Configuration Error", description: "Invalid Variant Map JSON", variant: "destructive" });
+                setIsRedirecting(false);
+                return;
+            }
+        } else {
+            // It's just a simple ID (Old way)
+            finalVariantId = rawConfig || "REPLACE_WITH_DEFAULT_ID";
+        }
+
+        // 3. Generate the "Clean Cart" Link (Permalink)
         // Format: /cart/{variant_id}:{quantity}
-        let checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/${variantId}:1`
+        let checkoutUrl = `https://${SHOPIFY_DOMAIN}/cart/${finalVariantId}:1`
 
-        // We use 'attributes' instead of 'properties' because Permalinks 
-        // don't support line-item properties easily. 
-        // Attributes apply to the whole order (perfect for single-reward backers).
+        // We use 'attributes' instead of 'properties' for permalinks
         if (hasOptions) {
             const sizeParam = encodeURIComponent(keySize)
             const colorParam = encodeURIComponent(variantColor)
 
-            // Append attributes with '?'
             checkoutUrl += `?attributes[Size]=${sizeParam}&attributes[Finish]=${colorParam}`
-
-            // Add a "Source" attribute so you know it came from the Crowdfund App
             checkoutUrl += `&attributes[Source]=CrowdfundingApp`
         } else {
-            // For rewards without options, we still append source
-            checkoutUrl += `?attributes[Source]=CrowdfundingApp` // FIXED: Changed & to ? for first param
+            checkoutUrl += `?attributes[Source]=CrowdfundingApp`
         }
 
         // 4. Redirect
