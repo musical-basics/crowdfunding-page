@@ -94,6 +94,48 @@ export async function submitPledge(formData: FormData) {
     return { success: true }
 }
 
+// 4. Join Email List
+export async function joinEmailList(formData: FormData) {
+    const supabase = createAdminClient()
+    const email = formData.get("email") as string
+    const name = formData.get("name") as string
+
+    if (!email) return { success: false, error: "Email is required" }
+
+    // 1. Check if customer exists
+    const { data: existingCustomer } = await supabase
+        .from("Customer")
+        .select("id")
+        .eq("email", email)
+        .single()
+
+    if (existingCustomer) {
+        // Optional: Update name if provided
+        if (name) {
+            await supabase
+                .from("Customer")
+                .update({ name })
+                .eq("id", existingCustomer.id)
+        }
+    } else {
+        // 2. Create new customer
+        const { error } = await supabase
+            .from("Customer")
+            .insert({
+                id: crypto.randomUUID(),
+                email,
+                name: name || null
+            })
+
+        if (error) {
+            console.error("Join Email List Error:", error)
+            return { success: false, error: "Failed to join email list" }
+        }
+    }
+
+    return { success: true }
+}
+
 // --- COMMUNITY ACTIONS ---
 
 // 1. ADMIN: Post an Update

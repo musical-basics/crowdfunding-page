@@ -3,12 +3,28 @@
 import { Button } from "@/components/ui/button"
 import { Bookmark, Facebook, Twitter, Share2 } from "lucide-react"
 import { useCampaign } from "@/context/campaign-context"
-import { useRouter, useSearchParams } from "next/navigation" // <--- Added imports
+import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useTransition } from "react"
+import { joinEmailList } from "@/app/actions"
+import { useToast } from "@/components/ui/use-toast"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export function StatsPanel() {
   const { totalPledged, backersCount, campaign } = useCampaign()
-  const router = useRouter() // <--- Initialize router
+  const router = useRouter()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
+
+  const [open, setOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  if (!campaign) return null
 
   // Calculate dynamic progress
   const progressPercentage = Math.min(
@@ -44,6 +60,26 @@ export function StatsPanel() {
         rewardsAnchor.scrollIntoView({ behavior: "smooth" })
       }
     }, 100)
+  }
+
+  const handleJoinList = async (formData: FormData) => {
+    startTransition(async () => {
+      const result = await joinEmailList(formData)
+
+      if (result.success) {
+        toast({
+          title: "You're on the list!",
+          description: "We'll let you know when there are updates.",
+        })
+        setOpen(false)
+      } else {
+        toast({
+          title: "Something went wrong",
+          description: result.error || "Please try again.",
+          variant: "destructive",
+        })
+      }
+    })
   }
 
   return (
@@ -86,10 +122,49 @@ export function StatsPanel() {
 
       {/* Secondary Actions */}
       <div className="flex items-center gap-2">
-        <Button variant="outline" className="flex-1 gap-2 bg-transparent">
-          <Bookmark className="h-4 w-4" />
-          Remind me
-        </Button>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="flex-1 gap-2 bg-transparent">
+              <Bookmark className="h-4 w-4" />
+              Join the email list
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <form action={handleJoinList} className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium leading-none">Join the list</h4>
+                <p className="text-sm text-muted-foreground">
+                  Get notified about project updates.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <div className="grid gap-1">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="Your name"
+                    className="h-8"
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    className="h-8"
+                    required
+                  />
+                </div>
+              </div>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Joining..." : "Join list"}
+              </Button>
+            </form>
+          </PopoverContent>
+        </Popover>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-blue-600">
             <Facebook className="h-5 w-5" />
