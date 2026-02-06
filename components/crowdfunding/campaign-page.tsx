@@ -180,8 +180,8 @@ export function CampaignPage() {
           <p className="text-sm text-muted-foreground line-clamp-3">
             {campaign.creator.bio}
           </p>
-          <Button variant="outline" className="w-full text-xs h-8">
-            Contact Creator
+          <Button variant="outline" className="w-full text-xs h-8" asChild>
+            <a href="mailto:lionel@dreamplaypianos.com">Contact Creator</a>
           </Button>
         </div>
 

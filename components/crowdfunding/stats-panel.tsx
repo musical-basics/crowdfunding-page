@@ -22,6 +22,7 @@ export function StatsPanel() {
   const { toast } = useToast()
 
   const [open, setOpen] = useState(false)
+  const [hasJoined, setHasJoined] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   if (!campaign) return null
@@ -71,7 +72,8 @@ export function StatsPanel() {
           title: "You're on the list!",
           description: "We'll let you know when there are updates.",
         })
-        setOpen(false)
+        setHasJoined(true)
+        // setOpen(false) // Don't close immediately, show success state
       } else {
         toast({
           title: "Something went wrong",
@@ -130,39 +132,57 @@ export function StatsPanel() {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
-            <form action={handleJoinList} className="grid gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Join the list</h4>
-                <p className="text-sm text-muted-foreground">
-                  Get notified about project updates.
-                </p>
-              </div>
-              <div className="grid gap-2">
-                <div className="grid gap-1">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="Your name"
-                    className="h-8"
-                  />
+            {hasJoined ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none text-emerald-600">Success!</h4>
+                  <p className="text-sm text-muted-foreground">
+                    You've been added to the list. Check your email for confirmation.
+                  </p>
                 </div>
-                <div className="grid gap-1">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    className="h-8"
-                    required
-                  />
-                </div>
+                <Button
+                  onClick={() => setOpen(false)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Close
+                </Button>
               </div>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Joining..." : "Join list"}
-              </Button>
-            </form>
+            ) : (
+              <form action={handleJoinList} className="grid gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">Join the list</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Get notified about project updates.
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <div className="grid gap-1">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="Your name"
+                      className="h-8"
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      className="h-8"
+                      required
+                    />
+                  </div>
+                </div>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Joining..." : "Join list"}
+                </Button>
+              </form>
+            )}
           </PopoverContent>
         </Popover>
         <div className="flex items-center gap-1">
