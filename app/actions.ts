@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/server" // <--- Import from new server file
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 
 export async function submitPledge(formData: FormData) {
     const supabase = createAdminClient() // <--- Initialize it here
@@ -96,44 +97,50 @@ export async function submitPledge(formData: FormData) {
 
 // 4. Join Email List
 export async function joinEmailList(formData: FormData) {
-    const supabase = createAdminClient()
     const email = formData.get("email") as string
     const name = formData.get("name") as string
 
     if (!email) return { success: false, error: "Email is required" }
 
-    // 1. Check if customer exists
-    const { data: existingCustomer } = await supabase
-        .from("Customer")
-        .select("id")
-        .eq("email", email)
-        .single()
+    try {
+        const headerStore = await headers()
+        const city = headerStore.get("x-vercel-ip-city") || "Unknown"
+        const country = headerStore.get("x-vercel-ip-country") || "Unknown"
+        const ip = headerStore.get("x-forwarded-for") || "Unknown"
 
-    if (existingCustomer) {
-        // Optional: Update name if provided
-        if (name) {
-            await supabase
-                .from("Customer")
-                .update({ name })
-                .eq("id", existingCustomer.id)
+        const apiPayload = {
+            email,
+            first_name: name,
+            tags: ["crowdfunding-waitlist"],
+            city,
+            country,
+            ip_address: ip
         }
-    } else {
-        // 2. Create new customer
-        const { error } = await supabase
-            .from("Customer")
-            .insert({
-                id: crypto.randomUUID(),
-                email,
-                name: name || null
-            })
 
-        if (error) {
-            console.error("Join Email List Error:", error)
-            return { success: false, error: "Failed to join email list" }
+        const response = await fetch("https://email.dreamplaypianos.com/api/webhooks/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(apiPayload)
+        })
+
+        if (!response.ok) {
+            let errorMessage = "Failed to subscribe"
+            try {
+                const errorData = await response.json()
+                if (errorData.error) errorMessage = errorData.error
+            } catch (e) {
+                // Ignore json parse error
+            }
+            console.error('Subscription API error:', response.status, response.statusText)
+            return { success: false, error: errorMessage }
         }
+
+        return { success: true }
+
+    } catch (error: any) {
+        console.error('Server Action subscription error:', error)
+        return { success: false, error: error.message || "Internal server error" }
     }
-
-    return { success: true }
 }
 
 // --- COMMUNITY ACTIONS ---
