@@ -23,6 +23,7 @@ export function CampaignPage() {
     { id: "story", label: "Story" },
     { id: "features", label: "Features" },
     { id: "specs", label: "Technical Details" },
+    { id: "manufacturer", label: "Manufacturer" },
     { id: "shipping", label: "Shipping" },
     { id: "community", label: "Community" },
   ]
@@ -140,6 +141,19 @@ export function CampaignPage() {
         </section>
 
 
+
+        {/* Manufacturer */}
+        <section id="manufacturer" className="scroll-mt-24 pt-8 border-t border-border">
+          <h3 className="text-2xl font-bold mb-6">About Our Manufacturer</h3>
+          {campaign.manufacturerDetails ? (
+            <div
+              className="prose dark:prose-invert max-w-none text-muted-foreground"
+              dangerouslySetInnerHTML={{ __html: campaign.manufacturerDetails }}
+            />
+          ) : (
+            <p className="text-muted-foreground">Manufacturer information coming soon.</p>
+          )}
+        </section>
 
         {/* Shipping */}
         <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">

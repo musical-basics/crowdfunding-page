@@ -112,6 +112,7 @@ export default function CampaignDetailsEditor() {
     const [risks, setRisks] = useState("")
     const [shipping, setShipping] = useState("")
     const [technicalDetails, setTechnicalDetails] = useState("")
+    const [manufacturerDetails, setManufacturerDetails] = useState("")
     const [goalAmount, setGoalAmount] = useState(0)
     const [endDate, setEndDate] = useState("")
 
@@ -136,6 +137,7 @@ export default function CampaignDetailsEditor() {
             setRisks(campaign.risks)
             setShipping(campaign.shipping)
             setTechnicalDetails(campaign.technicalDetails)
+            setManufacturerDetails(campaign.manufacturerDetails || "")
             setKeyFeatures(campaign.keyFeatures)
             setTechSpecs(campaign.techSpecs)
 
@@ -545,6 +547,19 @@ export default function CampaignDetailsEditor() {
 
                     <Card>
                         <CardHeader>
+                            <CardTitle>About Our Manufacturer (HTML)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Textarea
+                                className="min-h-[200px] font-mono text-sm"
+                                value={manufacturerDetails}
+                                onChange={e => setManufacturerDetails(e.target.value)}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
                             <CardTitle>Shipping & Risks (HTML)</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -571,6 +586,7 @@ export default function CampaignDetailsEditor() {
                     <input type="hidden" name="risks" value={risks} />
                     <input type="hidden" name="shipping" value={shipping} />
                     <input type="hidden" name="technicalDetails" value={technicalDetails} />
+                    <input type="hidden" name="manufacturerDetails" value={manufacturerDetails} />
                     <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
                     <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
 
