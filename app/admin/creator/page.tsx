@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast"
 import { updateCreatorProfile } from "../actions"
 import { useCampaign } from "@/context/campaign-context"
 import { ImageCropper } from "@/components/admin/image-cropper"
-import { Loader2 } from "lucide-react"
+import { Loader2, Save } from "lucide-react"
+import { AdminHeaderActions } from "@/components/admin/admin-header-actions"
 import { ImageFrame } from "@/components/admin/image-frame"
 
 // --- INTERFACES ---
@@ -252,7 +253,19 @@ export default function CreatorProfilePage() {
         <h1 className="text-3xl font-bold">Creator Profile</h1>
       </div>
 
-      <form action={handleSubmit} className="space-y-8">
+      <AdminHeaderActions>
+        <Button
+          type="submit"
+          form="creator-profile-form"
+          disabled={isSaving}
+          className="bg-emerald-600 hover:bg-emerald-700 min-w-[140px]"
+        >
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          Save Changes
+        </Button>
+      </AdminHeaderActions>
+
+      <form id="creator-profile-form" action={handleSubmit} className="space-y-8">
 
         {/* 1. Public Profile (Sidebar) */}
         <Card>
@@ -438,12 +451,7 @@ export default function CreatorProfilePage() {
           </CardContent>
         </Card>
 
-        <div className="sticky bottom-4 flex justify-end">
-          <Button type="submit" disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 min-w-[200px] shadow-lg">
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
-          </Button>
-        </div>
+
 
       </form>
 

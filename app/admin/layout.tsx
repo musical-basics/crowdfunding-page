@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                             <div className="flex-1">
                                 {/* Add Breadcrumbs here later if needed */}
                             </div>
+                            <div id="admin-header-actions" className="flex items-center gap-4" />
                         </header>
 
                         {/* Main Content Area */}

@@ -29,6 +29,8 @@ import { deleteFAQ, updateFAQPageContent } from "../actions"
 import { FAQItem, FAQPageContent } from "@/types/campaign"
 import { ImageFrame } from "@/components/admin/image-frame"
 import { useToast } from "@/hooks/use-toast"
+import { AdminHeaderActions } from "@/components/admin/admin-header-actions"
+import { Save } from "lucide-react"
 
 // Category order for display
 const CATEGORY_ORDER = ["About Purchase", "About Support", "About The Product"]
@@ -101,9 +103,21 @@ export default function AdminFAQPage() {
         <div className="space-y-8 max-w-4xl pb-20">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Manage FAQs</h1>
-                <Button onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700">
-                    <Plus className="mr-2 h-4 w-4" /> Add Question
-                </Button>
+                <div className="flex gap-2">
+                    <AdminHeaderActions>
+                        <Button
+                            onClick={handleSaveSidebar}
+                            disabled={isSaving}
+                            className="bg-emerald-600 hover:bg-emerald-700 min-w-[140px]"
+                        >
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save Sidebar
+                        </Button>
+                    </AdminHeaderActions>
+                    <Button onClick={handleCreate} variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50">
+                        <Plus className="mr-2 h-4 w-4" /> Add Question
+                    </Button>
+                </div>
             </div>
 
             {/* FAQs Grouped by Category */}
@@ -211,14 +225,7 @@ export default function AdminFAQPage() {
                         aspectRatio="video"
                     />
 
-                    <Button
-                        onClick={handleSaveSidebar}
-                        disabled={isSaving}
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                    >
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Sidebar Settings
-                    </Button>
+
                 </CardContent>
             </Card>
 

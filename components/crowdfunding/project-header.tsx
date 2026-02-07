@@ -9,10 +9,10 @@ export function ProjectHeader() {
 
   return (
     <div className="text-center">
-      <h1 className="text-xl md:text-2xl font-bold text-foreground text-balance">
+      <h1 className="text-3xl md:text-5xl font-extrabold text-foreground text-balance tracking-tight">
         {campaign.title}
       </h1>
-      <p className="text-sm text-muted-foreground mt-2">
+      <p className="text-md md:text-xl text-muted-foreground mt-3 max-w-3xl mx-auto">
         {campaign.subtitle}
       </p>
     </div>

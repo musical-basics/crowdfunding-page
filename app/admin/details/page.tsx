@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from "@/hooks/use-toast"
 import { updateCampaignDetails, uploadCreatorAsset } from "../actions"
 import { useCampaign, CampaignProvider } from "@/context/campaign-context"
-import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical } from "lucide-react"
+import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical, Save } from "lucide-react"
+import { AdminHeaderActions } from "@/components/admin/admin-header-actions"
 import {
     DndContext,
     closestCenter,
@@ -261,8 +262,18 @@ export default function CampaignDetailsEditor() {
 
     return (
         <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-4rem)]">
+            <AdminHeaderActions>
+                <Button
+                    type="submit"
+                    form="campaign-details-form"
+                    className="bg-emerald-600 hover:bg-emerald-700 min-w-[140px]"
+                >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                </Button>
+            </AdminHeaderActions>
             <div className="flex-1 overflow-y-auto pr-2 pb-20">
-                <form action={handleSubmit} className="space-y-8">
+                <form id="campaign-details-form" action={handleSubmit} className="space-y-8">
 
                     {/* Basic Info */}
                     <Card>
@@ -563,7 +574,7 @@ export default function CampaignDetailsEditor() {
                     <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
                     <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
 
-                    <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">Save Changes</Button>
+
                 </form>
 
                 {/* Community Updates Section */}
