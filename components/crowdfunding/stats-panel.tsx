@@ -133,17 +133,17 @@ export function StatsPanel() {
         </div>
       </div>
 
-      {/* Backers */}
+      {/* Backers & Days Left Hidden
       <div>
         <p className="text-2xl font-semibold text-foreground">{backersCount}</p>
         <p className="text-sm text-muted-foreground">backers</p>
       </div>
 
-      {/* Days Left */}
       <div>
         <p className="text-2xl font-semibold text-foreground">{campaign.stats.daysLeft}</p>
         <p className="text-sm text-muted-foreground">days to go</p>
       </div>
+      */}
 
       {/* CTA Button - NOW CONNECTED */}
       <Button
