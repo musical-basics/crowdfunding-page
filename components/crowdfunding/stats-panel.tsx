@@ -131,6 +131,14 @@ export function StatsPanel() {
         Secure Your Spot in Batch 1
       </Button>
 
+      {/* No-Risk Guarantee */}
+      <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg border border-dashed text-center space-y-1">
+        <p className="font-semibold text-foreground">The &quot;No-Risk&quot; Guarantee</p>
+        <p>
+          Your pre-order is held in a separate account until production begins. If we do not hit our production minimums to maintain our quality standards, you get a 100% refund immediately. You either get the piano of your dreams, or you get your money back. You risk nothing.
+        </p>
+      </div>
+
       {/* Secondary Actions */}
       <div className="flex items-center gap-2">
         <Popover open={open} onOpenChange={setOpen}>
