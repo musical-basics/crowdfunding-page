@@ -15,20 +15,7 @@ export const metadata: Metadata = {
   description: 'Back the DreamPlay One keyboard with narrower keys designed for your handspan. Stop over-stretching.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
+    icon: '/ICON Black SQUARE.jpg',
     apple: '/apple-icon.png',
   },
 }
