@@ -58,11 +58,6 @@ export function StatsPanel() {
 
   if (!campaign) return null
 
-  // Calculate dynamic progress
-  const progressPercentage = Math.min(
-    (totalPledged / campaign.stats.goalAmount) * 100,
-    100
-  )
 
   // Format currency
   const formattedPledged = new Intl.NumberFormat('en-US', {
@@ -71,11 +66,6 @@ export function StatsPanel() {
     maximumFractionDigits: 0
   }).format(totalPledged)
 
-  const formattedGoal = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0
-  }).format(campaign.stats.goalAmount)
 
   // --- NEW HANDLER ---
   const handleBackProject = () => {
@@ -117,19 +107,11 @@ export function StatsPanel() {
 
   return (
     <div className="space-y-6">
-      {/* Progress Bar */}
-      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full bg-emerald-600 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${progressPercentage}%` }}
-        />
-      </div>
-
       {/* Funding Amount */}
       <div>
         <div className="flex items-baseline gap-2">
           <p className="text-3xl font-bold text-foreground">{formattedPledged}</p>
-          <span className="text-sm text-muted-foreground">pledged of {formattedGoal} goal</span>
+          <span className="text-sm text-muted-foreground">Reserved</span>
         </div>
       </div>
 
