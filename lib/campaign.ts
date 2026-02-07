@@ -48,7 +48,8 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             totalPledged: Number(campaignData.total_pledged),
             goalAmount: Number(campaignData.goal_amount),
             totalBackers: campaignData.total_backers,
-            daysLeft: Math.max(0, Math.ceil((new Date(campaignData.ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+            daysLeft: Math.max(0, Math.ceil((new Date(campaignData.ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))),
+            lovesCount: campaignData.loves_count || 0
         },
         creator: {
             id: campaignData.creator.id,

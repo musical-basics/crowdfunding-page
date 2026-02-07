@@ -1,11 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Bookmark, Facebook, Twitter, Share2 } from "lucide-react"
+import { Bookmark, Facebook, Twitter, Share2, Heart } from "lucide-react"
 import { useCampaign } from "@/context/campaign-context"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useTransition } from "react"
-import { joinEmailList } from "@/app/actions"
+import { useState, useTransition, useEffect } from "react"
+import { joinEmailList, incrementProjectLoves } from "@/app/actions"
 import { useToast } from "@/components/ui/use-toast"
 import {
   Popover,
@@ -24,6 +24,37 @@ export function StatsPanel() {
   const [open, setOpen] = useState(false)
   const [hasJoined, setHasJoined] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  // Love Feature State
+  const [lovesCount, setLovesCount] = useState(0)
+  const [isLoved, setIsLoved] = useState(false)
+
+  useEffect(() => {
+    if (campaign) {
+      setLovesCount(campaign.stats.lovesCount || 0)
+      // Check local storage to see if already loved
+      const loved = localStorage.getItem("project_loved")
+      if (loved) setIsLoved(true)
+    }
+  }, [campaign])
+
+  const handleLove = async () => {
+    if (isLoved) return
+
+    // Optimistic Update
+    setIsLoved(true)
+    setLovesCount(prev => prev + 1)
+    localStorage.setItem("project_loved", "true")
+
+    // Server Action
+    const result = await incrementProjectLoves()
+    if (!result.success) {
+      // Revert if failed
+      setIsLoved(false)
+      setLovesCount(prev => prev - 1)
+      localStorage.removeItem("project_loved")
+    }
+  }
 
   if (!campaign) return null
 
@@ -198,7 +229,25 @@ export function StatsPanel() {
         </div>
       </div>
 
-
+      {/* Project Love Section */}
+      <div className="flex items-center gap-2 justify-center pt-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLove}
+          className={`group gap-2 hover:bg-red-50 ${isLoved ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
+        >
+          <Heart className={`h-5 w-5 transition-all ${isLoved ? "fill-red-500 scale-110" : "group-hover:scale-110"}`} />
+          <span className="font-medium text-sm">
+            {isLoved ? "You loved this project" : "Love this project"}
+          </span>
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {lovesCount} people loved this project.
+        </span>
+      </div>
     </div>
+
+
   )
 }

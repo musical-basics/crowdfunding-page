@@ -143,6 +143,34 @@ export async function joinEmailList(formData: FormData) {
     }
 }
 
+// 5. Increment Project Loves
+export async function incrementProjectLoves() {
+    const campaignId = "dreamplay-one"
+    const supabase = createAdminClient()
+
+    // 1. Get current count
+    const { data: campaign, error: fetchError } = await supabase
+        .from("cf_campaign")
+        .select("loves_count")
+        .eq("id", campaignId)
+        .single()
+
+    if (fetchError) return { success: false, error: fetchError.message }
+
+    const newCount = (campaign.loves_count || 0) + 1
+
+    // 2. Increment count
+    const { error: updateError } = await supabase
+        .from("cf_campaign")
+        .update({ loves_count: newCount })
+        .eq("id", campaignId)
+
+    if (updateError) return { success: false, error: updateError.message }
+
+    revalidatePath("/")
+    return { success: true, count: newCount }
+}
+
 // --- COMMUNITY ACTIONS ---
 
 // 1. ADMIN: Post an Update

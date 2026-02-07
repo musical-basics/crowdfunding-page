@@ -54,6 +54,7 @@ export interface CampaignStats {
     goalAmount: number;
     totalBackers: number;
     daysLeft: number;
+    lovesCount: number;
 }
 
 export interface KeyFeature {
