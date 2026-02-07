@@ -206,7 +206,7 @@ export function CheckoutDialog() {
                                         I agree to the Terms of Use
                                     </label>
                                     <p className="text-xs text-muted-foreground text-balance leading-relaxed">
-                                        I understand this is a pre-order for August 2026 delivery.
+                                        I understand this is a pre-order for {reward.estimatedDelivery} delivery.
                                     </p>
                                 </div>
                             </div>
