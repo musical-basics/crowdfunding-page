@@ -146,7 +146,7 @@ export function CheckoutDialog() {
                                             className={`cursor-pointer border-2 rounded-xl p-4 text-center transition-all ${keySize === size ? 'border-emerald-600 bg-emerald-50/50' : 'border-border hover:border-gray-300'}`}
                                         >
                                             <div className="font-bold">{size}</div>
-                                            <div className="text-xs text-muted-foreground mt-1">{size === "DS5.5" ? "Small Hands" : "Standard"}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">{size === "DS5.5" ? "Small Hands" : "Medium Hands"}</div>
                                         </div>
                                     ))}
                                 </div>
