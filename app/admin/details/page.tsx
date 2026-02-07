@@ -114,6 +114,7 @@ export default function CampaignDetailsEditor() {
     const [technicalDetails, setTechnicalDetails] = useState("")
     const [manufacturerDetails, setManufacturerDetails] = useState("")
     const [goalAmount, setGoalAmount] = useState(0)
+    const [totalSupply, setTotalSupply] = useState(100)
     const [endDate, setEndDate] = useState("")
 
     // Media & Video States
@@ -133,6 +134,8 @@ export default function CampaignDetailsEditor() {
             setTitle(campaign.title)
             setSubtitle(campaign.subtitle)
             setGoalAmount(campaign.stats.goalAmount)
+            setTotalSupply(campaign.stats.totalSupply || 100)
+            setEndDate(new Date(Date.now() + campaign.stats.daysLeft * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
             setStory(campaign.story)
             setRisks(campaign.risks)
             setShipping(campaign.shipping)
@@ -259,7 +262,14 @@ export default function CampaignDetailsEditor() {
             ...campaign.images,
             gallery: mediaGallery.map(m => m.src) // Simple preview
         },
-        mediaGallery: mediaGallery // Rich preview
+        mediaGallery: mediaGallery, // Rich preview
+        stats: {
+            ...campaign.stats,
+            goalAmount: goalAmount,
+            totalSupply: totalSupply,
+            // Recalculate daysLeft for preview based on endDate
+            daysLeft: endDate ? Math.max(0, Math.ceil((new Date(endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : campaign.stats.daysLeft
+        }
     }
 
     return (
@@ -571,6 +581,16 @@ export default function CampaignDetailsEditor() {
                                     onChange={e => setShipping(e.target.value)}
                                 />
                             </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="totalSupply">Total Supply Limit</Label>
+                                <Input
+                                    id="totalSupply"
+                                    name="totalSupply"
+                                    type="number"
+                                    value={totalSupply}
+                                    onChange={e => setTotalSupply(Number(e.target.value))}
+                                />
+                            </div>
                             <div className="space-y-2">
                                 <Label>Risks & Challenges</Label>
                                 <Textarea
@@ -589,6 +609,9 @@ export default function CampaignDetailsEditor() {
                     <input type="hidden" name="manufacturerDetails" value={manufacturerDetails} />
                     <input type="hidden" name="key_features_json" value={JSON.stringify(keyFeatures)} />
                     <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
+                    <input type="hidden" name="endsAt" value={endDate} />
+                    <input type="hidden" name="goal" value={goalAmount} />
+                    <input type="hidden" name="totalSupply" value={totalSupply} />
 
 
                 </form>

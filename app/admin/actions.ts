@@ -16,6 +16,7 @@ export async function updateCampaignDetails(formData: FormData) {
     const technicalDetails = formData.get("technicalDetails") as string
     const manufacturerDetails = formData.get("manufacturerDetails") as string
     const goalAmount = formData.get("goal")
+    const totalSupply = formData.get("totalSupply")
     const endsAt = formData.get("endDate")
 
     // Parse JSON fields
@@ -104,6 +105,7 @@ export async function updateCampaignDetails(formData: FormData) {
             technical_details: technicalDetails,
             manufacturer_details: manufacturerDetails,
             goal_amount: goalAmount,
+            total_supply: totalSupply || 100,
             media_gallery: mediaGallery,
             ends_at: endsAt ? new Date(endsAt as string).toISOString() : undefined,
             gallery_images: galleryImages,

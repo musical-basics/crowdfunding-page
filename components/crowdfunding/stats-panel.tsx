@@ -133,17 +133,13 @@ export function StatsPanel() {
         </div>
       </div>
 
-      {/* Backers & Days Left Hidden
+      {/* Percentage Sold Out */}
       <div>
-        <p className="text-2xl font-semibold text-foreground">{backersCount}</p>
-        <p className="text-sm text-muted-foreground">backers</p>
+        <p className="text-2xl font-semibold text-foreground">
+          {Math.min(100, Math.floor((backersCount / (campaign.stats.totalSupply || 100)) * 100))}%
+        </p>
+        <p className="text-sm text-muted-foreground">sold out</p>
       </div>
-
-      <div>
-        <p className="text-2xl font-semibold text-foreground">{campaign.stats.daysLeft}</p>
-        <p className="text-sm text-muted-foreground">days to go</p>
-      </div>
-      */}
 
       {/* CTA Button - NOW CONNECTED */}
       <Button
