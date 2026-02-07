@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Trash, Eye, EyeOff } from "lucide-react"
+import { Trash, Eye, EyeOff, Copy } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { useCampaign } from "@/context/campaign-context"
 import { CreateRewardDialog } from "@/components/admin/create-reward-dialog"
 import { EditRewardDialog } from "@/components/admin/edit-reward-dialog" // <--- Import the new component
-import { deleteReward, toggleRewardVisibility } from "../actions"
+import { deleteReward, toggleRewardVisibility, duplicateReward } from "../actions"
 import { useToast } from "@/hooks/use-toast"
 
 import { ImportRewardsButton } from "@/components/admin/import-rewards-button"
@@ -45,6 +45,27 @@ export default function AdminRewardsPage() {
             })
         } catch (e) {
             toast({ title: "Error", description: "Failed to update visibility", variant: "destructive" })
+        }
+    }
+
+    const handleDuplicate = async (rewardId: string) => {
+        try {
+            const result = await duplicateReward(rewardId)
+            if (result.success) {
+                await refreshCampaign()
+                toast({
+                    title: "Reward Duplicated",
+                    description: "A copy of the reward has been created."
+                })
+            } else {
+                toast({
+                    title: "Error",
+                    description: result.error || "Failed to duplicate reward",
+                    variant: "destructive"
+                })
+            }
+        } catch (e) {
+            toast({ title: "Error", description: "Failed to duplicate reward", variant: "destructive" })
         }
     }
 
@@ -111,6 +132,15 @@ export default function AdminRewardsPage() {
                                         </Button>
 
                                         <EditRewardDialog reward={reward} />
+
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDuplicate(reward.id)}
+                                            title="Duplicate Reward"
+                                        >
+                                            <Copy className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
 
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>

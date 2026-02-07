@@ -261,6 +261,42 @@ export async function toggleRewardVisibility(rewardId: string, currentStatus: bo
     return { success: true }
 }
 
+export async function duplicateReward(rewardId: string) {
+    const supabase = createAdminClient()
+
+    // 1. Fetch original reward
+    const { data: original, error: fetchError } = await supabase
+        .from("cf_reward")
+        .select("*")
+        .eq("id", rewardId)
+        .single()
+
+    if (fetchError || !original) {
+        return { success: false, error: "Failed to fetch original reward" }
+    }
+
+    // 2. Create copy
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    const { id, created_at, backers_count, ...rest } = original
+
+    const { error: insertError } = await supabase
+        .from("cf_reward")
+        .insert({
+            ...rest,
+            id: crypto.randomUUID(),
+            title: `Copy of ${original.title}`,
+            backers_count: 0,
+            is_sold_out: false
+        })
+
+    if (insertError) {
+        return { success: false, error: insertError.message }
+    }
+
+    revalidatePath("/admin/rewards")
+    return { success: true }
+}
+
 async function uploadRewardImage(file: File, supabase: any, existingUrl?: string) {
     if (!file || file.size === 0) return existingUrl || null
 
