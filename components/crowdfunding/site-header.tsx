@@ -138,7 +138,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                             size="sm"
                             className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
                         >
-                            Back this project
+                            Pre-order now
                         </Button>
                     </div>
 
@@ -230,7 +230,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
                         <div className="mt-8 pt-4 border-t border-border">
                             <Button onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }} className="w-full rounded-full py-6 text-lg">
-                                Back this project
+                                Pre-order now
                             </Button>
                         </div>
                     </div>

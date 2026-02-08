@@ -10,6 +10,7 @@ export function MobilePledgeBar() {
 
     // Only show on mobile
     if (!isMobile) return null
+    if (!campaign) return null
 
     return (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-50 md:hidden pb-safe">
@@ -35,7 +36,7 @@ export function MobilePledgeBar() {
                     }}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg"
                 >
-                    Back this project
+                    Pre-order now
                 </Button>
             </div>
         </div>
