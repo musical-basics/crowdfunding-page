@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { HeroSection } from "@/components/crowdfunding/hero-section" // Import HeroSection
 import { CommunityTab } from "@/components/crowdfunding/community-tab"
+import { CreatorPage } from "@/components/crowdfunding/creator-page"
 
 export function CampaignPage() {
   const { campaign, isLoading, selectReward } = useCampaign()
@@ -23,6 +24,7 @@ export function CampaignPage() {
     { id: "story", label: "Story" },
     { id: "features", label: "Features" },
     { id: "specs", label: "Technical Details" },
+    { id: "creator", label: "Creator" },
     { id: "manufacturer", label: "Manufacturer" },
     { id: "shipping", label: "Shipping" },
     { id: "community", label: "Community" },
@@ -140,7 +142,10 @@ export function CampaignPage() {
           )}
         </section>
 
-
+        {/* Creator */}
+        <section id="creator" className="scroll-mt-24 pt-8 border-t border-border">
+          <CreatorPage />
+        </section>
 
         {/* Manufacturer */}
         <section id="manufacturer" className="scroll-mt-24 pt-8 border-t border-border">

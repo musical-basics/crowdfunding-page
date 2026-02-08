@@ -97,7 +97,6 @@ function CrowdfundingContent() {
 
             {activeTab === "campaign" && <CampaignPage />}
             {activeTab === "rewards" && <RewardsPage />}
-            {activeTab === "creator" && <CreatorPage />}
             {activeTab === "faq" && <FAQPage />}
             {activeTab === "updates" && <SectionPlaceholder title="Updates" />}
             {activeTab === "comments" && <SectionPlaceholder title="Comments" />}

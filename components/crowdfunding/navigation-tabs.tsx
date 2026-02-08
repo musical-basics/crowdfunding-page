@@ -11,7 +11,6 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
   const navLinks = [
     { id: "rewards", label: "Rewards" },
     { id: "faq", label: "FAQ" },
-    { id: "creator", label: "Creator" },
     { id: "community", label: "Community" },
   ]
 
