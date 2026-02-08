@@ -34,6 +34,7 @@ export interface Reward {
     checkoutUrl?: string; // External checkout URL
     shopifyVariantId?: string; // Shopify Variant ID or JSON map
     isVisible: boolean;
+    sortOrder?: number;
 }
 
 export interface FAQItem {

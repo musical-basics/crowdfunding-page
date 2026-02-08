@@ -324,6 +324,33 @@ async function uploadRewardImage(file: File, supabase: any, existingUrl?: string
     return urlData.publicUrl
 }
 
+export async function updateRewardOrder(orderedIds: string[]) {
+    const supabase = createAdminClient()
+
+    // 1. Prepare updates
+    // We can't do a single bulk update with different values for the same column easily in Supabase/Postgrest
+    // So we'll loop. For a small number of rewards (e.g. < 50), this is fine.
+    // Ideally, we'd use a stored procedure or a single CASE WHEN query if performance matters.
+
+    const updates = orderedIds.map((id, index) => {
+        return supabase
+            .from('cf_reward')
+            .update({ sort_order: index })
+            .eq('id', id)
+    })
+
+    // 2. Execute all updates
+    try {
+        await Promise.all(updates)
+        revalidatePath("/admin/rewards")
+        revalidatePath("/")
+        return { success: true }
+    } catch (error: any) {
+        console.error("Failed to update reward order:", error)
+        return { success: false, error: error.message }
+    }
+}
+
 // --- FAQ ACTIONS ---
 
 export async function deleteFAQ(faqId: string) {

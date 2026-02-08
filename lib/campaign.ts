@@ -20,6 +20,7 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
         .from('cf_reward')
         .select('*')
         .eq('campaign_id', campaignId)
+        .order('sort_order', { ascending: true })
         .order('price', { ascending: true })
 
     // 3. Fetch FAQs
@@ -78,7 +79,8 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             isFeatured: r.is_featured,
             checkoutUrl: r.checkout_url,
             shopifyVariantId: r.shopify_variant_id,
-            isVisible: r.is_visible !== false
+            isVisible: r.is_visible !== false,
+            sortOrder: r.sort_order
         })) || [],
         faqs: faqData?.map((f: any) => ({
             id: f.id,
