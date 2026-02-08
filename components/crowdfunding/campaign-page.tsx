@@ -208,7 +208,7 @@ export function CampaignPage() {
 
         {/* REWARDS LIST */}
         <div className="space-y-6">
-          <h4 className="font-bold text-lg">Support</h4>
+          <h4 className="font-bold text-lg">Pre-Order Now</h4>
 
           {campaign.rewards
             .filter(r => r.isVisible !== false)
