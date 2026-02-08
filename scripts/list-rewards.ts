@@ -1,7 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
-import dotenv from 'dotenv'
+import fs from 'fs'
+import path from 'path'
 
-dotenv.config({ path: '.env.local' })
+// Load env vars manually
+const envPath = path.resolve(__dirname, '../.env.local')
+if (fs.existsSync(envPath)) {
+    const envConfig = fs.readFileSync(envPath, 'utf8')
+    envConfig.split('\n').forEach(line => {
+        const [key, value] = line.split('=')
+        if (key && value) {
+            process.env[key.trim()] = value.trim()
+        }
+    })
+}
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,7 +22,7 @@ const supabase = createClient(
 async function main() {
     const { data: rewards, error } = await supabase
         .from('cf_reward')
-        .select('id, title, price')
+        .select('id, title, price, shopify_variant_id')
         .eq('campaign_id', 'dreamplay-one')
 
     if (error) {

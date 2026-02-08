@@ -43,16 +43,34 @@ export async function POST(req: Request) {
 
         // 4. Iterate Line Items
         // We match the Shopify Variant ID in the order to the one in your DB
+        // Fetch ALL rewards to check against JSON maps
+        const { data: allRewards } = await supabase
+            .from("cf_reward")
+            .select("id, shopify_variant_id")
+            .eq("campaign_id", "dreamplay-one") // Optimization: only fetch for this campaign
+
         for (const item of order.line_items) {
             const variantId = item.variant_id.toString()
             const price = parseFloat(item.price)
 
-            // Find matching reward in your DB
-            const { data: reward } = await supabase
-                .from("cf_reward")
-                .select("id")
-                .eq("shopify_variant_id", variantId)
-                .single()
+            // Find matching reward in memory
+            const reward = allRewards?.find(r => {
+                if (!r.shopify_variant_id) return false
+
+                // 1. Direct Match
+                if (r.shopify_variant_id === variantId) return true
+
+                // 2. JSON Map Match (for Bundles/Options)
+                if (r.shopify_variant_id.trim().startsWith("{")) {
+                    try {
+                        const map = JSON.parse(r.shopify_variant_id)
+                        return Object.values(map).includes(variantId)
+                    } catch (e) {
+                        return false
+                    }
+                }
+                return false
+            })
 
             if (reward) {
                 // Insert Pledge
