@@ -300,7 +300,7 @@ export function CampaignPage() {
                       <div className="relative">
                         <div className={`absolute inset-0 bg-emerald-600 opacity-0 group-hover:opacity-10 transition-opacity rounded-md ${isFeatured ? 'opacity-5' : ''}`} />
                         <Button className={`w-full text-white shadow-sm ${isFeatured ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200 shadow-md" : "bg-emerald-600 hover:bg-emerald-700"}`}>
-                          Pledge ${reward.price}
+                          Reserve for ${reward.price}
                         </Button>
                       </div>
                     )}
