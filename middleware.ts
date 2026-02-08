@@ -1,16 +1,35 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-export function middleware(request: NextRequest) {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export async function middleware(request: NextRequest) {
     // Only run on the root path
     if (request.nextUrl.pathname === '/') {
         // Check for existing cookie
         const variantCookie = request.cookies.get('landing_page_variant')
         let variant = variantCookie?.value
 
-        // If no cookie, assign one randomly
+        // If no cookie, get next variant from database (round-robin)
         if (!variant) {
-            variant = Math.random() < 0.5 ? 'a' : 'b'
+            try {
+                const supabase = createClient(supabaseUrl, supabaseAnonKey)
+                const { data, error } = await supabase.rpc('get_next_traffic_variant', {
+                    campaign_id_input: 'dreamplay-one'
+                })
+
+                if (error) {
+                    console.error('Traffic toggle RPC error:', error)
+                    variant = 'a' // Default to 'a' on error
+                } else {
+                    variant = data as string
+                }
+            } catch (e) {
+                console.error('Middleware error:', e)
+                variant = 'a' // Default to 'a' on error
+            }
         }
 
         // Determine destination based on variant
