@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ManualPledgeDialog } from "@/components/admin/manual-pledge-dialog"
 import { ImportPledgesButton } from "@/components/admin/import-pledges-button"
+import { ExportPledgesButton } from "@/components/admin/export-pledges-button"
 
 // Define interface for the data shape
 interface Backer {
@@ -51,6 +52,7 @@ export default function BackersPage() {
                 <h1 className="text-3xl font-bold">Backers & Pledges</h1>
                 <div className="flex gap-2 items-center">
                     <div className="text-muted-foreground mr-2">Total: {pledges.length}</div>
+                    <ExportPledgesButton data={pledges} />
                     <ImportPledgesButton />
                     <ManualPledgeDialog />
                 </div>
