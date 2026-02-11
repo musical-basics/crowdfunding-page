@@ -311,6 +311,16 @@ export default function CampaignDetailsEditor() {
                                     <Input id="endDate" name="endDate" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
                                 </div>
                             </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="totalSupply">Total Supply Limit</Label>
+                                <Input
+                                    id="totalSupply"
+                                    name="totalSupply"
+                                    type="number"
+                                    value={totalSupply}
+                                    onChange={e => setTotalSupply(Number(e.target.value))}
+                                />
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -581,16 +591,7 @@ export default function CampaignDetailsEditor() {
                                     onChange={e => setShipping(e.target.value)}
                                 />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="totalSupply">Total Supply Limit</Label>
-                                <Input
-                                    id="totalSupply"
-                                    name="totalSupply"
-                                    type="number"
-                                    value={totalSupply}
-                                    onChange={e => setTotalSupply(Number(e.target.value))}
-                                />
-                            </div>
+
                             <div className="space-y-2">
                                 <Label>Risks & Challenges</Label>
                                 <Textarea
@@ -611,7 +612,7 @@ export default function CampaignDetailsEditor() {
                     <input type="hidden" name="tech_specs_json" value={JSON.stringify(techSpecs)} />
                     <input type="hidden" name="endsAt" value={endDate} />
                     <input type="hidden" name="goal" value={goalAmount} />
-                    <input type="hidden" name="totalSupply" value={totalSupply} />
+
 
 
                 </form>
