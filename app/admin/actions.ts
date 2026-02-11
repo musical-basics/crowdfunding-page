@@ -265,6 +265,21 @@ export async function toggleRewardVisibility(rewardId: string, currentStatus: bo
     return { success: true }
 }
 
+export async function toggleRewardSoldOut(rewardId: string, currentStatus: boolean) {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from("cf_reward")
+        .update({ is_sold_out: !currentStatus })
+        .eq("id", rewardId)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath("/admin/rewards")
+    revalidatePath("/") // Update public page
+    return { success: true }
+}
+
 export async function duplicateReward(rewardId: string) {
     const supabase = createAdminClient()
 

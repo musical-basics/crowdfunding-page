@@ -217,13 +217,23 @@ export function CampaignPage() {
               return (
                 <Card
                   key={reward.id}
-                  className={`overflow-hidden transition-all duration-200 border relative ${reward.isSoldOut
-                    ? "opacity-70"
-                    : isFeatured
-                      ? "border-2 border-emerald-500 shadow-xl scale-[1.02] z-10 bg-emerald-50/10"
-                      : "hover:border-emerald-500 hover:shadow-md"
+                  className={`overflow-hidden transition-all duration-200 border relative 
+                    ${reward.isSoldOut
+                      ? "opacity-75 bg-slate-50 border-slate-200 grayscale-[0.8]" // Distinct sold out style
+                      : isFeatured
+                        ? "border-2 border-emerald-500 shadow-xl scale-[1.02] z-10 bg-emerald-50/10"
+                        : "hover:border-emerald-500 hover:shadow-md"
                     }`}
                 >
+                  {/* SOLD OUT OVERLAY */}
+                  {reward.isSoldOut && (
+                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center z-20 pointer-events-none">
+                      <span className="bg-slate-900/80 text-white px-4 py-1 rounded font-bold uppercase tracking-widest text-sm backdrop-blur-sm">
+                        Sold Out
+                      </span>
+                    </div>
+                  )}
+
                   {/* Featured Badge */}
                   {isFeatured && !reward.isSoldOut && (
                     <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20">
@@ -300,7 +310,7 @@ export function CampaignPage() {
                   <div className="p-4 bg-muted/30 border-t border-border group cursor-pointer"
                     onClick={() => !reward.isSoldOut && selectReward(reward.id)}>
                     {reward.isSoldOut ? (
-                      <Button disabled className="w-full" variant="outline">Sold Out</Button>
+                      <Button disabled className="w-full bg-slate-200 text-slate-500" variant="ghost">Sold Out</Button>
                     ) : (
                       <div className="relative">
                         <div className={`absolute inset-0 bg-emerald-600 opacity-0 group-hover:opacity-10 transition-opacity rounded-md ${isFeatured ? 'opacity-5' : ''}`} />

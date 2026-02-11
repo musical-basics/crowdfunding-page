@@ -33,9 +33,18 @@ export function RewardsPage() {
                   ? isFeatured
                     ? "bg-gradient-to-b from-white to-emerald-50/30 border-2 border-emerald-500 shadow-xl scale-[1.02] z-10"
                     : "bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1"
-                  : "bg-slate-100 opacity-60 grayscale border border-slate-200 cursor-not-allowed"}
+                  : "bg-slate-50 border-slate-200 opacity-90 cursor-not-allowed grayscale-[0.8]"} 
               `}
             >
+              {/* SOLD OUT OVERLAY BADGE */}
+              {!isAvailable(reward) && (
+                <div className="absolute top-4 right-4 z-20 rotate-12">
+                  <div className="border-2 border-red-500 text-red-500 font-black text-xl px-4 py-1 rounded-md tracking-widest uppercase opacity-80">
+                    Sold Out
+                  </div>
+                </div>
+              )}
+
               {/* Featured Badge */}
               {isFeatured && isAvailable(reward) && (
                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Trash, Eye, EyeOff, Copy, GripVertical } from "lucide-react"
+import { Trash, Eye, EyeOff, Copy, GripVertical, Ban, CheckCircle2 } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { useCampaign } from "@/context/campaign-context"
 import { CreateRewardDialog } from "@/components/admin/create-reward-dialog"
 import { EditRewardDialog } from "@/components/admin/edit-reward-dialog"
-import { deleteReward, toggleRewardVisibility, duplicateReward, updateRewardOrder } from "../actions"
+import { deleteReward, toggleRewardVisibility, duplicateReward, updateRewardOrder, toggleRewardSoldOut } from "../actions"
 import { useToast } from "@/hooks/use-toast"
 
 import { ImportRewardsButton } from "@/components/admin/import-rewards-button"
@@ -166,6 +166,19 @@ export default function AdminRewardsPage() {
         }
     }
 
+    const handleToggleSoldOut = async (reward: any) => {
+        try {
+            await toggleRewardSoldOut(reward.id, reward.isSoldOut)
+            await refreshCampaign()
+            toast({
+                title: !reward.isSoldOut ? "Marked as Sold Out" : "Marked as Available",
+                description: `"${reward.title}" is now ${!reward.isSoldOut ? "sold out" : "available"}.`
+            })
+        } catch (e) {
+            toast({ title: "Error", description: "Failed to update status", variant: "destructive" })
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -234,6 +247,20 @@ export default function AdminRewardsPage() {
                                                         <Eye className="h-4 w-4 text-muted-foreground" />
                                                     ) : (
                                                         <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                    )}
+                                                </Button>
+
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleToggleSoldOut(reward)}
+                                                    title={reward.isSoldOut ? "Mark as Available" : "Mark as Sold Out"}
+                                                    className={reward.isSoldOut ? "text-emerald-600" : "text-orange-500"}
+                                                >
+                                                    {reward.isSoldOut ? (
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                    ) : (
+                                                        <Ban className="h-4 w-4" />
                                                     )}
                                                 </Button>
 
