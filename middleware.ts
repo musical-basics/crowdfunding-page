@@ -8,6 +8,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export async function middleware(request: NextRequest) {
     // Only run on the root path
     if (request.nextUrl.pathname === '/') {
+        // middleware disabled
+        return NextResponse.next()
+
+        /*
         // Check for existing cookie
         const variantCookie = request.cookies.get('landing_page_variant')
         let variant = variantCookie?.value
@@ -54,6 +58,7 @@ export async function middleware(request: NextRequest) {
         }
 
         return response
+        */
     }
 
     return NextResponse.next()
