@@ -118,7 +118,7 @@ export function StatsPanel() {
       {/* Percentage Sold Out */}
       <div>
         <p className="text-2xl font-semibold text-foreground">
-          {Math.min(100, Math.floor((backersCount / (campaign.stats.totalSupply || 100)) * 100))}%
+          {Math.floor((backersCount / (campaign.stats.totalSupply || 100)) * 100)}%
         </p>
         <p className="text-sm text-muted-foreground">sold out</p>
       </div>
