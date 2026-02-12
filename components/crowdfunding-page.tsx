@@ -96,9 +96,9 @@ function CrowdfundingContent() {
                   <AlertTriangle className="h-6 w-6" />
                 </div>
                 <p className="text-lg md:text-xl font-medium text-amber-900 leading-relaxed max-w-3xl">
-                  We are sold out for the <span className="font-bold underline decoration-amber-400 decoration-2 underline-offset-2">Summer 2026 batch</span>.
+                  We are sold out for the <span className="font-bold underline decoration-amber-400 decoration-2 underline-offset-2">Batch 1 (Summer 2026 Delivery)</span>.
                   <br />
-                  We are now accepting reservations for the <span className="font-bold">End of Year batch</span>.
+                  We have an extremely limited quantity available for the <span className="font-bold">2nd Production Batch (End of Year)</span>.
                 </p>
               </div>
             </div>
