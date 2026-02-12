@@ -143,9 +143,9 @@ export function StatsPanel() {
       <div className="flex items-center gap-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="flex-1 gap-2 bg-transparent">
-              <Bookmark className="h-4 w-4" />
-              Join the email list
+            <Button variant="outline" className="flex-1 gap-2 bg-transparent text-lg py-6">
+              <Bookmark className="h-5 w-5" />
+              Join The Waitlist
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
@@ -168,7 +168,7 @@ export function StatsPanel() {
             ) : (
               <form action={handleJoinList} className="grid gap-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium leading-none">Join the list</h4>
+                  <h4 className="font-medium leading-none">Join the waitlist</h4>
                   <p className="text-sm text-muted-foreground">
                     Get notified about project updates.
                   </p>
@@ -196,23 +196,12 @@ export function StatsPanel() {
                   </div>
                 </div>
                 <Button type="submit" disabled={isPending}>
-                  {isPending ? "Joining..." : "Join list"}
+                  {isPending ? "Joining..." : "Join waitlist"}
                 </Button>
               </form>
             )}
           </PopoverContent>
         </Popover>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-blue-600">
-            <Facebook className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-sky-500">
-            <Twitter className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground">
-            <Share2 className="h-5 w-5" />
-          </Button>
-        </div>
       </div>
 
       {/* Project Love Section */}
