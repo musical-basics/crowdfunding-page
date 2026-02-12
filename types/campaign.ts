@@ -91,4 +91,5 @@ export interface Campaign {
     faqPageContent?: FAQPageContent;
     keyFeatures: KeyFeature[];
     techSpecs: TechSpec[];
+    showAnnouncement?: boolean;
 }

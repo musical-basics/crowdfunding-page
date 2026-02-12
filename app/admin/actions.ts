@@ -19,6 +19,8 @@ export async function updateCampaignDetails(formData: FormData) {
     const totalSupply = formData.get("totalSupply")
     const endsAt = formData.get("endDate")
 
+    const showAnnouncement = formData.get("show_announcement") === "true"
+
     // Parse JSON fields
     const keyFeaturesJson = formData.get("key_features_json") as string
     const techSpecsJson = formData.get("tech_specs_json") as string
@@ -111,7 +113,8 @@ export async function updateCampaignDetails(formData: FormData) {
             gallery_images: galleryImages,
             hero_image: heroImageUrl,
             key_features: keyFeatures,
-            tech_specs: techSpecs
+            tech_specs: techSpecs,
+            show_announcement: showAnnouncement
         })
         .eq("id", id)
 

@@ -87,21 +87,23 @@ function CrowdfundingContent() {
               </div>
             </div>
 
-            {/* NEW: Sold Out Announcement Banner (Placed here per request) */}
-            <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm text-center">
-              <div className="flex flex-col items-center justify-center gap-2">
-                <div className="flex items-center gap-2 text-amber-700 font-bold text-lg md:text-xl uppercase tracking-wide">
-                  <AlertTriangle className="h-6 w-6" />
-                  <span>Important Update</span>
-                  <AlertTriangle className="h-6 w-6" />
+            {/* Sold Out Announcement Banner (Admin-controlled visibility) */}
+            {campaign.showAnnouncement && (
+              <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm text-center">
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="flex items-center gap-2 text-amber-700 font-bold text-lg md:text-xl uppercase tracking-wide">
+                    <AlertTriangle className="h-6 w-6" />
+                    <span>Important Update</span>
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                  <p className="text-lg md:text-xl font-medium text-amber-900 leading-relaxed max-w-3xl">
+                    We are sold out for the <span className="font-bold underline decoration-amber-400 decoration-2 underline-offset-2">Batch 1 (Summer 2026 Delivery)</span>.
+                    <br />
+                    We will resume accepting new reservations when our manufacturer notifies us of additional capacity. For now you can join <span className="font-bold">the Waitlist</span>.
+                  </p>
                 </div>
-                <p className="text-lg md:text-xl font-medium text-amber-900 leading-relaxed max-w-3xl">
-                  We are sold out for the <span className="font-bold underline decoration-amber-400 decoration-2 underline-offset-2">Batch 1 (Summer 2026 Delivery)</span>.
-                  <br />
-                  We will resume accepting new reservations when our manufacturer notifies us of additional capacity. For now you can join <span className="font-bold">the Waitlist</span>.
-                </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

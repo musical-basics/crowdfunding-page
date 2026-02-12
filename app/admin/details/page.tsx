@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { updateCampaignDetails, uploadCreatorAsset } from "../actions"
 import { useCampaign, CampaignProvider } from "@/context/campaign-context"
 import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical, Save } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { AdminHeaderActions } from "@/components/admin/admin-header-actions"
 import {
     DndContext,
@@ -116,6 +117,7 @@ export default function CampaignDetailsEditor() {
     const [goalAmount, setGoalAmount] = useState(0)
     const [totalSupply, setTotalSupply] = useState(100)
     const [endDate, setEndDate] = useState("")
+    const [showAnnouncement, setShowAnnouncement] = useState(false)
 
     // Media & Video States
     const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([])
@@ -143,6 +145,7 @@ export default function CampaignDetailsEditor() {
             setManufacturerDetails(campaign.manufacturerDetails || "")
             setKeyFeatures(campaign.keyFeatures)
             setTechSpecs(campaign.techSpecs)
+            setShowAnnouncement(campaign.showAnnouncement ?? false)
 
             // Gallery Logic
             if (campaign.mediaGallery && campaign.mediaGallery.length > 0) {
@@ -233,6 +236,7 @@ export default function CampaignDetailsEditor() {
     }
 
     async function handleSubmit(formData: FormData) {
+        formData.set("show_announcement", showAnnouncement.toString())
         formData.set("media_gallery_json", JSON.stringify(mediaGallery))
         // Re-inject legacy gallery array for compatibility if needed
         const legacyImages = mediaGallery.filter(m => m.type === 'image').map(m => m.src)
@@ -319,6 +323,17 @@ export default function CampaignDetailsEditor() {
                                     type="number"
                                     value={totalSupply}
                                     onChange={e => setTotalSupply(Number(e.target.value))}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="showAnnouncement" className="font-medium">Show Announcement Banner</Label>
+                                    <p className="text-sm text-muted-foreground">Display the "Important Update" banner on the public page</p>
+                                </div>
+                                <Switch
+                                    id="showAnnouncement"
+                                    checked={showAnnouncement}
+                                    onCheckedChange={setShowAnnouncement}
                                 />
                             </div>
                         </CardContent>

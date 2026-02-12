@@ -100,7 +100,8 @@ export async function GET() {
             answer: f.answer
         })) || [],
         keyFeatures: campaignData.key_features || [],
-        techSpecs: campaignData.tech_specs || []
+        techSpecs: campaignData.tech_specs || [],
+        showAnnouncement: campaignData.show_announcement ?? false
     }
 
     return NextResponse.json(formattedCampaign)
