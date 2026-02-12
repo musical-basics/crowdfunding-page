@@ -128,7 +128,7 @@ export function StatsPanel() {
         onClick={handleBackProject} // <--- Added click handler
         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg"
       >
-        Secure Your Spot in Batch 1
+        Reserve for End of Year Batch
       </Button>
 
       {/* No-Risk Guarantee */}

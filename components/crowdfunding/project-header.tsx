@@ -15,6 +15,15 @@ export function ProjectHeader() {
       <p className="text-md md:text-xl text-muted-foreground mt-3 max-w-3xl mx-auto">
         {campaign.subtitle}
       </p>
+
+      {/* NEW: Sold Out Announcement Banner */}
+      <div className="max-w-4xl mx-auto py-6 px-4 bg-muted/30 rounded-xl border border-dashed border-border/60">
+        <p className="text-lg md:text-xl font-bold text-foreground leading-relaxed">
+          *** Important note: We are sold out for the Summer 2026 batch.
+          <br className="hidden md:block" />
+          We are now accepting reservations for the End of Year batch. ***
+        </p>
+      </div>
     </div>
   )
 }
