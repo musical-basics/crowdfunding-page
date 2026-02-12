@@ -17,6 +17,7 @@ import { MobilePledgeBar } from "./crowdfunding/mobile-pledge-bar"
 import { CheckoutDialog } from "./crowdfunding/checkout-dialog"
 import { CommunityTab } from "./crowdfunding/community-tab" // <--- Import
 import { Skeleton } from "@/components/ui/skeleton" // <--- Import Skeleton
+import { AlertTriangle } from "lucide-react" // <--- Import Skeleton
 
 function CrowdfundingContent() {
   const { campaign, isLoading, error } = useCampaign() // <--- Access loading state
@@ -83,6 +84,22 @@ function CrowdfundingContent() {
               </div>
               <div className="lg:col-span-1">
                 <StatsPanel />
+              </div>
+            </div>
+
+            {/* NEW: Sold Out Announcement Banner (Placed here per request) */}
+            <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm text-center">
+              <div className="flex flex-col items-center justify-center gap-2">
+                <div className="flex items-center gap-2 text-amber-700 font-bold text-lg md:text-xl uppercase tracking-wide">
+                  <AlertTriangle className="h-6 w-6" />
+                  <span>Important Update</span>
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <p className="text-lg md:text-xl font-medium text-amber-900 leading-relaxed max-w-3xl">
+                  We are sold out for the <span className="font-bold underline decoration-amber-400 decoration-2 underline-offset-2">Summer 2026 batch</span>.
+                  <br />
+                  We are now accepting reservations for the <span className="font-bold">End of Year batch</span>.
+                </p>
               </div>
             </div>
           </div>
