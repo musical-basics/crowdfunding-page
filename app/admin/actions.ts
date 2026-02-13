@@ -20,8 +20,8 @@ export async function updateCampaignDetails(formData: FormData) {
     const endsAt = formData.get("endDate")
 
     const showAnnouncement = formData.get("show_announcement") === "true"
-    const showReservedAmount = formData.get("show_reserved_amount") !== "false"
-    const showSoldOutPercent = formData.get("show_sold_out_percent") !== "false"
+    const showReservedAmount = formData.get("show_reserved_amount") === "true"
+    const showSoldOutPercent = formData.get("show_sold_out_percent") === "true"
 
     // Parse JSON fields
     const keyFeaturesJson = formData.get("key_features_json") as string
