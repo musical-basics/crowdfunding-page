@@ -129,6 +129,8 @@ export async function updateCampaignDetails(formData: FormData) {
         })
         .eq("id", id)
 
+    console.log("[SERVER ACTION] Supabase update result:", { error: error?.message || 'none', updatePayload: { show_announcement: showAnnouncement, show_reserved_amount: showReservedAmount, show_sold_out_percent: showSoldOutPercent } })
+
     if (error) {
         console.error("Supabase Update Error:", error.message)
         throw new Error(`Database error: ${error.message}`)

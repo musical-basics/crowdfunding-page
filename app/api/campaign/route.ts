@@ -30,6 +30,12 @@ export async function GET() {
         return NextResponse.json({ error: 'Campaign not found', details: campaignError }, { status: 404 })
     }
 
+    console.log("[API ROUTE] Toggle columns from DB:", {
+        show_announcement: campaignData.show_announcement,
+        show_reserved_amount: campaignData.show_reserved_amount,
+        show_sold_out_percent: campaignData.show_sold_out_percent,
+    })
+
     // 2. Fetch Rewards
     const { data: rewardsData } = await supabase
         .from('cf_reward')
