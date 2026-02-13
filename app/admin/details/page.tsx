@@ -243,6 +243,12 @@ export default function CampaignDetailsEditor() {
         formData.set("show_announcement", showAnnouncement.toString())
         formData.set("show_reserved_amount", showReservedAmount.toString())
         formData.set("show_sold_out_percent", showSoldOutPercent.toString())
+        console.log("[SUBMIT] React state:", { showAnnouncement, showReservedAmount, showSoldOutPercent })
+        console.log("[SUBMIT] FormData values:", {
+            show_announcement: formData.get("show_announcement"),
+            show_reserved_amount: formData.get("show_reserved_amount"),
+            show_sold_out_percent: formData.get("show_sold_out_percent"),
+        })
         formData.set("media_gallery_json", JSON.stringify(mediaGallery))
         // Re-inject legacy gallery array for compatibility if needed
         const legacyImages = mediaGallery.filter(m => m.type === 'image').map(m => m.src)

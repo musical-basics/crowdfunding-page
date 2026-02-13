@@ -23,6 +23,13 @@ export async function updateCampaignDetails(formData: FormData) {
     const showReservedAmount = formData.get("show_reserved_amount") === "true"
     const showSoldOutPercent = formData.get("show_sold_out_percent") === "true"
 
+    console.log("[SERVER ACTION] Raw FormData:", {
+        show_announcement: formData.get("show_announcement"),
+        show_reserved_amount: formData.get("show_reserved_amount"),
+        show_sold_out_percent: formData.get("show_sold_out_percent"),
+    })
+    console.log("[SERVER ACTION] Parsed booleans:", { showAnnouncement, showReservedAmount, showSoldOutPercent })
+
     // Parse JSON fields
     const keyFeaturesJson = formData.get("key_features_json") as string
     const techSpecsJson = formData.get("tech_specs_json") as string
