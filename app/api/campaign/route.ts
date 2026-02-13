@@ -101,7 +101,9 @@ export async function GET() {
         })) || [],
         keyFeatures: campaignData.key_features || [],
         techSpecs: campaignData.tech_specs || [],
-        showAnnouncement: campaignData.show_announcement ?? false
+        showAnnouncement: campaignData.show_announcement ?? false,
+        showReservedAmount: campaignData.show_reserved_amount ?? true,
+        showSoldOutPercent: campaignData.show_sold_out_percent ?? true
     }
 
     return NextResponse.json(formattedCampaign)

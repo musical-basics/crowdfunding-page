@@ -108,20 +108,24 @@ export function StatsPanel() {
   return (
     <div className="space-y-6">
       {/* Funding Amount */}
-      <div>
-        <div className="flex items-baseline gap-2">
-          <p className="text-3xl font-bold text-foreground">{formattedPledged}</p>
-          <span className="text-sm text-muted-foreground">Reserved</span>
+      {(campaign.showReservedAmount !== false) && (
+        <div>
+          <div className="flex items-baseline gap-2">
+            <p className="text-3xl font-bold text-foreground">{formattedPledged}</p>
+            <span className="text-sm text-muted-foreground">Reserved</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Percentage Sold Out */}
-      <div>
-        <p className="text-2xl font-semibold text-foreground">
-          {Math.floor((backersCount / (campaign.stats.totalSupply || 100)) * 100)}%
-        </p>
-        <p className="text-sm text-muted-foreground">sold out</p>
-      </div>
+      {(campaign.showSoldOutPercent !== false) && (
+        <div>
+          <p className="text-2xl font-semibold text-foreground">
+            {Math.floor((backersCount / (campaign.stats.totalSupply || 100)) * 100)}%
+          </p>
+          <p className="text-sm text-muted-foreground">sold out</p>
+        </div>
+      )}
 
       {/* CTA Button - NOW CONNECTED */}
       <Button

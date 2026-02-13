@@ -92,4 +92,6 @@ export interface Campaign {
     keyFeatures: KeyFeature[];
     techSpecs: TechSpec[];
     showAnnouncement?: boolean;
+    showReservedAmount?: boolean;
+    showSoldOutPercent?: boolean;
 }

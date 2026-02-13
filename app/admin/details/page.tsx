@@ -118,6 +118,8 @@ export default function CampaignDetailsEditor() {
     const [totalSupply, setTotalSupply] = useState(100)
     const [endDate, setEndDate] = useState("")
     const [showAnnouncement, setShowAnnouncement] = useState(false)
+    const [showReservedAmount, setShowReservedAmount] = useState(true)
+    const [showSoldOutPercent, setShowSoldOutPercent] = useState(true)
 
     // Media & Video States
     const [mediaGallery, setMediaGallery] = useState<MediaItem[]>([])
@@ -146,6 +148,8 @@ export default function CampaignDetailsEditor() {
             setKeyFeatures(campaign.keyFeatures)
             setTechSpecs(campaign.techSpecs)
             setShowAnnouncement(campaign.showAnnouncement ?? false)
+            setShowReservedAmount(campaign.showReservedAmount ?? true)
+            setShowSoldOutPercent(campaign.showSoldOutPercent ?? true)
 
             // Gallery Logic
             if (campaign.mediaGallery && campaign.mediaGallery.length > 0) {
@@ -237,6 +241,8 @@ export default function CampaignDetailsEditor() {
 
     async function handleSubmit(formData: FormData) {
         formData.set("show_announcement", showAnnouncement.toString())
+        formData.set("show_reserved_amount", showReservedAmount.toString())
+        formData.set("show_sold_out_percent", showSoldOutPercent.toString())
         formData.set("media_gallery_json", JSON.stringify(mediaGallery))
         // Re-inject legacy gallery array for compatibility if needed
         const legacyImages = mediaGallery.filter(m => m.type === 'image').map(m => m.src)
@@ -334,6 +340,28 @@ export default function CampaignDetailsEditor() {
                                     id="showAnnouncement"
                                     checked={showAnnouncement}
                                     onCheckedChange={setShowAnnouncement}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="showReservedAmount" className="font-medium">Show Reserved Amount</Label>
+                                    <p className="text-sm text-muted-foreground">Display the "$ Reserved" stat on the public page</p>
+                                </div>
+                                <Switch
+                                    id="showReservedAmount"
+                                    checked={showReservedAmount}
+                                    onCheckedChange={setShowReservedAmount}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="showSoldOutPercent" className="font-medium">Show Sold Out Percentage</Label>
+                                    <p className="text-sm text-muted-foreground">Display the "% sold out" stat on the public page</p>
+                                </div>
+                                <Switch
+                                    id="showSoldOutPercent"
+                                    checked={showSoldOutPercent}
+                                    onCheckedChange={setShowSoldOutPercent}
                                 />
                             </div>
                         </CardContent>
