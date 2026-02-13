@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Campaign } from '@/types/campaign'
 
+// Disable Next.js route caching so we always get fresh data
+export const dynamic = 'force-dynamic'
+
 // Initialize Supabase (Use specific env vars for this site)
 export async function GET() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

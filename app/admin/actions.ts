@@ -139,6 +139,7 @@ export async function updateCampaignDetails(formData: FormData) {
     // Refresh the data on the site immediately
     revalidatePath("/")
     revalidatePath("/admin/details")
+    revalidatePath("/api/campaign")
     return { success: true }
 }
 
