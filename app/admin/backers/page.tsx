@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getBackers, getRewards, updatePledgeReward } from "@/app/admin/actions"
+import { getBackers, getRewards, updatePledgeReward, recalculateAllRewardCounts } from "@/app/admin/actions"
 import { RefreshCw } from "lucide-react"
 import {
     Table,
@@ -96,7 +96,11 @@ export default function BackersPage() {
                 <h1 className="text-3xl font-bold">Backers & Pledges</h1>
                 <div className="flex gap-2 items-center">
                     <div className="text-muted-foreground mr-2">Total: {pledges.length}</div>
-                    <Button variant="outline" size="sm" onClick={() => { loadData(); toast({ title: "Refreshed", description: "Backer data reloaded." }) }}>
+                    <Button variant="outline" size="sm" onClick={async () => {
+                        await recalculateAllRewardCounts()
+                        await loadData()
+                        toast({ title: "Refreshed", description: "Backer data and reward counts recalculated." })
+                    }}>
                         <RefreshCw className="h-4 w-4 mr-1" /> Refresh
                     </Button>
                     <ExportPledgesButton data={pledges} />
