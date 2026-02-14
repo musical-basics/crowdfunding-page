@@ -97,7 +97,7 @@ export function RewardsPage() {
               )}
 
               {/* Description */}
-              <p className="text-muted-foreground mb-6">{reward.description}</p>
+              <p className="text-muted-foreground mb-6 whitespace-pre-line">{reward.description}</p>
 
               {/* Includes */}
               <div className="space-y-2 mb-6">

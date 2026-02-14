@@ -270,7 +270,7 @@ export function CampaignPage() {
                     )}
 
                     {/* Description */}
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                       {reward.description}
                     </p>
 
