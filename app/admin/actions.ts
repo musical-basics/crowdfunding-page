@@ -795,17 +795,7 @@ export async function getRewards() {
 export async function updatePledgeReward(pledgeId: string, rewardId: string | null) {
     const supabase = createAdminClient()
 
-    // 1. Get the current reward_id so we can adjust counts
-    const { data: pledge } = await supabase
-        .from('cf_pledge')
-        .select('reward_id')
-        .eq('id', pledgeId)
-        .single()
-
-    const oldRewardId = pledge?.reward_id
-    console.log("[updatePledgeReward] oldRewardId:", oldRewardId, "newRewardId:", rewardId)
-
-    // 2. Update the pledge's reward
+    // 1. Update the pledge's reward
     const { error } = await supabase
         .from('cf_pledge')
         .update({ reward_id: rewardId })
@@ -816,48 +806,45 @@ export async function updatePledgeReward(pledgeId: string, rewardId: string | nu
         throw new Error(`Failed to update reward: ${error.message}`)
     }
 
-    // 3. Recalculate old reward's backers_count
-    if (oldRewardId) {
-        const { count: oldCount } = await supabase
-            .from('cf_pledge')
-            .select('id', { count: 'exact', head: true })
-            .eq('reward_id', oldRewardId)
-            .eq('status', 'succeeded')
-
-        const newBackersCount = Math.max(0, oldCount || 0)
-        console.log("[updatePledgeReward] Old reward", oldRewardId, "new count:", newBackersCount)
-
-        const { error: decErr } = await supabase
-            .from('cf_reward')
-            .update({ backers_count: newBackersCount })
-            .eq('id', oldRewardId)
-
-        if (decErr) console.error("Old reward update error:", decErr)
-    }
-
-    // 4. Recalculate new reward's backers_count
-    if (rewardId) {
-        const { count: newCount } = await supabase
-            .from('cf_pledge')
-            .select('id', { count: 'exact', head: true })
-            .eq('reward_id', rewardId)
-            .eq('status', 'succeeded')
-
-        const newBackersCount = newCount || 0
-        console.log("[updatePledgeReward] New reward", rewardId, "new count:", newBackersCount)
-
-        const { error: incErr } = await supabase
-            .from('cf_reward')
-            .update({ backers_count: newBackersCount })
-            .eq('id', rewardId)
-
-        if (incErr) console.error("New reward update error:", incErr)
-    }
+    // 2. Recalculate ALL reward backers_counts from actual pledges
+    //    This runs after any DB triggers have settled and overwrites with correct values
+    await recalculateAllRewardCounts()
 
     revalidatePath("/")
     revalidatePath("/admin/backers")
     revalidatePath("/api/campaign")
     return { success: true }
+}
+
+export async function recalculateAllRewardCounts() {
+    const supabase = createAdminClient()
+    const campaignId = "dreamplay-one"
+
+    // Get all rewards
+    const { data: rewards } = await supabase
+        .from('cf_reward')
+        .select('id')
+        .eq('campaign_id', campaignId)
+
+    if (!rewards) return
+
+    // Count actual pledges per reward and update
+    for (const reward of rewards) {
+        const { count } = await supabase
+            .from('cf_pledge')
+            .select('id', { count: 'exact', head: true })
+            .eq('reward_id', reward.id)
+            .eq('status', 'succeeded')
+
+        const actualCount = count || 0
+
+        await supabase
+            .from('cf_reward')
+            .update({ backers_count: actualCount })
+            .eq('id', reward.id)
+
+        console.log(`[recalculate] Reward ${reward.id}: backers_count = ${actualCount}`)
+    }
 }
 
 export async function bulkImportPledges(rows: any[]) {
