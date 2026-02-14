@@ -803,6 +803,7 @@ export async function updatePledgeReward(pledgeId: string, rewardId: string | nu
         .single()
 
     const oldRewardId = pledge?.reward_id
+    console.log("[updatePledgeReward] oldRewardId:", oldRewardId, "newRewardId:", rewardId)
 
     // 2. Update the pledge's reward
     const { error } = await supabase
@@ -815,22 +816,42 @@ export async function updatePledgeReward(pledgeId: string, rewardId: string | nu
         throw new Error(`Failed to update reward: ${error.message}`)
     }
 
-    // 3. Decrement old reward's backers_count
+    // 3. Recalculate old reward's backers_count
     if (oldRewardId) {
+        const { count: oldCount } = await supabase
+            .from('cf_pledge')
+            .select('id', { count: 'exact', head: true })
+            .eq('reward_id', oldRewardId)
+            .eq('status', 'succeeded')
+
+        const newBackersCount = Math.max(0, oldCount || 0)
+        console.log("[updatePledgeReward] Old reward", oldRewardId, "new count:", newBackersCount)
+
         const { error: decErr } = await supabase
             .from('cf_reward')
-            .update({ backers_count: Math.max(0, (await supabase.from('cf_pledge').select('id', { count: 'exact', head: true }).eq('reward_id', oldRewardId).eq('status', 'succeeded')).count || 0) })
+            .update({ backers_count: newBackersCount })
             .eq('id', oldRewardId)
-        if (decErr) console.error("Decrement error:", decErr)
+
+        if (decErr) console.error("Old reward update error:", decErr)
     }
 
     // 4. Recalculate new reward's backers_count
     if (rewardId) {
+        const { count: newCount } = await supabase
+            .from('cf_pledge')
+            .select('id', { count: 'exact', head: true })
+            .eq('reward_id', rewardId)
+            .eq('status', 'succeeded')
+
+        const newBackersCount = newCount || 0
+        console.log("[updatePledgeReward] New reward", rewardId, "new count:", newBackersCount)
+
         const { error: incErr } = await supabase
             .from('cf_reward')
-            .update({ backers_count: (await supabase.from('cf_pledge').select('id', { count: 'exact', head: true }).eq('reward_id', rewardId).eq('status', 'succeeded')).count || 0 })
+            .update({ backers_count: newBackersCount })
             .eq('id', rewardId)
-        if (incErr) console.error("Increment error:", incErr)
+
+        if (incErr) console.error("New reward update error:", incErr)
     }
 
     revalidatePath("/")
