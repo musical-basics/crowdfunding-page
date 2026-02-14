@@ -98,6 +98,7 @@ export async function GET() {
             isSoldOut: r.is_sold_out,
             imageUrl: r.image_url,
             isFeatured: r.is_featured,
+            badgeType: r.badge_type || (r.is_featured ? 'featured' : 'none'),
             checkoutUrl: r.checkout_url,
             shopifyVariantId: r.shopify_variant_id,
             isVisible: r.is_visible !== false

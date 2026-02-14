@@ -154,15 +154,18 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                         />
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="isFeatured"
-                            name="isFeatured"
-                            defaultChecked={reward.isFeatured}
-                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <Label htmlFor="isFeatured">Featured Reward (Most Popular)</Label>
+                    <div className="grid gap-2">
+                        <Label htmlFor="badgeType">Badge Type</Label>
+                        <select
+                            id="badgeType"
+                            name="badgeType"
+                            defaultValue={reward.badgeType || (reward.isFeatured ? 'featured' : 'none')}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <option value="none">None</option>
+                            <option value="featured">Most Popular</option>
+                            <option value="minimum_package">Minimum Package</option>
+                        </select>
                     </div>
 
                     <div className="grid gap-2">

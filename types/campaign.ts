@@ -31,6 +31,7 @@ export interface Reward {
     isSoldOut: boolean;
     imageUrl?: string;
     isFeatured?: boolean;
+    badgeType?: 'none' | 'featured' | 'minimum_package';
     checkoutUrl?: string; // External checkout URL
     shopifyVariantId?: string; // Shopify Variant ID or JSON map
     isVisible: boolean;

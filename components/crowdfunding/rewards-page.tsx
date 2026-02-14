@@ -23,7 +23,8 @@ export function RewardsPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {campaign.rewards.filter(r => r.isVisible).map((reward) => {
-          const isFeatured = reward.isFeatured
+          const isFeatured = reward.badgeType === 'featured' || reward.isFeatured
+          const isMinPackage = reward.badgeType === 'minimum_package'
           return (
             <div
               key={reward.id}
@@ -32,7 +33,9 @@ export function RewardsPage() {
                 ${isAvailable(reward)
                   ? isFeatured
                     ? "bg-gradient-to-b from-white to-emerald-50/30 border-2 border-emerald-500 shadow-xl scale-[1.02] z-10"
-                    : "bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                    : isMinPackage
+                      ? "bg-gradient-to-b from-white to-cyan-50/30 border-2 border-cyan-500 shadow-xl scale-[1.02] z-10"
+                      : "bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1"
                   : "bg-slate-50 border-slate-200 opacity-90 cursor-not-allowed grayscale-[0.8]"} 
               `}
             >
@@ -45,15 +48,20 @@ export function RewardsPage() {
                 </div>
               )}
 
-              {/* Featured Badge */}
+              {/* Badge */}
               {isFeatured && isAvailable(reward) && (
                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">
                   MOST POPULAR
                 </div>
               )}
+              {isMinPackage && isAvailable(reward) && (
+                <div className="absolute top-0 right-0 bg-cyan-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">
+                  MINIMUM PACKAGE
+                </div>
+              )}
 
               {/* Add a colored accent bar at the top */}
-              <div className={`absolute top-0 left-0 right-0 h-1.5 ${isAvailable(reward) ? (isFeatured ? "bg-emerald-500" : "bg-primary") : "bg-gray-300"}`} />
+              <div className={`absolute top-0 left-0 right-0 h-1.5 ${isAvailable(reward) ? (isFeatured ? "bg-emerald-500" : isMinPackage ? "bg-cyan-500" : "bg-primary") : "bg-gray-300"}`} />
 
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 mt-2">
@@ -61,6 +69,7 @@ export function RewardsPage() {
                   <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                     {reward.title}
                     {isFeatured && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">Best Value</span>}
+                    {isMinPackage && <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full border border-cyan-200">Minimum Package</span>}
                   </h3>
                   <div className="flex items-baseline gap-2 mt-1">
                     <span className="text-2xl font-bold text-emerald-600">${reward.price}</span>
@@ -75,7 +84,7 @@ export function RewardsPage() {
                 <Button
                   disabled={!isAvailable(reward)}
                   onClick={() => selectReward(reward.id)}
-                  className={`${isAvailable(reward) ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""} ${isFeatured ? "shadow-lg shadow-emerald-200" : ""}`}
+                  className={`${isAvailable(reward) ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""} ${isFeatured ? "shadow-lg shadow-emerald-200" : ""} ${isMinPackage ? "shadow-lg shadow-cyan-200" : ""}`}
                 >
                   {isAvailable(reward) ? "Select Reward" : "Sold Out"}
                 </Button>
