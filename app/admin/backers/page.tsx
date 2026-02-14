@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getBackers, getRewards, updatePledgeReward } from "@/app/admin/actions"
+import { RefreshCw } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -11,6 +12,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
     Select,
     SelectContent,
@@ -48,18 +50,18 @@ export default function BackersPage() {
     const [isLoading, setIsLoading] = useState(true)
     const { toast } = useToast()
 
-    useEffect(() => {
-        const loadData = async () => {
-            const [backersData, rewardsData] = await Promise.all([
-                getBackers(),
-                getRewards()
-            ])
-            // @ts-ignore - Supabase types can be tricky with joins
-            setPledges(backersData as Backer[])
-            setRewards(rewardsData as Reward[])
-            setIsLoading(false)
-        }
+    async function loadData() {
+        const [backersData, rewardsData] = await Promise.all([
+            getBackers(),
+            getRewards()
+        ])
+        // @ts-ignore - Supabase types can be tricky with joins
+        setPledges(backersData as Backer[])
+        setRewards(rewardsData as Reward[])
+        setIsLoading(false)
+    }
 
+    useEffect(() => {
         loadData()
     }, [])
 
@@ -94,6 +96,9 @@ export default function BackersPage() {
                 <h1 className="text-3xl font-bold">Backers & Pledges</h1>
                 <div className="flex gap-2 items-center">
                     <div className="text-muted-foreground mr-2">Total: {pledges.length}</div>
+                    <Button variant="outline" size="sm" onClick={() => { loadData(); toast({ title: "Refreshed", description: "Backer data reloaded." }) }}>
+                        <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+                    </Button>
                     <ExportPledgesButton data={pledges} />
                     <ImportPledgesButton />
                     <ManualPledgeDialog />
