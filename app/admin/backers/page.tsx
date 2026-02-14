@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-// REMOVE: import { createBrowserClient } from "@/lib/supabase/client"
-import { getBackers } from "@/app/admin/actions" // <--- Import the new action
+import { getBackers, getRewards, updatePledgeReward } from "@/app/admin/actions"
 import {
     Table,
     TableBody,
@@ -12,9 +11,17 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { ManualPledgeDialog } from "@/components/admin/manual-pledge-dialog"
 import { ImportPledgesButton } from "@/components/admin/import-pledges-button"
 import { ExportPledgesButton } from "@/components/admin/export-pledges-button"
+import { useToast } from "@/hooks/use-toast"
 
 // Define interface for the data shape
 interface Backer {
@@ -24,25 +31,60 @@ interface Backer {
     status: string
     shipping_address: string | null
     shipping_location: string | null
+    reward_id: string | null
     Customer: { name: string; email: string } | null
     cf_reward: { title: string } | null
 }
 
+interface Reward {
+    id: string
+    title: string
+    price: number
+}
+
 export default function BackersPage() {
     const [pledges, setPledges] = useState<Backer[]>([])
+    const [rewards, setRewards] = useState<Reward[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const { toast } = useToast()
 
     useEffect(() => {
         const loadData = async () => {
-            // Call the Server Action
-            const data = await getBackers()
-            // @ts-ignore - Supabase types can be tricky with joins, trusting the fetcher
-            setPledges(data as Backer[])
+            const [backersData, rewardsData] = await Promise.all([
+                getBackers(),
+                getRewards()
+            ])
+            // @ts-ignore - Supabase types can be tricky with joins
+            setPledges(backersData as Backer[])
+            setRewards(rewardsData as Reward[])
             setIsLoading(false)
         }
 
         loadData()
     }, [])
+
+    async function handleRewardChange(pledgeId: string, newRewardId: string) {
+        const rewardId = newRewardId === "none" ? null : newRewardId
+        const reward = rewards.find(r => r.id === rewardId)
+
+        // Optimistic update
+        setPledges(prev => prev.map(p =>
+            p.id === pledgeId
+                ? { ...p, reward_id: rewardId, cf_reward: reward ? { title: reward.title } : null }
+                : p
+        ))
+
+        try {
+            await updatePledgeReward(pledgeId, rewardId)
+            toast({ title: "Updated", description: `Reward changed to ${reward?.title || 'None'}` })
+        } catch {
+            // Revert on error
+            const data = await getBackers()
+            // @ts-ignore
+            setPledges(data as Backer[])
+            toast({ title: "Error", description: "Failed to update reward.", variant: "destructive" })
+        }
+    }
 
     if (isLoading) return <div className="p-8">Loading backers...</div>
 
@@ -85,9 +127,22 @@ export default function BackersPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant="outline">
-                                        {pledge.cf_reward?.title || 'No Reward'}
-                                    </Badge>
+                                    <Select
+                                        value={pledge.reward_id || "none"}
+                                        onValueChange={(val) => handleRewardChange(pledge.id, val)}
+                                    >
+                                        <SelectTrigger className="w-[280px] h-8 text-xs">
+                                            <SelectValue placeholder="Select a reward" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">No Reward</SelectItem>
+                                            {rewards.map((reward) => (
+                                                <SelectItem key={reward.id} value={reward.id}>
+                                                    {reward.title} (${reward.price})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </TableCell>
                                 <TableCell className="font-bold">
                                     ${pledge.amount.toLocaleString()}
@@ -126,3 +181,4 @@ export default function BackersPage() {
         </div>
     )
 }
+

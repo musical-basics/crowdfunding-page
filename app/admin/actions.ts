@@ -763,6 +763,7 @@ export async function getBackers() {
             status,
             shipping_address,
             shipping_location,
+            reward_id,
             Customer ( name, email ),
             cf_reward ( title )
         `)
@@ -774,6 +775,38 @@ export async function getBackers() {
     }
 
     return pledges
+}
+
+export async function getRewards() {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+        .from('cf_reward')
+        .select('id, title, price')
+        .eq('campaign_id', 'dreamplay-one')
+        .order('price', { ascending: true })
+
+    if (error) {
+        console.error("Error fetching rewards:", error)
+        return []
+    }
+    return data
+}
+
+export async function updatePledgeReward(pledgeId: string, rewardId: string | null) {
+    const supabase = createAdminClient()
+
+    const { error } = await supabase
+        .from('cf_pledge')
+        .update({ reward_id: rewardId })
+        .eq('id', pledgeId)
+
+    if (error) {
+        console.error("Error updating pledge reward:", error)
+        throw new Error(`Failed to update reward: ${error.message}`)
+    }
+
+    revalidatePath("/admin/backers")
+    return { success: true }
 }
 
 export async function bulkImportPledges(rows: any[]) {
