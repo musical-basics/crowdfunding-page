@@ -116,7 +116,7 @@ export function RewardsPage() {
               <div className="flex gap-6 text-xs text-muted-foreground border-t border-border pt-4">
                 <div>
                   <span className="font-semibold text-foreground block">{reward.backersCount}</span>
-                  buyers
+                  reservations
                 </div>
                 <div>
                   <span className="font-semibold text-foreground block">{reward.estimatedDelivery}</span>

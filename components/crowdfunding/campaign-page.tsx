@@ -286,7 +286,7 @@ export function CampaignPage() {
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Buyers</span>
+                        <span className="font-semibold text-foreground uppercase tracking-wider text-[10px]">Reservations</span>
                         <span>{reward.backersCount}</span>
                       </div>
                       {reward.limitedQuantity && (
