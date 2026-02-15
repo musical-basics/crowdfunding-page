@@ -22,6 +22,8 @@ export async function updateCampaignDetails(formData: FormData) {
     const showAnnouncement = formData.get("show_announcement") === "true"
     const showReservedAmount = formData.get("show_reserved_amount") === "true"
     const showSoldOutPercent = formData.get("show_sold_out_percent") === "true"
+    const hiddenSectionsJson = formData.get("hidden_sections_json") as string
+    const hiddenSections = hiddenSectionsJson ? JSON.parse(hiddenSectionsJson) : []
 
     console.log("[SERVER ACTION] Raw FormData:", {
         show_announcement: formData.get("show_announcement"),
@@ -125,7 +127,8 @@ export async function updateCampaignDetails(formData: FormData) {
             tech_specs: techSpecs,
             show_announcement: showAnnouncement,
             show_reserved_amount: showReservedAmount,
-            show_sold_out_percent: showSoldOutPercent
+            show_sold_out_percent: showSoldOutPercent,
+            hidden_sections: hiddenSections
         })
         .eq("id", id)
 

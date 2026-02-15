@@ -95,6 +95,7 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
         techSpecs: campaignData.tech_specs || [],
         showAnnouncement: campaignData.show_announcement ?? false,
         showReservedAmount: campaignData.show_reserved_amount ?? true,
-        showSoldOutPercent: campaignData.show_sold_out_percent ?? true
+        showSoldOutPercent: campaignData.show_sold_out_percent ?? true,
+        hiddenSections: campaignData.hidden_sections || []
     }
 }

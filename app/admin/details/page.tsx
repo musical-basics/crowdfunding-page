@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from "@/hooks/use-toast"
 import { updateCampaignDetails, uploadCreatorAsset } from "../actions"
 import { useCampaign, CampaignProvider } from "@/context/campaign-context"
-import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical, Save } from "lucide-react"
+import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical, Save, Eye, EyeOff } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { AdminHeaderActions } from "@/components/admin/admin-header-actions"
 import {
@@ -290,16 +290,25 @@ export default function CampaignDetailsEditor() {
 
     // --- SIDEBAR NAVIGATION ---
     const sectionIds = [
-        { id: 'basic-info', label: 'Basic Information' },
-        { id: 'media-gallery', label: 'Media Gallery' },
-        { id: 'campaign-story', label: 'Campaign Story' },
-        { id: 'key-features', label: 'Key Features' },
-        { id: 'tech-specs', label: 'Tech Specs' },
-        { id: 'technical-details', label: 'Technical Details' },
-        { id: 'manufacturer', label: 'Manufacturer' },
-        { id: 'shipping-risks', label: 'Shipping & Risks' },
-        { id: 'community-updates', label: 'Community Updates' },
+        { id: 'basic-info', label: 'Basic Information', publicId: null },
+        { id: 'media-gallery', label: 'Media Gallery', publicId: null },
+        { id: 'campaign-story', label: 'Campaign Story', publicId: 'story' },
+        { id: 'key-features', label: 'Key Features', publicId: 'features' },
+        { id: 'tech-specs', label: 'Tech Specs', publicId: 'specs' },
+        { id: 'technical-details', label: 'Technical Details', publicId: 'technical-details' },
+        { id: 'manufacturer', label: 'Manufacturer', publicId: 'manufacturer' },
+        { id: 'shipping-risks', label: 'Shipping & Risks', publicId: 'shipping' },
+        { id: 'community-updates', label: 'Community Updates', publicId: 'community' },
     ]
+    const [hiddenSections, setHiddenSections] = useState<string[]>(campaign?.hiddenSections || [])
+
+    const toggleSectionVisibility = (publicId: string) => {
+        setHiddenSections(prev =>
+            prev.includes(publicId)
+                ? prev.filter(s => s !== publicId)
+                : [...prev, publicId]
+        )
+    }
     const [activeSection, setActiveSection] = useState('basic-info')
     const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -348,25 +357,42 @@ export default function CampaignDetailsEditor() {
             <nav className="hidden lg:block w-40 shrink-0 sticky top-4 self-start">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-3">Sections</p>
                 <ul className="space-y-0.5">
-                    {sectionIds.map(({ id, label }) => (
-                        <li key={id}>
-                            <button
-                                type="button"
-                                onClick={() => scrollToSection(id)}
-                                className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${activeSection === id
-                                    ? 'bg-emerald-50 text-emerald-700 font-medium'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                    }`}
-                            >
-                                {label}
-                            </button>
-                        </li>
-                    ))}
+                    {sectionIds.map(({ id, label, publicId }) => {
+                        const isHidden = publicId ? hiddenSections.includes(publicId) : false
+                        return (
+                            <li key={id} className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollToSection(id)}
+                                    className={`flex-1 text-left px-3 py-1.5 rounded-md text-sm transition-colors ${isHidden ? 'opacity-50 line-through' : ''} ${activeSection === id
+                                        ? 'bg-emerald-50 text-emerald-700 font-medium'
+                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                        }`}
+                                >
+                                    {label}
+                                </button>
+                                {publicId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleSectionVisibility(publicId)}
+                                        className={`p-1 rounded transition-colors cursor-pointer ${isHidden
+                                                ? 'text-red-400 hover:text-red-600 hover:bg-red-50'
+                                                : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted'
+                                            }`}
+                                        title={isHidden ? `Show ${label} on public page` : `Hide ${label} from public page`}
+                                    >
+                                        {isHidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                    </button>
+                                )}
+                            </li>
+                        )
+                    })}
                 </ul>
             </nav>
 
             <div className="flex-1 min-w-0 overflow-y-auto pr-2 pb-20" ref={scrollContainerRef}>
                 <form id="campaign-details-form" action={handleSubmit} className="space-y-8">
+                    <input type="hidden" name="hidden_sections_json" value={JSON.stringify(hiddenSections)} />
 
                     {/* Basic Info */}
                     <Card id="basic-info">

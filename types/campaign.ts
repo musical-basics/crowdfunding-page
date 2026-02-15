@@ -96,4 +96,5 @@ export interface Campaign {
     showAnnouncement?: boolean;
     showReservedAmount?: boolean;
     showSoldOutPercent?: boolean;
+    hiddenSections?: string[];
 }

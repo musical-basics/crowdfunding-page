@@ -23,6 +23,8 @@ export function CampaignPage() {
     return <div className="py-12 text-center text-muted-foreground">Loading campaign...</div>
   }
 
+  const hiddenSections = campaign.hiddenSections || []
+
   const sections = [
     { id: "story", label: "Story" },
     { id: "features", label: "Features" },
@@ -31,7 +33,7 @@ export function CampaignPage() {
     { id: "manufacturer", label: "Manufacturer" },
     { id: "shipping", label: "Shipping" },
     { id: "community", label: "Community" },
-  ]
+  ].filter(s => !hiddenSections.includes(s.id))
 
   // Scroll Spy Logic
   useEffect(() => {
@@ -98,91 +100,105 @@ export function CampaignPage() {
         <main className="col-span-1 md:col-span-6 space-y-16">
 
           {/* Story */}
-          <section id="story" className="space-y-6 scroll-mt-24">
-            <div
-              className="prose prose-lg dark:prose-invert max-w-none 
+          {!hiddenSections.includes('story') && (
+            <section id="story" className="space-y-6 scroll-mt-24">
+              <div
+                className="prose prose-lg dark:prose-invert max-w-none 
                        prose-headings:font-bold prose-headings:tracking-tight 
                        prose-p:text-muted-foreground prose-p:leading-relaxed
                        prose-img:rounded-xl prose-img:shadow-sm prose-img:cursor-pointer"
-              dangerouslySetInnerHTML={{ __html: campaign.story }}
-              onClick={handleContainerClick}
-            />
+                dangerouslySetInnerHTML={{ __html: campaign.story }}
+                onClick={handleContainerClick}
+              />
 
-            {/* Hero Section (Mixed Media Gallery) */}
-            <div className="mb-8">
-              <HeroSection />
-            </div>
-          </section>
+              {/* Hero Section (Mixed Media Gallery) */}
+              <div className="mb-8">
+                <HeroSection />
+              </div>
+            </section>
+          )}
 
           {/* Features */}
-          <section id="features" className="scroll-mt-24 pt-8 border-t border-border">
-            <h3 className="text-2xl font-bold mb-6">Key Features</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(campaign.keyFeatures?.length > 0 ? campaign.keyFeatures : [
-                { icon: "🎹", title: "Narrower Keys", desc: "15/16th size for ergonomic reach." },
-                { icon: "🔊", title: "Pro Sound Engine", desc: "Sampled from a 9ft Concert Grand." },
-                { icon: "🔋", title: "Portable Power", desc: "Built-in battery for 8 hours of play." },
-                { icon: "📱", title: "Bluetooth MIDI", desc: "Connect instantly to your tablet." },
-              ]).map((feature, idx) => (
-                <div key={idx} className="p-6 rounded-xl border border-border bg-card/50">
-                  <div className="text-3xl mb-3">{feature.icon}</div>
-                  <h4 className="font-semibold mb-1">{feature.title}</h4>
-                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {!hiddenSections.includes('features') && (
+            <section id="features" className="scroll-mt-24 pt-8 border-t border-border">
+              <h3 className="text-2xl font-bold mb-6">Key Features</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(campaign.keyFeatures?.length > 0 ? campaign.keyFeatures : [
+                  { icon: "🎹", title: "Narrower Keys", desc: "15/16th size for ergonomic reach." },
+                  { icon: "🔊", title: "Pro Sound Engine", desc: "Sampled from a 9ft Concert Grand." },
+                  { icon: "🔋", title: "Portable Power", desc: "Built-in battery for 8 hours of play." },
+                  { icon: "📱", title: "Bluetooth MIDI", desc: "Connect instantly to your tablet." },
+                ]).map((feature, idx) => (
+                  <div key={idx} className="p-6 rounded-xl border border-border bg-card/50">
+                    <div className="text-3xl mb-3">{feature.icon}</div>
+                    <h4 className="font-semibold mb-1">{feature.title}</h4>
+                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Specs */}
-          <section id="specs" className="scroll-mt-24 pt-8 border-t border-border">
-            <h3 className="text-2xl font-bold mb-6">Technical Details</h3>
+          {!hiddenSections.includes('specs') && (
+            <section id="specs" className="scroll-mt-24 pt-8 border-t border-border">
+              <h3 className="text-2xl font-bold mb-6">Technical Details</h3>
 
-            {campaign.technicalDetails ? (
-              <div
-                className="prose dark:prose-invert max-w-none text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: campaign.technicalDetails }}
-              />
-            ) : (
-              <p className="text-muted-foreground">Detailed specifications coming soon.</p>
-            )}
-          </section>
+              {campaign.technicalDetails ? (
+                <div
+                  className="prose dark:prose-invert max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: campaign.technicalDetails }}
+                />
+              ) : (
+                <p className="text-muted-foreground">Detailed specifications coming soon.</p>
+              )}
+            </section>
+          )}
 
           {/* Creator */}
-          <section id="creator" className="scroll-mt-24 pt-8 border-t border-border">
-            <CreatorPage />
-          </section>
+          {!hiddenSections.includes('creator') && (
+            <section id="creator" className="scroll-mt-24 pt-8 border-t border-border">
+              <CreatorPage />
+            </section>
+          )}
 
           {/* Manufacturer */}
-          <section id="manufacturer" className="scroll-mt-24 pt-8 border-t border-border">
-            <h3 className="text-2xl font-bold mb-6">About Our Manufacturer</h3>
-            {campaign.manufacturerDetails ? (
-              <div
-                className="prose dark:prose-invert max-w-none text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: campaign.manufacturerDetails }}
-              />
-            ) : (
-              <p className="text-muted-foreground">Manufacturer information coming soon.</p>
-            )}
-          </section>
+          {!hiddenSections.includes('manufacturer') && (
+            <section id="manufacturer" className="scroll-mt-24 pt-8 border-t border-border">
+              <h3 className="text-2xl font-bold mb-6">About Our Manufacturer</h3>
+              {campaign.manufacturerDetails ? (
+                <div
+                  className="prose dark:prose-invert max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: campaign.manufacturerDetails }}
+                />
+              ) : (
+                <p className="text-muted-foreground">Manufacturer information coming soon.</p>
+              )}
+            </section>
+          )}
 
           {/* Shipping */}
-          <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">
-            <h3 className="text-2xl font-bold mb-6">Shipping & Delivery</h3>
-            {campaign.shipping ? (
-              <div
-                className="prose dark:prose-invert max-w-none text-muted-foreground"
-                dangerouslySetInnerHTML={{ __html: campaign.shipping }}
-              />
-            ) : (
-              <p className="text-muted-foreground">Shipping details coming soon.</p>
-            )}
-          </section>
+          {!hiddenSections.includes('shipping') && (
+            <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">
+              <h3 className="text-2xl font-bold mb-6">Shipping & Delivery</h3>
+              {campaign.shipping ? (
+                <div
+                  className="prose dark:prose-invert max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: campaign.shipping }}
+                />
+              ) : (
+                <p className="text-muted-foreground">Shipping details coming soon.</p>
+              )}
+            </section>
+          )}
 
           {/* Community / Updates */}
-          <section id="community" className="scroll-mt-24 pt-8 border-t border-border">
-            <h3 className="text-2xl font-bold mb-6">Community & Updates</h3>
-            <CommunityTab isAdmin={false} />
-          </section>
+          {!hiddenSections.includes('community') && (
+            <section id="community" className="scroll-mt-24 pt-8 border-t border-border">
+              <h3 className="text-2xl font-bold mb-6">Community & Updates</h3>
+              <CommunityTab isAdmin={false} />
+            </section>
+          )}
         </main>
 
         {/* --- RIGHT COLUMN: Rewards & Creator --- */}
