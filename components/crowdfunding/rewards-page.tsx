@@ -1,11 +1,12 @@
 "use client"
 
-
+import { useState } from "react"
 import { useCampaign } from "@/context/campaign-context"
 import { Button } from "@/components/ui/button"
 
 export function RewardsPage() {
   const { campaign, selectReward, selectedRewardId } = useCampaign()
+  const [activeTab, setActiveTab] = useState<'bundle' | 'keyboard_only'>('bundle')
 
   // Helper to determine if a reward is active
   const isAvailable = (reward: any) => !reward.isSoldOut
@@ -16,13 +17,39 @@ export function RewardsPage() {
 
   // Pre-select the featured reward if available
 
+  // Filter rewards by active tab
+  const filteredRewards = campaign.rewards.filter(
+    r => r.isVisible && (r.rewardType || 'bundle') === activeTab
+  )
 
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold">Select a Reward</h2>
 
+      {/* Reward Type Tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setActiveTab('bundle')}
+          className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${activeTab === 'bundle'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+        >
+          Premium Bundle
+        </button>
+        <button
+          onClick={() => setActiveTab('keyboard_only')}
+          className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${activeTab === 'keyboard_only'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+        >
+          Keyboard Only
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 gap-6">
-        {campaign.rewards.filter(r => r.isVisible).map((reward) => {
+        {filteredRewards.map((reward) => {
           const isFeatured = reward.badgeType === 'featured' || reward.isFeatured
           const isMinPackage = reward.badgeType === 'minimum_package'
           return (

@@ -80,6 +80,7 @@ export async function getCampaignData(slug: string): Promise<Campaign | null> {
             badgeType: r.badge_type || (r.is_featured ? 'featured' : 'none'),
             checkoutUrl: r.checkout_url,
             shopifyVariantId: r.shopify_variant_id,
+            rewardType: r.reward_type || 'bundle',
             isVisible: r.is_visible !== false,
             sortOrder: r.sort_order
         })) || [],

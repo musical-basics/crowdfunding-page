@@ -34,6 +34,7 @@ export interface Reward {
     badgeType?: 'none' | 'featured' | 'minimum_package';
     checkoutUrl?: string; // External checkout URL
     shopifyVariantId?: string; // Shopify Variant ID or JSON map
+    rewardType?: 'bundle' | 'keyboard_only';
     isVisible: boolean;
     sortOrder?: number;
 }

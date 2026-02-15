@@ -190,7 +190,8 @@ export async function createReward(prevState: any, formData: FormData) {
             is_featured: formData.get("badgeType") === "featured",
             badge_type: (formData.get("badgeType") as string) || "none",
             checkout_url: formData.get("checkoutUrl") as string,
-            shopify_variant_id: formData.get("shopifyVariantId") as string
+            shopify_variant_id: formData.get("shopifyVariantId") as string,
+            reward_type: (formData.get("rewardType") as string) || "bundle"
         })
 
     if (error) return { error: error.message }
@@ -254,7 +255,8 @@ export async function updateReward(prevState: any, formData: FormData) {
             is_featured: formData.get("badgeType") === "featured",
             badge_type: (formData.get("badgeType") as string) || "none",
             checkout_url: formData.get("checkoutUrl") as string,
-            shopify_variant_id: formData.get("shopifyVariantId") as string
+            shopify_variant_id: formData.get("shopifyVariantId") as string,
+            reward_type: (formData.get("rewardType") as string) || "bundle"
         })
         .eq("id", id)
 

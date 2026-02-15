@@ -167,6 +167,19 @@ export function CreateRewardDialog() {
                     </div>
 
                     <div className="grid gap-2">
+                        <Label htmlFor="rewardType">Reward Type</Label>
+                        <select
+                            id="rewardType"
+                            name="rewardType"
+                            defaultValue="bundle"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <option value="bundle">Bundle</option>
+                            <option value="keyboard_only">Keyboard Only</option>
+                        </select>
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="checkoutUrl">Checkout URL (Optional)</Label>
                         <Input
                             id="checkoutUrl"
