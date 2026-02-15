@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -288,6 +288,49 @@ export default function CampaignDetailsEditor() {
         }
     }
 
+    // --- SIDEBAR NAVIGATION ---
+    const sectionIds = [
+        { id: 'basic-info', label: 'Basic Information' },
+        { id: 'media-gallery', label: 'Media Gallery' },
+        { id: 'campaign-story', label: 'Campaign Story' },
+        { id: 'key-features', label: 'Key Features' },
+        { id: 'tech-specs', label: 'Tech Specs' },
+        { id: 'technical-details', label: 'Technical Details' },
+        { id: 'manufacturer', label: 'Manufacturer' },
+        { id: 'shipping-risks', label: 'Shipping & Risks' },
+        { id: 'community-updates', label: 'Community Updates' },
+    ]
+    const [activeSection, setActiveSection] = useState('basic-info')
+    const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const container = scrollContainerRef.current
+        if (!container) return
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        setActiveSection(entry.target.id)
+                    }
+                }
+            },
+            { root: container, rootMargin: '-20% 0px -60% 0px', threshold: 0 }
+        )
+
+        sectionIds.forEach(({ id }) => {
+            const el = document.getElementById(id)
+            if (el) observer.observe(el)
+        })
+
+        return () => observer.disconnect()
+    }, [campaign])
+
+    const scrollToSection = (id: string) => {
+        const el = document.getElementById(id)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
     return (
         <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-4rem)]">
             <AdminHeaderActions>
@@ -300,11 +343,33 @@ export default function CampaignDetailsEditor() {
                     Save Changes
                 </Button>
             </AdminHeaderActions>
-            <div className="flex-1 overflow-y-auto pr-2 pb-20">
+
+            {/* Section Sidebar */}
+            <nav className="hidden md:block w-48 shrink-0 sticky top-4 self-start">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-3">Sections</p>
+                <ul className="space-y-0.5">
+                    {sectionIds.map(({ id, label }) => (
+                        <li key={id}>
+                            <button
+                                type="button"
+                                onClick={() => scrollToSection(id)}
+                                className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${activeSection === id
+                                        ? 'bg-emerald-50 text-emerald-700 font-medium'
+                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    }`}
+                            >
+                                {label}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+
+            <div className="flex-1 overflow-y-auto pr-2 pb-20" ref={scrollContainerRef}>
                 <form id="campaign-details-form" action={handleSubmit} className="space-y-8">
 
                     {/* Basic Info */}
-                    <Card>
+                    <Card id="basic-info">
                         <CardHeader>
                             <CardTitle>Basic Information</CardTitle>
                         </CardHeader>
@@ -374,7 +439,7 @@ export default function CampaignDetailsEditor() {
                     </Card>
 
                     {/* MEDIA GALLERY */}
-                    <Card>
+                    <Card id="media-gallery">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>Media Gallery</CardTitle>
@@ -462,7 +527,7 @@ export default function CampaignDetailsEditor() {
                     </Card>
 
                     {/* Story Editor */}
-                    <Card>
+                    <Card id="campaign-story">
                         <CardHeader>
                             <CardTitle>Campaign Story (HTML)</CardTitle>
                         </CardHeader>
@@ -478,7 +543,7 @@ export default function CampaignDetailsEditor() {
                     </Card>
 
                     {/* Key Features Editor */}
-                    <Card>
+                    <Card id="key-features">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Key Features</CardTitle>
                             <Button
@@ -547,7 +612,7 @@ export default function CampaignDetailsEditor() {
                     </Card>
 
                     {/* Tech Specs Editor */}
-                    <Card>
+                    <Card id="tech-specs">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Technical Specifications</CardTitle>
                             <Button
@@ -601,7 +666,7 @@ export default function CampaignDetailsEditor() {
                     </Card>
 
                     {/* HTML Content Editors */}
-                    <Card>
+                    <Card id="technical-details">
                         <CardHeader>
                             <CardTitle>Technical Details (HTML)</CardTitle>
                         </CardHeader>
@@ -614,7 +679,7 @@ export default function CampaignDetailsEditor() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card id="manufacturer">
                         <CardHeader>
                             <CardTitle>About Our Manufacturer (HTML)</CardTitle>
                         </CardHeader>
@@ -627,7 +692,7 @@ export default function CampaignDetailsEditor() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card id="shipping-risks">
                         <CardHeader>
                             <CardTitle>Shipping & Risks (HTML)</CardTitle>
                         </CardHeader>
@@ -667,7 +732,7 @@ export default function CampaignDetailsEditor() {
                 </form>
 
                 {/* Community Updates Section */}
-                <div className="mt-12 pt-12 border-t">
+                <div id="community-updates" className="mt-12 pt-12 border-t">
                     <h2 className="text-2xl font-bold mb-6">Community Updates</h2>
                     <CommunityTab isAdmin={true} />
                 </div>
