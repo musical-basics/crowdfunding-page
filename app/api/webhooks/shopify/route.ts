@@ -84,6 +84,33 @@ export async function POST(req: Request) {
                     // Store Shopify Order ID to prevent duplicates if webhook fires twice
                     shipping_address: `Shopify Order #${order.order_number}`
                 })
+
+                // Update Campaign Stats (total_pledged + total_backers)
+                const { data: campaignData } = await supabase
+                    .from("cf_campaign")
+                    .select("total_pledged, total_backers")
+                    .eq("id", "dreamplay-one")
+                    .single()
+
+                if (campaignData) {
+                    await supabase.from("cf_campaign").update({
+                        total_pledged: Number(campaignData.total_pledged) + price,
+                        total_backers: Number(campaignData.total_backers) + 1
+                    }).eq("id", "dreamplay-one")
+                }
+
+                // Update Reward Backers Count
+                const { data: rewardData } = await supabase
+                    .from("cf_reward")
+                    .select("backers_count")
+                    .eq("id", reward.id)
+                    .single()
+
+                if (rewardData) {
+                    await supabase.from("cf_reward").update({
+                        backers_count: rewardData.backers_count + 1
+                    }).eq("id", reward.id)
+                }
             }
         }
 
