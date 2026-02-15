@@ -332,7 +332,7 @@ export default function CampaignDetailsEditor() {
     }
 
     return (
-        <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-4rem)]">
+        <div className="flex flex-col 2xl:flex-row gap-6 h-[calc(100vh-4rem)]">
             <AdminHeaderActions>
                 <Button
                     type="submit"
@@ -345,7 +345,7 @@ export default function CampaignDetailsEditor() {
             </AdminHeaderActions>
 
             {/* Section Sidebar */}
-            <nav className="hidden md:block w-48 shrink-0 sticky top-4 self-start">
+            <nav className="hidden lg:block w-40 shrink-0 sticky top-4 self-start">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-3">Sections</p>
                 <ul className="space-y-0.5">
                     {sectionIds.map(({ id, label }) => (
@@ -354,8 +354,8 @@ export default function CampaignDetailsEditor() {
                                 type="button"
                                 onClick={() => scrollToSection(id)}
                                 className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${activeSection === id
-                                        ? 'bg-emerald-50 text-emerald-700 font-medium'
-                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    ? 'bg-emerald-50 text-emerald-700 font-medium'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                     }`}
                             >
                                 {label}
@@ -365,7 +365,7 @@ export default function CampaignDetailsEditor() {
                 </ul>
             </nav>
 
-            <div className="flex-1 overflow-y-auto pr-2 pb-20" ref={scrollContainerRef}>
+            <div className="flex-1 min-w-0 overflow-y-auto pr-2 pb-20" ref={scrollContainerRef}>
                 <form id="campaign-details-form" action={handleSubmit} className="space-y-8">
 
                     {/* Basic Info */}
@@ -739,7 +739,7 @@ export default function CampaignDetailsEditor() {
             </div>
 
             {/* Preview Column */}
-            <div className="hidden xl:block w-[500px] border-l bg-background pl-4">
+            <div className="hidden 2xl:block w-[420px] shrink-0 border-l bg-background pl-4">
                 <div className="flex items-center justify-between mb-4 mt-2">
                     <h2 className="font-semibold text-lg flex items-center gap-2">
                         <Monitor className="h-4 w-4" /> Live Preview
@@ -748,7 +748,7 @@ export default function CampaignDetailsEditor() {
                 <div className="border rounded-xl overflow-hidden shadow-2xl h-[calc(100vh-8rem)] bg-white relative">
                     <div className="h-full w-full overflow-y-auto bg-white" style={{ isolation: 'isolate' }}>
                         <CampaignProvider initialData={previewCampaign}>
-                            <div className="pointer-events-none select-none transform origin-top-left">
+                            <div className="pointer-events-none select-none transform origin-top-left scale-[0.6]" style={{ width: '166.67%' }}>
                                 <CrowdfundingPage />
                             </div>
                         </CampaignProvider>
