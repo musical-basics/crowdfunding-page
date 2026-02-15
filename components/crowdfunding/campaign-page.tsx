@@ -14,6 +14,7 @@ import { CreatorPage } from "@/components/crowdfunding/creator-page"
 export function CampaignPage() {
   const { campaign, isLoading, selectReward } = useCampaign()
   const [activeSection, setActiveSection] = useState("story")
+  const [rewardTab, setRewardTab] = useState<'bundle' | 'keyboard_only'>('bundle')
 
 
   if (isLoading || !campaign) {
@@ -210,8 +211,33 @@ export function CampaignPage() {
         <div className="space-y-6">
           <h4 className="font-bold text-lg">Pre-Order Now</h4>
 
+          {/* Reward Type Tabs */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setRewardTab('bundle')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${rewardTab === 'bundle'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+            >
+              Premium Bundle
+            </button>
+            <button
+              type="button"
+              onClick={() => setRewardTab('keyboard_only')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${rewardTab === 'keyboard_only'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+            >
+              Keyboard Only
+            </button>
+          </div>
+
           {campaign.rewards
             .filter(r => r.isVisible !== false)
+            .filter(r => (r.rewardType || 'bundle') === rewardTab)
             .map(reward => {
               const isFeatured = reward.badgeType === 'featured' || reward.isFeatured
               const isMinPackage = reward.badgeType === 'minimum_package'
