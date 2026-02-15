@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Edit, HelpCircle } from "lucide-react"
+import { Edit, HelpCircle, X } from "lucide-react"
 import {
     Tooltip,
     TooltipContent,
@@ -36,6 +36,7 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
     const { toast } = useToast()
     const { refreshCampaign } = useCampaign()
     const [preview, setPreview] = useState(reward.imageUrl || "")
+    const [imageRemoved, setImageRemoved] = useState(false)
 
     // Cropper States
     const [originalImageSrc, setOriginalImageSrc] = useState<string | null>(null)
@@ -56,9 +57,16 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
         }
     }
 
+    const handleRemoveImage = () => {
+        setPreview("")
+        setCroppedBlob(null)
+        setImageRemoved(true)
+    }
+
     const handleCropComplete = (blob: Blob) => {
         setCroppedBlob(blob)
         setPreview(URL.createObjectURL(blob))
+        setImageRemoved(false)
         setIsCropperOpen(false)
     }
 
@@ -106,7 +114,8 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                 </DialogHeader>
 
                 <form action={handleSubmit} className="grid gap-4 py-4">
-                    <input type="hidden" name="imageUrl" value={reward.imageUrl || ""} />
+                    <input type="hidden" name="imageUrl" value={imageRemoved ? "" : (reward.imageUrl || "")} />
+                    <input type="hidden" name="removeImage" value={imageRemoved ? "true" : ""} />
                     <div className="grid gap-2">
                         <Label htmlFor="title">Reward Title</Label>
                         <Input id="title" name="title" defaultValue={reward.title} required />
@@ -116,8 +125,15 @@ export function EditRewardDialog({ reward }: EditRewardDialogProps) {
                         <Label>Reward Image</Label>
                         <div className="flex items-center gap-4">
                             {preview && (
-                                <div className="relative w-24 h-16 rounded overflow-hidden border border-border">
+                                <div className="relative w-24 h-16 rounded overflow-hidden border border-border group">
                                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveImage}
+                                        className="absolute top-0 right-0 bg-destructive/90 text-white p-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
                                 </div>
                             )}
                             <Input
