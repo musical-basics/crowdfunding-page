@@ -1,6 +1,7 @@
 "use client"
 
 import { useCampaign } from "@/context/campaign-context"
+import { useImageLightbox, ImageLightbox } from "@/components/crowdfunding/image-lightbox"
 
 // Same interface as Admin
 interface CreatorPageStructure {
@@ -32,6 +33,7 @@ interface CreatorPageStructure {
 
 export function CreatorPage() {
   const { campaign } = useCampaign()
+  const { lightboxSrc, openLightbox, closeLightbox, handleContainerClick } = useImageLightbox()
 
   if (!campaign) return <div className="p-12 text-center text-muted-foreground">Loading creator story...</div>
 
@@ -61,8 +63,9 @@ export function CreatorPage() {
     // For now, trust the DB.
     return (
       <div
-        className="prose dark:prose-invert max-w-none text-muted-foreground [&_img]:rounded-xl [&_img]:shadow-sm"
+        className="prose dark:prose-invert max-w-none text-muted-foreground [&_img]:rounded-xl [&_img]:shadow-sm [&_img]:cursor-pointer"
         dangerouslySetInnerHTML={{ __html: legacyHtml || "" }}
+        onClick={handleContainerClick}
       />
     )
   }
@@ -91,7 +94,7 @@ export function CreatorPage() {
           {/* Carnegie Image */}
           <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center relative">
             {content.story.images.carnegie ? (
-              <img src={content.story.images.carnegie} alt="Performance" className="object-cover w-full h-full" />
+              <img src={content.story.images.carnegie} alt="Performance" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.story.images.carnegie)} />
             ) : (
               <div className="text-center p-6 text-muted-foreground">
                 <p className="font-medium">Carnegie Hall Performance Photo</p>
@@ -101,7 +104,7 @@ export function CreatorPage() {
           {/* Personal Image */}
           <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center relative">
             {content.story.images.personal ? (
-              <img src={content.story.images.personal} alt="Personal" className="object-cover w-full h-full" />
+              <img src={content.story.images.personal} alt="Personal" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.story.images.personal)} />
             ) : (
               <div className="text-center p-6 text-muted-foreground">
                 <p className="font-medium">Personal Photo</p>
@@ -121,7 +124,7 @@ export function CreatorPage() {
           />
           <div className="aspect-square bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center relative">
             {content.problem.image ? (
-              <img src={content.problem.image} alt="Infographic" className="object-cover w-full h-full" />
+              <img src={content.problem.image} alt="Infographic" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.problem.image)} />
             ) : (
               <div className="text-center p-6 text-muted-foreground">
                 <p className="font-medium">Infographic</p>
@@ -142,7 +145,7 @@ export function CreatorPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center">
             {content.solution.images.product1 ? (
-              <img src={content.solution.images.product1} alt="Product Shot" className="object-cover w-full h-full" />
+              <img src={content.solution.images.product1} alt="Product Shot" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.solution.images.product1)} />
             ) : (
               <div className="text-center p-6 text-muted-foreground">
                 <p className="font-medium">Keyboard Product Shot 1</p>
@@ -151,7 +154,7 @@ export function CreatorPage() {
           </div>
           <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center">
             {content.solution.images.comparison ? (
-              <img src={content.solution.images.comparison} alt="Comparison" className="object-cover w-full h-full" />
+              <img src={content.solution.images.comparison} alt="Comparison" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.solution.images.comparison)} />
             ) : (
               <div className="text-center p-6 text-muted-foreground">
                 <p className="font-medium">Comparison Shot</p>
@@ -169,6 +172,9 @@ export function CreatorPage() {
 
       {/* Audience Section (HTML) */}
       <div dangerouslySetInnerHTML={{ __html: content.audienceHtml }} />
+
+      {/* Lightbox Overlay */}
+      {lightboxSrc && <ImageLightbox src={lightboxSrc} onClose={closeLightbox} />}
     </div>
   )
 }
