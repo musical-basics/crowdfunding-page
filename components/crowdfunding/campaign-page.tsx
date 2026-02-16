@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { HeroSection } from "@/components/crowdfunding/hero-section" // Import HeroSection
+
 import { CommunityTab } from "@/components/crowdfunding/community-tab"
 import { CreatorPage } from "@/components/crowdfunding/creator-page"
 import { useImageLightbox, ImageLightbox } from "@/components/crowdfunding/image-lightbox"
@@ -70,34 +70,9 @@ export function CampaignPage() {
     <>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 relative">
 
-
-        {/* --- LEFT COLUMN: Table of Contents (Sticky) --- */}
-        {/* Hidden on mobile, visible on desktop (2 cols wide) */}
-        <aside className="hidden md:block md:col-span-2">
-          <div className="sticky top-24 space-y-4">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-              Contents
-            </p>
-            <nav className="flex flex-col space-y-1 border-l-2 border-border pl-4">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => scrollToSection(section.id)}
-                  className={`text-left text-sm py-1 transition-colors ${activeSection === section.id
-                    ? "text-primary font-semibold -ml-[18px] border-l-2 border-primary pl-4"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  {section.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
-        {/* --- MIDDLE COLUMN: Main Content --- */}
-        {/* Full width on mobile, 6 cols on desktop (was 7) */}
-        <main className="col-span-1 md:col-span-6 space-y-16">
+        {/* --- MAIN CONTENT COLUMN --- */}
+        {/* Full width on mobile, 8 cols on desktop */}
+        <main className="col-span-1 md:col-span-8 space-y-16">
 
           {/* Story */}
           {!hiddenSections.includes('story') && (
@@ -110,11 +85,6 @@ export function CampaignPage() {
                 dangerouslySetInnerHTML={{ __html: campaign.story }}
                 onClick={handleContainerClick}
               />
-
-              {/* Hero Section (Mixed Media Gallery) */}
-              <div className="mb-8">
-                <HeroSection />
-              </div>
             </section>
           )}
 
@@ -130,7 +100,9 @@ export function CampaignPage() {
                   { icon: "📱", title: "Bluetooth MIDI", desc: "Connect instantly to your tablet." },
                 ]).map((feature, idx) => (
                   <div key={idx} className="p-6 rounded-xl border border-border bg-card/50">
-                    <div className="text-3xl mb-3">{feature.icon}</div>
+                    <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-2xl mb-4 border border-emerald-200 shadow-sm">
+                      {feature.icon}
+                    </div>
                     <h4 className="font-semibold mb-1">{feature.title}</h4>
                     <p className="text-sm text-muted-foreground">{feature.desc}</p>
                   </div>
@@ -202,32 +174,9 @@ export function CampaignPage() {
         </main>
 
         {/* --- RIGHT COLUMN: Rewards & Creator --- */}
-        <aside className="hidden md:block md:col-span-4 space-y-8"> {/* Increased span to 4 for better width */}
+        <aside className="hidden md:block md:col-span-4 space-y-8">
 
-          {/* Creator Profile */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-sm uppercase text-muted-foreground tracking-wider">Creator</h4>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 border border-border">
-                <AvatarImage src={campaign.creator.avatarUrl} />
-                <AvatarFallback>CR</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-bold leading-none">{campaign.creator.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">{campaign.creator.location}</p>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground line-clamp-3">
-              {campaign.creator.bio}
-            </p>
-            <Button variant="outline" className="w-full text-xs h-8" asChild>
-              <a href="mailto:lionel@dreamplaypianos.com">Contact Creator</a>
-            </Button>
-          </div>
-
-          <div className="h-px bg-border w-full" />
-
-          {/* REWARDS LIST */}
+          {/* REWARDS LIST — placed above Creator for immediate pricing visibility */}
           <div className="space-y-6">
             <h4 className="font-bold text-lg">Pre-Order Now</h4>
 
@@ -258,6 +207,10 @@ export function CampaignPage() {
             {campaign.rewards
               .filter(r => r.isVisible !== false)
               .filter(r => (r.rewardType || 'bundle') === rewardTab)
+              .sort((a, b) => {
+                if (a.isSoldOut === b.isSoldOut) return 0;
+                return a.isSoldOut ? 1 : -1; // Push sold-out to bottom
+              })
               .map(reward => {
                 const isFeatured = reward.badgeType === 'featured' || reward.isFeatured
                 const isMinPackage = reward.badgeType === 'minimum_package'
@@ -291,7 +244,7 @@ export function CampaignPage() {
                     )}
                     {isMinPackage && !reward.isSoldOut && (
                       <div className="absolute top-0 right-0 bg-cyan-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20">
-                        MINIMUM PACKAGE
+                        ESSENTIAL KIT
                       </div>
                     )}
 
@@ -301,7 +254,7 @@ export function CampaignPage() {
                         <h3 className="font-bold text-lg leading-tight flex items-center gap-2 flex-wrap">
                           {reward.title}
                           {isFeatured && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">Best Value</Badge>}
-                          {isMinPackage && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-cyan-100 text-cyan-700 border-cyan-200 hover:bg-cyan-100">Minimum Package</Badge>}
+                          {isMinPackage && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-cyan-100 text-cyan-700 border-cyan-200 hover:bg-cyan-100">Essential Kit</Badge>}
                         </h3>
                         <p className="text-2xl font-bold text-emerald-600">
                           ${reward.price} <span className="text-xs font-normal text-muted-foreground text-black">approx. ¥{(reward.price * 150).toLocaleString()}</span>
@@ -361,6 +314,22 @@ export function CampaignPage() {
                       )}
                     </div>
 
+                    {/* Scarcity Progress Bar */}
+                    {reward.limitedQuantity && !reward.isSoldOut && (
+                      <div className="px-6 pb-4">
+                        <div className="flex justify-between text-[10px] font-bold text-orange-600 mb-1.5 uppercase tracking-wider">
+                          <span>High Demand</span>
+                          <span>{Math.max(0, reward.limitedQuantity - reward.backersCount)} Left!</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-orange-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-orange-500 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.min(100, (reward.backersCount / reward.limitedQuantity) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     {/* Action Button */}
                     <div className="p-4 bg-muted/30 border-t border-border group cursor-pointer"
                       onClick={() => !reward.isSoldOut && selectReward(reward.id)}>
@@ -378,6 +347,29 @@ export function CampaignPage() {
                   </Card>
                 )
               })}
+          </div>
+
+          <div className="h-px bg-border w-full" />
+
+          {/* Creator Profile — moved below rewards */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-sm uppercase text-muted-foreground tracking-wider">Creator</h4>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12 border border-border">
+                <AvatarImage src={campaign.creator.avatarUrl} />
+                <AvatarFallback>CR</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-bold leading-none">{campaign.creator.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{campaign.creator.location}</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground line-clamp-3">
+              {campaign.creator.bio}
+            </p>
+            <Button variant="outline" className="w-full text-xs h-8" asChild>
+              <a href="mailto:lionel@dreamplaypianos.com">Contact Creator</a>
+            </Button>
           </div>
         </aside>
 
