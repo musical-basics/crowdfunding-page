@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from "@/hooks/use-toast"
 import { updateCampaignDetails, uploadCreatorAsset } from "../actions"
 import { useCampaign, CampaignProvider } from "@/context/campaign-context"
-import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical, Save, Eye, EyeOff } from "lucide-react"
+import { Plus, Trash2, Monitor, Video, Image as ImageIcon, PlayCircle, GripVertical, Save, Eye, EyeOff, Pencil } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { AdminHeaderActions } from "@/components/admin/admin-header-actions"
 import {
@@ -43,7 +43,7 @@ interface MediaItem {
 }
 
 // --- COMPONENT: Sortable Media Item ---
-function SortableMediaItem({ item, onRemove }: { item: MediaItem, onRemove: () => void }) {
+function SortableMediaItem({ item, onRemove, onEdit }: { item: MediaItem, onRemove: () => void, onEdit: () => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
     const style = {
@@ -65,7 +65,7 @@ function SortableMediaItem({ item, onRemove }: { item: MediaItem, onRemove: () =
             {/* Video Indicator */}
             {item.type === 'video' && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                    <PlayCircle className="w-8 h-8 text-white opacity-80" />
+                    <PlayCircle className="w-10 h-10 text-white opacity-80" />
                 </div>
             )}
 
@@ -78,18 +78,31 @@ function SortableMediaItem({ item, onRemove }: { item: MediaItem, onRemove: () =
 
             {/* Grip Icon (Visual Cue) */}
             <div className="absolute top-2 left-2 p-1 rounded bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <GripVertical className="h-4 w-4" />
+                <GripVertical className="h-5 w-5" />
             </div>
 
             {/* Type Badge */}
-            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded uppercase font-bold pointer-events-none backdrop-blur-sm">
+            <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded uppercase font-bold pointer-events-none backdrop-blur-sm">
                 {item.type}
             </div>
+
+            {/* Edit Button */}
+            <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit()
+                }}
+                className="absolute top-2 right-10 bg-black/70 text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/90 shadow-sm z-20 cursor-pointer"
+            >
+                <Pencil className="h-4 w-4" />
+            </button>
 
             {/* Delete Button (Must stop propagation) */}
             <button
                 type="button"
-                onPointerDown={(e) => e.stopPropagation()} // Important: Prevents drag start on click
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                     e.stopPropagation()
                     onRemove()
@@ -127,6 +140,13 @@ export default function CampaignDetailsEditor() {
     const [newVideoUrl, setNewVideoUrl] = useState("")
     const [newVideoThumb, setNewVideoThumb] = useState<File | null>(null)
     const [isUploadingVideo, setIsUploadingVideo] = useState(false)
+
+    // Edit media dialog states
+    const [editingItem, setEditingItem] = useState<MediaItem | null>(null)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [editUrl, setEditUrl] = useState("")
+    const [editThumbnailFile, setEditThumbnailFile] = useState<File | null>(null)
+    const [isUpdatingMedia, setIsUpdatingMedia] = useState(false)
 
     // Other features
     const [keyFeatures, setKeyFeatures] = useState<any[]>([])
@@ -237,6 +257,37 @@ export default function CampaignDetailsEditor() {
         setNewVideoUrl("")
         setNewVideoThumb(null)
         setIsUploadingVideo(false)
+    }
+
+    const handleOpenEdit = (item: MediaItem) => {
+        setEditingItem(item)
+        setEditUrl(item.src)
+        setEditThumbnailFile(null)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleSaveEdit = async () => {
+        if (!editingItem) return
+        setIsUpdatingMedia(true)
+
+        let updatedThumbnail = editingItem.thumbnail
+        if (editThumbnailFile) {
+            const formData = new FormData()
+            formData.append("file", await compressImageFile(editThumbnailFile))
+            const result = await uploadCreatorAsset(formData)
+            if (result.success && result.url) updatedThumbnail = result.url
+        }
+
+        setMediaGallery(prev => prev.map(item =>
+            item.id === editingItem.id
+                ? { ...item, src: editUrl, thumbnail: updatedThumbnail }
+                : item
+        ))
+
+        setIsEditDialogOpen(false)
+        setEditingItem(null)
+        setIsUpdatingMedia(false)
+        toast({ title: "Media updated", description: "Don't forget to save changes." })
     }
 
     async function handleSubmit(formData: FormData) {
@@ -376,8 +427,8 @@ export default function CampaignDetailsEditor() {
                                         type="button"
                                         onClick={() => toggleSectionVisibility(publicId)}
                                         className={`p-1 rounded transition-colors cursor-pointer ${isHidden
-                                                ? 'text-red-400 hover:text-red-600 hover:bg-red-50'
-                                                : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted'
+                                            ? 'text-red-400 hover:text-red-600 hover:bg-red-50'
+                                            : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted'
                                             }`}
                                         title={isHidden ? `Show ${label} on public page` : `Hide ${label} from public page`}
                                     >
@@ -532,12 +583,13 @@ export default function CampaignDetailsEditor() {
                                     items={mediaGallery.map(i => i.id)}
                                     strategy={rectSortingStrategy}
                                 >
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {mediaGallery.map((item) => (
                                             <SortableMediaItem
                                                 key={item.id}
                                                 item={item}
                                                 onRemove={() => setMediaGallery(prev => prev.filter(i => i.id !== item.id))}
+                                                onEdit={() => handleOpenEdit(item)}
                                             />
                                         ))}
                                     </div>
@@ -551,6 +603,84 @@ export default function CampaignDetailsEditor() {
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Edit Media Dialog */}
+                    <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+                        setIsEditDialogOpen(open)
+                        if (!open) setEditingItem(null)
+                    }}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    Edit {editingItem?.type === 'video' ? 'Video' : 'Image'}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                {/* Preview */}
+                                {editingItem && (
+                                    <div className="aspect-video bg-muted rounded-md overflow-hidden border">
+                                        <img
+                                            src={editingItem.type === 'video'
+                                                ? (editingItem.thumbnail || editingItem.src)
+                                                : editingItem.src}
+                                            alt="Preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+                                <div className="grid gap-2">
+                                    <Label>{editingItem?.type === 'video' ? 'Video URL (Cloudflare R2)' : 'Image URL'}</Label>
+                                    <Input
+                                        placeholder={editingItem?.type === 'video'
+                                            ? 'https://pub-xyz.r2.dev/video.mp4'
+                                            : 'https://pub-xyz.r2.dev/image.jpg'}
+                                        value={editUrl}
+                                        onChange={e => setEditUrl(e.target.value)}
+                                    />
+                                </div>
+                                {editingItem?.type === 'video' && (
+                                    <div className="grid gap-2">
+                                        <Label>Replace Thumbnail</Label>
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={e => setEditThumbnailFile(e.target.files?.[0] || null)}
+                                        />
+                                        {editingItem.thumbnail && (
+                                            <p className="text-xs text-muted-foreground">Current: {editingItem.thumbnail}</p>
+                                        )}
+                                    </div>
+                                )}
+                                {editingItem?.type === 'image' && (
+                                    <div className="grid gap-2">
+                                        <Label>Replace Image File</Label>
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0]
+                                                if (!file) return
+                                                const formData = new FormData()
+                                                formData.append("file", await compressImageFile(file))
+                                                const result = await uploadCreatorAsset(formData)
+                                                if (result.success && result.url) {
+                                                    setEditUrl(result.url)
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleSaveEdit} disabled={isUpdatingMedia}>
+                                    {isUpdatingMedia ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     {/* Story Editor */}
                     <Card id="campaign-story">
