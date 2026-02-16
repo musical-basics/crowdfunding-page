@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Bookmark, Facebook, Twitter, Share2, Heart } from "lucide-react"
+import { Bookmark, Facebook, Twitter, Share2, Heart, ShieldCheck } from "lucide-react"
 import { useCampaign } from "@/context/campaign-context"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition, useEffect } from "react"
@@ -117,13 +117,13 @@ export function StatsPanel() {
         </div>
       )}
 
-      {/* Percentage Sold Out */}
+      {/* Percentage Funded */}
       {(campaign.showSoldOutPercent !== false) && (
         <div>
           <p className="text-2xl font-semibold text-foreground">
-            {Math.floor((backersCount / (campaign.stats.totalSupply || 100)) * 100)}%
+            {Math.floor((totalPledged / campaign.stats.goalAmount) * 100)}%
           </p>
-          <p className="text-sm text-muted-foreground">sold out</p>
+          <p className="text-sm text-muted-foreground">funded</p>
         </div>
       )}
 
@@ -135,11 +135,14 @@ export function StatsPanel() {
         Reserve for Founder's Batch
       </Button>
 
-      {/* No-Risk Guarantee */}
-      <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg border border-dashed text-center space-y-1">
-        <p className="font-semibold text-foreground">The &quot;No-Risk&quot; Guarantee</p>
-        <p>
-          Your pre-order is held in a separate account until production begins. If we do not hit our production minimums to maintain our quality standards, you get a 100% refund immediately. You either get the piano of your dreams, or you get your money back. You risk nothing.
+      {/* No-Risk Guarantee — Premium Trust Seal */}
+      <div className="bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-center space-y-2 shadow-sm">
+        <div className="flex items-center justify-center gap-2 text-blue-800 font-bold uppercase tracking-wider text-xs">
+          <ShieldCheck className="h-4 w-4" />
+          The "No-Risk" Guarantee
+        </div>
+        <p className="text-xs text-blue-900/80 leading-relaxed font-medium">
+          Your pre-order is held securely until production begins. If we do not hit our minimums, <strong>you get a 100% refund immediately.</strong> You risk nothing.
         </p>
       </div>
 
