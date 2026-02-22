@@ -63,7 +63,7 @@ export function CreatorPage() {
     // For now, trust the DB.
     return (
       <div
-        className="prose dark:prose-invert max-w-none text-muted-foreground [&_img]:rounded-xl [&_img]:shadow-sm [&_img]:cursor-pointer"
+        className="prose dark:prose-invert max-w-none text-muted-foreground [&_img]:border [&_img]:border-border [&_img]:cursor-pointer"
         dangerouslySetInnerHTML={{ __html: legacyHtml || "" }}
         onClick={handleContainerClick}
       />
@@ -74,25 +74,26 @@ export function CreatorPage() {
   return (
     <div className="space-y-12">
       {/* Header */}
-      <div className="border-b border-border pb-6">
-        <h2 className="text-3xl font-bold mb-2">{content.intro.heading}</h2>
-        <p className="text-muted-foreground text-lg">
+      <div className="border-b border-border pb-8">
+        <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">The Creator</p>
+        <h2 className="text-4xl md:text-5xl font-serif mb-4 text-foreground">{content.intro.heading}</h2>
+        <p className="text-muted-foreground font-sans text-lg">
           {content.intro.subheading}
         </p>
       </div>
 
       {/* My Story Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        <div className="space-y-4">
-          <h3 className="text-2xl font-bold">My Story</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pt-4">
+        <div className="space-y-6">
+          <h3 className="text-3xl font-serif text-foreground">My Story</h3>
           <div
-            className="prose prose-lg max-w-none text-muted-foreground space-y-4"
+            className="prose prose-lg max-w-none text-muted-foreground space-y-4 font-sans leading-relaxed"
             dangerouslySetInnerHTML={{ __html: content.story.html }}
           />
         </div>
         <div className="space-y-4">
           {/* Carnegie Image */}
-          <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center relative">
+          <div className="aspect-video bg-muted/50 border border-border overflow-hidden flex items-center justify-center relative">
             {content.story.images.carnegie ? (
               <img src={content.story.images.carnegie} alt="Performance" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.story.images.carnegie)} />
             ) : (
@@ -102,7 +103,7 @@ export function CreatorPage() {
             )}
           </div>
           {/* Personal Image */}
-          <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center relative">
+          <div className="aspect-video bg-muted/50 border border-border overflow-hidden flex items-center justify-center relative">
             {content.story.images.personal ? (
               <img src={content.story.images.personal} alt="Personal" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.story.images.personal)} />
             ) : (
@@ -115,14 +116,14 @@ export function CreatorPage() {
       </div>
 
       {/* The Problem Section */}
-      <div className="bg-muted/30 rounded-xl p-8 border border-border">
-        <h3 className="text-2xl font-bold mb-6">The Problem I Wanted to Solve</h3>
+      <div className="bg-muted/30 p-8 border border-border">
+        <h3 className="text-3xl font-serif mb-6 text-foreground">The Problem I Wanted to Solve</h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div
             className="space-y-4 text-lg text-muted-foreground leading-relaxed [&_span]:text-foreground"
             dangerouslySetInnerHTML={{ __html: content.problem.html }}
           />
-          <div className="aspect-square bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center relative">
+          <div className="aspect-square bg-muted/50 border border-border overflow-hidden flex items-center justify-center relative">
             {content.problem.image ? (
               <img src={content.problem.image} alt="Infographic" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.problem.image)} />
             ) : (
@@ -143,7 +144,7 @@ export function CreatorPage() {
 
         {/* Product Images */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center">
+          <div className="aspect-video bg-muted/50 border border-border overflow-hidden flex items-center justify-center">
             {content.solution.images.product1 ? (
               <img src={content.solution.images.product1} alt="Product Shot" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.solution.images.product1)} />
             ) : (
@@ -152,7 +153,7 @@ export function CreatorPage() {
               </div>
             )}
           </div>
-          <div className="aspect-video bg-muted/50 rounded-lg border border-border overflow-hidden flex items-center justify-center">
+          <div className="aspect-video bg-muted/50 border border-border overflow-hidden flex items-center justify-center">
             {content.solution.images.comparison ? (
               <img src={content.solution.images.comparison} alt="Comparison" className="object-cover w-full h-full cursor-pointer" onClick={() => openLightbox(content!.solution.images.comparison)} />
             ) : (

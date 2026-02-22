@@ -106,52 +106,66 @@ export function StatsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 bg-neutral-50/50 p-8 md:p-10 border border-neutral-200 h-full">
       {/* Funding Amount */}
       {(campaign.showReservedAmount !== false) && (
-        <div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold text-foreground">{formattedPledged}</p>
-            <span className="text-sm text-muted-foreground">Reserved</span>
+        <div className="border-b border-neutral-200 pb-6">
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-5xl md:text-6xl font-serif text-foreground">{formattedPledged}</p>
+            <span className="text-[10px] font-sans uppercase tracking-[0.2em] font-bold text-muted-foreground">Reserved</span>
           </div>
         </div>
       )}
 
       {/* Percentage Funded */}
       {(campaign.showSoldOutPercent !== false) && (
-        <div>
-          <p className="text-2xl font-semibold text-foreground">
+        <div className="border-b border-neutral-200 pb-6">
+          <p className="text-3xl font-serif text-foreground">
             {Math.floor((totalPledged / campaign.stats.goalAmount) * 100)}%
           </p>
-          <p className="text-sm text-muted-foreground">sold out</p>
+          <p className="text-[10px] font-sans uppercase tracking-[0.2em] font-bold text-muted-foreground mt-2">Sold Out</p>
         </div>
       )}
 
-      {/* CTA Button - NOW CONNECTED */}
-      <Button
-        onClick={handleBackProject} // <--- Added click handler
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-6 text-lg"
-      >
-        Reserve for Founder's Batch
-      </Button>
+      {/* Days & Backers */}
+      <div className="flex gap-12 border-b border-neutral-200 pb-6">
+        <div>
+          <p className="text-2xl font-serif text-foreground mb-1">{backersCount}</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Backers</p>
+        </div>
+        <div>
+          <p className="text-2xl font-serif text-foreground mb-1">{campaign.stats.daysLeft}</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Days Left</p>
+        </div>
+      </div>
 
-      {/* No-Risk Guarantee — Premium Trust Seal */}
-      <div className="bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-center space-y-2 shadow-sm">
-        <div className="flex items-center justify-center gap-2 text-blue-800 font-bold uppercase tracking-wider text-xs">
+      {/* CTA Button */}
+      <div className="pt-2">
+        <Button
+          onClick={handleBackProject}
+          className="w-full bg-foreground hover:bg-foreground/90 text-background font-sans uppercase tracking-widest text-[10px] font-bold py-7 rounded-none shadow-md transition-all cursor-pointer"
+        >
+          Reserve for Founder's Batch
+        </Button>
+      </div>
+
+      {/* No-Risk Guarantee */}
+      <div className="bg-white border border-neutral-200 p-6 text-center space-y-3 shadow-sm">
+        <div className="flex items-center justify-center gap-2 text-foreground font-sans font-bold uppercase tracking-widest text-[10px]">
           <ShieldCheck className="h-4 w-4" />
           The "No-Risk" Guarantee
         </div>
-        <p className="text-xs text-blue-900/80 leading-relaxed font-medium">
-          Your pre-order is held securely until production begins. If we do not hit our minimums, <strong>you get a 100% refund immediately.</strong> You risk nothing.
+        <p className="text-xs text-muted-foreground leading-relaxed font-sans">
+          Your pre-order is held securely until production begins. If we do not hit our minimums, <strong className="text-foreground font-medium">you get a 100% refund immediately.</strong> You risk nothing.
         </p>
       </div>
 
       {/* Secondary Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pt-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="flex-1 gap-2 bg-transparent text-lg py-6">
-              <Bookmark className="h-5 w-5" />
+            <Button variant="outline" className="w-full gap-2 font-sans text-xs uppercase tracking-widest font-bold py-6 rounded-none border-border hover:bg-neutral-100 hover:text-foreground cursor-pointer">
+              <Bookmark className="h-4 w-4" />
               Join The Waitlist
             </Button>
           </PopoverTrigger>
@@ -159,7 +173,7 @@ export function StatsPanel() {
             {hasJoined ? (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium leading-none text-emerald-600">Success!</h4>
+                  <h4 className="font-medium leading-none text-foreground">Success!</h4>
                   <p className="text-sm text-muted-foreground">
                     You've been added to the list. Check your email for confirmation.
                   </p>

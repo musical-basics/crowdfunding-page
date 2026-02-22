@@ -79,9 +79,9 @@ export function CampaignPage() {
             <section id="story" className="space-y-6 scroll-mt-24">
               <div
                 className="prose prose-lg dark:prose-invert max-w-none 
-                       prose-headings:font-bold prose-headings:tracking-tight 
-                       prose-p:text-muted-foreground prose-p:leading-relaxed
-                       prose-img:rounded-xl prose-img:shadow-sm prose-img:cursor-pointer"
+                       prose-headings:font-serif prose-headings:font-medium prose-headings:tracking-tight prose-headings:text-foreground
+                       prose-p:font-sans prose-p:text-muted-foreground prose-p:leading-relaxed
+                       prose-img:rounded-none prose-img:border prose-img:border-border prose-img:cursor-pointer"
                 dangerouslySetInnerHTML={{ __html: campaign.story }}
                 onClick={handleContainerClick}
               />
@@ -90,21 +90,22 @@ export function CampaignPage() {
 
           {/* Features */}
           {!hiddenSections.includes('features') && (
-            <section id="features" className="scroll-mt-24 pt-8 border-t border-border">
-              <h3 className="text-2xl font-bold mb-6">Key Features</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <section id="features" className="scroll-mt-24 pt-12 border-t border-border">
+              <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Capabilities</p>
+              <h3 className="text-3xl md:text-4xl font-serif mb-10 text-foreground">Key Features</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border border border-border">
                 {(campaign.keyFeatures?.length > 0 ? campaign.keyFeatures : [
                   { icon: "🎹", title: "Narrower Keys", desc: "15/16th size for ergonomic reach." },
                   { icon: "🔊", title: "Pro Sound Engine", desc: "Sampled from a 9ft Concert Grand." },
                   { icon: "🔋", title: "Portable Power", desc: "Built-in battery for 8 hours of play." },
                   { icon: "📱", title: "Bluetooth MIDI", desc: "Connect instantly to your tablet." },
                 ]).map((feature, idx) => (
-                  <div key={idx} className="p-6 rounded-xl border border-border bg-card/50">
-                    <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-2xl mb-4 border border-emerald-200 shadow-sm">
+                  <div key={idx} className="p-8 bg-background">
+                    <div className="h-10 w-10 flex items-center justify-center text-2xl mb-6 bg-secondary border border-border shadow-sm">
                       {feature.icon}
                     </div>
-                    <h4 className="font-semibold mb-1">{feature.title}</h4>
-                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                    <h4 className="font-serif text-xl mb-3 text-foreground">{feature.title}</h4>
+                    <p className="font-sans text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
                   </div>
                 ))}
               </div>
@@ -178,16 +179,16 @@ export function CampaignPage() {
 
           {/* REWARDS LIST — placed above Creator for immediate pricing visibility */}
           <div className="space-y-6">
-            <h4 className="font-bold text-lg">Pre-Order Now</h4>
+            <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">Pre-Order Now</p>
 
             {/* Reward Type Tabs */}
-            <div className="flex gap-2">
+            <div className="flex gap-6 border-b border-border pb-px">
               <button
                 type="button"
                 onClick={() => setRewardTab('bundle')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${rewardTab === 'bundle'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                className={`pb-3 text-[10px] uppercase tracking-[0.2em] font-bold transition-all duration-200 border-b-2 cursor-pointer ${rewardTab === 'bundle'
+                  ? 'text-foreground border-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Premium Bundle
@@ -195,9 +196,9 @@ export function CampaignPage() {
               <button
                 type="button"
                 onClick={() => setRewardTab('keyboard_only')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${rewardTab === 'keyboard_only'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                className={`pb-3 text-[10px] uppercase tracking-[0.2em] font-bold transition-all duration-200 border-b-2 cursor-pointer ${rewardTab === 'keyboard_only'
+                  ? 'text-foreground border-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Keyboard Only
@@ -217,33 +218,33 @@ export function CampaignPage() {
                 return (
                   <Card
                     key={reward.id}
-                    className={`overflow-hidden transition-all duration-200 border relative 
+                    className={`overflow-hidden transition-all duration-200 border relative rounded-none
                     ${reward.isSoldOut
-                        ? "opacity-75 bg-slate-50 border-slate-200 grayscale-[0.8]"
+                        ? "opacity-75 bg-neutral-50 border-border grayscale-[0.5]"
                         : isFeatured
-                          ? "border-2 border-emerald-500 shadow-xl scale-[1.02] z-10 bg-emerald-50/10"
+                          ? "border-2 border-foreground shadow-xl z-10 bg-neutral-50/50"
                           : isMinPackage
-                            ? "border-2 border-cyan-500 shadow-xl scale-[1.02] z-10 bg-cyan-50/10"
-                            : "hover:border-emerald-500 hover:shadow-md"
+                            ? "border-2 border-foreground shadow-xl z-10 bg-neutral-50/50"
+                            : "hover:border-neutral-400 hover:shadow-lg"
                       }`}
                   >
                     {/* SOLD OUT OVERLAY */}
                     {reward.isSoldOut && (
-                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center z-20 pointer-events-none">
-                        <span className="bg-slate-900/80 text-white px-4 py-1 rounded font-bold uppercase tracking-widest text-sm backdrop-blur-sm">
+                      <div className="absolute top-4 right-4 z-20">
+                        <div className="bg-foreground text-background font-bold text-[10px] px-4 py-1.5 uppercase tracking-widest">
                           Sold Out
-                        </span>
+                        </div>
                       </div>
                     )}
 
                     {/* Badge */}
                     {isFeatured && !reward.isSoldOut && (
-                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20">
+                      <div className="absolute top-0 right-0 bg-foreground text-background text-[10px] uppercase tracking-[0.2em] font-bold px-4 py-1.5 z-20">
                         MOST POPULAR
                       </div>
                     )}
                     {isMinPackage && !reward.isSoldOut && (
-                      <div className="absolute top-0 right-0 bg-cyan-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20">
+                      <div className="absolute top-0 right-0 bg-foreground text-background text-[10px] uppercase tracking-[0.2em] font-bold px-4 py-1.5 z-20">
                         ESSENTIAL KIT
                       </div>
                     )}
@@ -251,20 +252,18 @@ export function CampaignPage() {
                     <div className="p-6 space-y-4">
                       {/* Header */}
                       <div className="space-y-1">
-                        <h3 className="font-bold text-lg leading-tight flex items-center gap-2 flex-wrap">
+                        <h3 className="font-serif text-lg leading-tight flex items-center gap-2 flex-wrap">
                           {reward.title}
-                          {isFeatured && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">Best Value</Badge>}
-                          {isMinPackage && <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-cyan-100 text-cyan-700 border-cyan-200 hover:bg-cyan-100">Essential Kit</Badge>}
                         </h3>
-                        <p className="text-2xl font-bold text-emerald-600">
-                          ${reward.price} <span className="text-xs font-normal text-muted-foreground text-black">approx. ¥{(reward.price * 150).toLocaleString()}</span>
+                        <p className="text-2xl font-serif text-foreground tracking-tight">
+                          ${reward.price} <span className="text-xs font-sans font-normal text-muted-foreground">approx. ¥{(reward.price * 150).toLocaleString()}</span>
                         </p>
                       </div>
 
                       {/* Reward Image */}
                       {reward.imageUrl && (
-                        <div className="rounded-lg overflow-hidden aspect-video relative bg-slate-100 border border-slate-100/50 cursor-pointer" onClick={() => openLightbox(reward.imageUrl!)}>
-                          <img src={reward.imageUrl} alt={reward.title} className="w-full h-full object-cover" />
+                        <div className="overflow-hidden aspect-video relative bg-neutral-100 border border-neutral-200 cursor-pointer" onClick={() => openLightbox(reward.imageUrl!)}>
+                          <img src={reward.imageUrl} alt={reward.title} className="w-full h-full object-cover mix-blend-multiply" />
                         </div>
                       )}
 
@@ -300,13 +299,13 @@ export function CampaignPage() {
 
                       {/* Items Included */}
                       {reward.itemsIncluded.length > 0 && (
-                        <div className="pt-2 border-t border-dashed">
-                          <span className="font-semibold text-xs uppercase tracking-wider block mb-2">Includes:</span>
-                          <ul className="text-sm space-y-1">
+                        <div className="pt-2 border-t border-border">
+                          <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold block mb-2">Includes:</span>
+                          <ul className="text-sm space-y-1 font-sans">
                             {reward.itemsIncluded.map((item, i) => (
                               <li key={i} className="flex items-center gap-2">
-                                <span className="h-1 w-1 rounded-full bg-foreground" />
-                                {item}
+                                <span className="h-1.5 w-1.5 rounded-full bg-foreground/40 shrink-0" />
+                                <span className="text-foreground/80">{item}</span>
                               </li>
                             ))}
                           </ul>
@@ -322,8 +321,8 @@ export function CampaignPage() {
                           <span>{Math.max(0, reward.limitedQuantity - reward.backersCount)} Left!</span>
                         </div>
                         <div className="w-full h-1.5 bg-orange-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-orange-500 rounded-full transition-all duration-500" 
+                          <div
+                            className="h-full bg-orange-500 rounded-full transition-all duration-500"
                             style={{ width: `${Math.min(100, (reward.backersCount / reward.limitedQuantity) * 100)}%` }}
                           />
                         </div>
@@ -331,17 +330,14 @@ export function CampaignPage() {
                     )}
 
                     {/* Action Button */}
-                    <div className="p-4 bg-muted/30 border-t border-border group cursor-pointer"
+                    <div className="p-4 border-t border-border group cursor-pointer"
                       onClick={() => !reward.isSoldOut && selectReward(reward.id)}>
                       {reward.isSoldOut ? (
-                        <Button disabled className="w-full bg-slate-200 text-slate-500" variant="ghost">Sold Out</Button>
+                        <Button disabled className="w-full bg-neutral-200 text-neutral-500 rounded-none" variant="ghost">Sold Out</Button>
                       ) : (
-                        <div className="relative">
-                          <div className={`absolute inset-0 bg-emerald-600 opacity-0 group-hover:opacity-10 transition-opacity rounded-md ${isFeatured ? 'opacity-5' : ''} ${isMinPackage ? 'opacity-5' : ''}`} />
-                          <Button className={`w-full text-white shadow-sm ${isFeatured ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200 shadow-md" : isMinPackage ? "bg-cyan-600 hover:bg-cyan-700 shadow-cyan-200 shadow-md" : "bg-emerald-600 hover:bg-emerald-700"}`}>
-                            Reserve for ${reward.price}
-                          </Button>
-                        </div>
+                        <Button className="w-full bg-foreground hover:bg-foreground/90 text-background rounded-none uppercase tracking-widest text-[10px] font-bold h-12 cursor-pointer">
+                          Reserve for ${reward.price}
+                        </Button>
                       )}
                     </div>
                   </Card>
@@ -353,7 +349,7 @@ export function CampaignPage() {
 
           {/* Creator Profile — moved below rewards */}
           <div className="space-y-4">
-            <h4 className="font-bold text-sm uppercase text-muted-foreground tracking-wider">Creator</h4>
+            <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">Creator</p>
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12 border border-border">
                 <AvatarImage src={campaign.creator.avatarUrl} />

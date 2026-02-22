@@ -42,7 +42,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
 
                 {/* Center: Navigation Links (Desktop) */}
                 <nav className="hidden md:flex items-center">
-                    <div className="flex items-center gap-1 backdrop-blur-xl bg-white/5 border border-white/10 rounded-full px-4 py-1">
+                    <div className="flex items-center gap-1 backdrop-blur-xl bg-white/5 border border-white/10 px-4 py-1">
                         <Link
                             href="https://dreamplaypianos.com/"
                             className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
@@ -135,8 +135,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                     <div className="hidden md:flex items-center">
                         <Button
                             onClick={() => onTabChange("rewards")}
-                            size="sm"
-                            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+                            className="bg-foreground hover:bg-foreground/90 text-background rounded-none font-sans text-[10px] uppercase tracking-widest font-bold px-8 py-4 transition-colors cursor-pointer"
                         >
                             Pre-order now
                         </Button>
@@ -229,7 +228,7 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                         </Link>
 
                         <div className="mt-8 pt-4 border-t border-border">
-                            <Button onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }} className="w-full rounded-full py-6 text-lg">
+                            <Button onClick={() => { onTabChange("rewards"); setMobileMenuOpen(false); }} className="w-full rounded-none py-6 text-lg bg-foreground hover:bg-foreground/90 text-background font-sans uppercase tracking-widest text-[10px] font-bold">
                                 Pre-order now
                             </Button>
                         </div>

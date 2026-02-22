@@ -15,14 +15,12 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
   ]
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-t border-white/10 bg-background/95 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-border bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-center px-4 sm:px-6 lg:px-8">
-
-        {/* Desktop Links - Centered */}
-        <div className="flex items-center gap-8 overflow-x-auto no-scrollbar py-2">
+        <div className="flex items-center gap-8 overflow-x-auto no-scrollbar py-2 h-full">
           <button
             onClick={() => onTabChange("campaign")}
-            className={`text-sm font-medium transition-colors hover:text-primary whitespace-nowrap ${activeTab === "campaign" ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+            className={`font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors whitespace-nowrap px-2 h-full border-b-2 cursor-pointer ${activeTab === "campaign" ? "text-foreground border-foreground" : "text-muted-foreground border-transparent hover:text-foreground"
               }`}
           >
             Overview
@@ -31,14 +29,13 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
             <button
               key={link.id}
               onClick={() => onTabChange(link.id)}
-              className={`text-sm font-medium transition-colors hover:text-primary whitespace-nowrap ${activeTab === link.id ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+              className={`font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors whitespace-nowrap px-2 h-full border-b-2 cursor-pointer ${activeTab === link.id ? "text-foreground border-foreground" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
             >
               {link.label}
             </button>
           ))}
         </div>
-
       </div>
     </nav>
   )
