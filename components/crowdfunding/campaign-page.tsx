@@ -76,55 +76,109 @@ export function CampaignPage() {
 
           {/* Story */}
           {!hiddenSections.includes('story') && (
-            <section id="story" className="space-y-6 scroll-mt-24">
-              <div
-                className="prose prose-lg dark:prose-invert max-w-none 
-                       prose-headings:font-serif prose-headings:font-medium prose-headings:tracking-tight prose-headings:text-foreground
-                       prose-p:font-sans prose-p:text-muted-foreground prose-p:leading-relaxed
-                       prose-img:rounded-none prose-img:border prose-img:border-border prose-img:cursor-pointer"
-                dangerouslySetInnerHTML={{ __html: campaign.story }}
-                onClick={handleContainerClick}
-              />
-            </section>
-          )}
+            <section id="story" className="space-y-12 scroll-mt-24">
+              {/* Intro */}
+              <div className="space-y-6">
+                <div className="border-b border-border pb-6">
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Our Story</p>
+                  <h2 className="text-3xl md:text-4xl font-serif text-foreground">Why playing the piano shouldn't hurt.</h2>
+                </div>
+                <p className="font-sans text-muted-foreground leading-relaxed">
+                  I've been a concert pianist for years. But I have a confession: <strong className="text-foreground">I always struggled with the size of the keyboard.</strong> It was just a tiny bit too big for my hands.
+                </p>
+                <p className="font-sans text-muted-foreground leading-relaxed">
+                  For years, I thought it was <em>my</em> fault. I thought I just needed to practice more or stretch further. But then I realized: <strong className="text-foreground">I wasn't alone.</strong>
+                </p>
+                <p className="font-sans text-muted-foreground leading-relaxed">
+                  That's why I created <strong className="text-foreground">DreamPlay One</strong>. It isn't just a "smaller keyboard". It's a professional instrument designed to fit your hands, not fight them.
+                </p>
+              </div>
 
-          {/* Features */}
-          {!hiddenSections.includes('features') && (
-            <section id="features" className="scroll-mt-24 pt-12 border-t border-border">
-              <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Capabilities</p>
-              <h3 className="text-3xl md:text-4xl font-serif mb-10 text-foreground">Key Features</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border border border-border">
-                {(campaign.keyFeatures?.length > 0 ? campaign.keyFeatures : [
-                  { icon: "🎹", title: "Narrower Keys", desc: "15/16th size for ergonomic reach." },
-                  { icon: "🔊", title: "Pro Sound Engine", desc: "Sampled from a 9ft Concert Grand." },
-                  { icon: "🔋", title: "Portable Power", desc: "Built-in battery for 8 hours of play." },
-                  { icon: "📱", title: "Bluetooth MIDI", desc: "Connect instantly to your tablet." },
-                ]).map((feature, idx) => (
-                  <div key={idx} className="p-8 bg-background">
-                    <div className="h-10 w-10 flex items-center justify-center text-2xl mb-6 bg-secondary border border-border shadow-sm">
-                      {feature.icon}
+              {/* Why DreamPlay One */}
+              <div className="border-t border-border pt-12 space-y-8">
+                <div>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Benefits</p>
+                  <h3 className="text-3xl md:text-4xl font-serif text-foreground">Why DreamPlay One?</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border border border-border">
+                  {[
+                    { title: "Reach More, Strain Less", desc: "The keys are slightly narrower (15/16ths or 7/8ths of standard). This means you can finally reach octaves and large chords without stretching until it hurts." },
+                    { title: "University Approved", desc: "We use the official \"DS Standard\" sizes. These are the exact same sizes used by top universities worldwide. You are playing on a professional standard, not a toy." },
+                    { title: "Concert Hall Sound", desc: "We didn't sacrifice quality for comfort. We partnered with top sound engineers to ensure the DreamPlay One sounds as rich and grand as it feels." },
+                    { title: "Play Anywhere", desc: "It's lightweight and compact. Take your music with you, wherever you go." },
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-8 bg-background">
+                      <h4 className="font-serif text-xl mb-3 text-foreground">{item.title}</h4>
+                      <p className="font-sans text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                     </div>
-                    <h4 className="font-serif text-xl mb-3 text-foreground">{feature.title}</h4>
-                    <p className="font-sans text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Choose Your Fit */}
+              <div className="border-t border-border pt-12 space-y-8">
+                <div>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Sizing</p>
+                  <h3 className="text-3xl md:text-4xl font-serif text-foreground">Choose Your Perfect Fit</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="border border-border p-8 space-y-3">
+                    <h4 className="font-serif text-xl text-foreground">DS5.5 — "Small" Size</h4>
+                    <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                      Designed for pianists with hands under 7.6 inches. This size allows players in "Zone A" to play octaves and 9ths with ease, and even the occasional 10th interval comfortably.
+                    </p>
                   </div>
-                ))}
+                  <div className="border border-border p-8 space-y-3">
+                    <h4 className="font-serif text-xl text-foreground">DS6.0 — "Medium" Size</h4>
+                    <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                      Designed for pianists with hands between 7.6 and 8.5 inches. This size allows players in "Zone B" to play octaves and 9ths with ease, and the occasional 10th without strain.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Specs Highlight */}
+              <div className="border-t border-border pt-12 space-y-8">
+                <div>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Specifications</p>
+                  <h3 className="text-3xl md:text-4xl font-serif text-foreground">DreamPlay One Specs</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border border border-border">
+                  <div className="p-8 bg-background">
+                    <h4 className="font-serif text-xl mb-3 text-foreground">Authentic Feel & Sound</h4>
+                    <p className="font-sans text-sm text-muted-foreground leading-relaxed">We didn't cut corners. The DreamPlay One features graded "hammer-feel" weighted keys and a beautiful, modern piano sound engine.</p>
+                  </div>
+                  <div className="p-8 bg-background">
+                    <h4 className="font-serif text-xl mb-3 text-foreground">Smart & Connected</h4>
+                    <p className="font-sans text-sm text-muted-foreground leading-relaxed">Built for the modern musician, it comes equipped with an onboard metronome, full MIDI connectivity, interactive LEDs, and seamless learning app connectivity.</p>
+                  </div>
+                </div>
               </div>
             </section>
           )}
 
-          {/* Specs */}
+          {/* Technical Details */}
           {!hiddenSections.includes('specs') && (
-            <section id="specs" className="scroll-mt-24 pt-8 border-t border-border">
-              <h3 className="text-2xl font-bold mb-6">Technical Details</h3>
-
-              {campaign.technicalDetails ? (
-                <div
-                  className="prose dark:prose-invert max-w-none text-muted-foreground"
-                  dangerouslySetInnerHTML={{ __html: campaign.technicalDetails }}
-                />
-              ) : (
-                <p className="text-muted-foreground">Detailed specifications coming soon.</p>
-              )}
+            <section id="specs" className="scroll-mt-24 pt-12 border-t border-border space-y-8">
+              <div>
+                <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Engineering</p>
+                <h3 className="text-3xl md:text-4xl font-serif text-foreground">Technical Specs</h3>
+              </div>
+              <div className="border border-border divide-y divide-border font-sans text-sm">
+                {[
+                  { label: "Keyboard Versions", value: "DS5.5 (7/8ths size) or DS6.0 (15/16ths size)" },
+                  { label: "Overall Dimensions (LxWxH)", value: '48.27" × 11.65" × 5.9" (1226 × 296 × 150 mm)' },
+                  { label: "Active Key Width", value: "DS 6.0: 44.53\" (1131 mm) · DS 5.5: 41.1\" (1044 mm)" },
+                  { label: "Action", value: "Graded Hammer Action (Weighted)" },
+                  { label: "Polyphony", value: "256 Notes (Never cut off a sound)" },
+                  { label: "Connectivity", value: "USB-MIDI, Bluetooth Audio, 2× Headphone Jacks, Aux In/Out, Sustain Pedal" },
+                ].map((spec, idx) => (
+                  <div key={idx} className={`flex flex-col sm:flex-row ${idx % 2 === 0 ? 'bg-neutral-50/50' : 'bg-background'}`}>
+                    <div className="sm:w-2/5 px-6 py-4 font-bold text-foreground">{spec.label}</div>
+                    <div className="sm:w-3/5 px-6 py-4 text-muted-foreground">{spec.value}</div>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 
@@ -137,31 +191,117 @@ export function CampaignPage() {
 
           {/* Manufacturer */}
           {!hiddenSections.includes('manufacturer') && (
-            <section id="manufacturer" className="scroll-mt-24 pt-8 border-t border-border">
-              <h3 className="text-2xl font-bold mb-6">About Our Manufacturer</h3>
-              {campaign.manufacturerDetails ? (
-                <div
-                  className="prose dark:prose-invert max-w-none text-muted-foreground"
-                  dangerouslySetInnerHTML={{ __html: campaign.manufacturerDetails }}
-                />
-              ) : (
-                <p className="text-muted-foreground">Manufacturer information coming soon.</p>
-              )}
+            <section id="manufacturer" className="scroll-mt-24 pt-12 border-t border-border space-y-8">
+              <div>
+                <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Manufacturing</p>
+                <h3 className="text-3xl md:text-4xl font-serif text-foreground">About Our Manufacturer</h3>
+              </div>
+              <p className="font-sans text-muted-foreground leading-relaxed">
+                Our supplier, Ebulent Technologies Corporation, has been a cornerstone of precision manufacturing in Shenzhen for over two decades. We chose them not just for their factory size, but for their specific expertise in building next-generation musical instruments.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-border border border-border">
+                <div className="p-8 bg-background">
+                  <h4 className="font-serif text-xl mb-3 text-foreground">The Aeroband Connection</h4>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">Ebulent is the manufacturing force behind the viral Aeroband Smart Guitar. They understand that a digital instrument must feel as responsive and soulful as an acoustic one.</p>
+                </div>
+                <div className="p-8 bg-background">
+                  <h4 className="font-serif text-xl mb-3 text-foreground">Total Quality Control</h4>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">Unlike factories that just assemble bought parts, Ebulent builds from the ground up. From lithium batteries to complex electronics, they manufacture critical components in-house.</p>
+                </div>
+                <div className="p-8 bg-background">
+                  <h4 className="font-serif text-xl mb-3 text-foreground">Decades of Experience</h4>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">Established in the early 2000s, Ebulent has evolved from display technologies to advanced consumer electronics. Your DreamPlay One is built with mature, time-tested reliability.</p>
+                </div>
+              </div>
+
+              {/* Satisfaction Guarantee */}
+              <div className="border border-border p-6 bg-neutral-50/50 text-center space-y-2">
+                <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-foreground font-bold">🛡️ Satisfaction Guarantee</p>
+                <p className="font-sans text-sm text-muted-foreground">
+                  Not sure if you will like it? We offer a <strong className="text-foreground">90-day, 100% full refund policy</strong> (with <strong className="text-foreground">return shipping covered</strong>).
+                </p>
+              </div>
             </section>
           )}
 
-          {/* Shipping */}
+          {/* Shipping & Risks */}
           {!hiddenSections.includes('shipping') && (
-            <section id="shipping" className="scroll-mt-24 pt-8 border-t border-border">
-              <h3 className="text-2xl font-bold mb-6">Shipping & Delivery</h3>
-              {campaign.shipping ? (
-                <div
-                  className="prose dark:prose-invert max-w-none text-muted-foreground"
-                  dangerouslySetInnerHTML={{ __html: campaign.shipping }}
-                />
-              ) : (
-                <p className="text-muted-foreground">Shipping details coming soon.</p>
-              )}
+            <section id="shipping" className="scroll-mt-24 pt-12 border-t border-border space-y-10">
+              {/* Shipping */}
+              <div className="space-y-6">
+                <div>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 font-bold">Logistics</p>
+                  <h3 className="text-3xl md:text-4xl font-serif text-foreground">Shipping & Delivery</h3>
+                </div>
+                <p className="font-sans text-muted-foreground leading-relaxed">
+                  We ship worldwide! Shipping costs will be calculated after the campaign ends to ensure you get the best current rates.
+                </p>
+                <div className="border border-border bg-neutral-50/50 p-6 space-y-2">
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-foreground font-bold">⚠️ Important for International Backers (EU/UK/Asia)</p>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                    Shipping estimates <strong className="text-foreground">do not include</strong> local VAT (e.g., 19% MwSt), Import Duties, or Customs fees. These are collected by your local carrier upon delivery in accordance with your country's regulations.
+                  </p>
+                </div>
+                <a
+                  href="https://www.dreamplaypianos.com/information-and-policies/shipping"
+                  target="_blank"
+                  className="inline-block bg-foreground text-background font-sans text-[10px] uppercase tracking-widest font-bold px-8 py-4 hover:bg-foreground/90 transition-colors"
+                >
+                  View Estimated Shipping Rates →
+                </a>
+              </div>
+
+              {/* Risks & Challenges */}
+              <div className="border-t border-border pt-10 space-y-6">
+                <h3 className="text-3xl md:text-4xl font-serif text-foreground">Risks & Challenges</h3>
+                <p className="font-sans text-muted-foreground leading-relaxed">
+                  Every crowdfunding campaign involves some risk, but we have mitigated the biggest ones already:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-border border border-border">
+                  <div className="p-6 bg-background space-y-2">
+                    <p className="font-sans text-sm font-bold text-foreground">✅ Prototype is finished</p>
+                    <p className="font-sans text-sm text-muted-foreground">We aren't guessing; the piano works.</p>
+                  </div>
+                  <div className="p-6 bg-background space-y-2">
+                    <p className="font-sans text-sm font-bold text-foreground">✅ Manufacturer secured</p>
+                    <p className="font-sans text-sm text-muted-foreground">We have partnered with a reputable factory.</p>
+                  </div>
+                  <div className="p-6 bg-background space-y-2">
+                    <p className="font-sans text-sm font-bold text-foreground">✅ Experienced Team</p>
+                    <p className="font-sans text-sm text-muted-foreground">We know music and logistics.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                  <h4 className="font-serif text-xl text-foreground">The Production Reality</h4>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                    <strong className="text-foreground">1. Tooling (90 Days):</strong> The most complex part is creating the steel molds for our custom 15/16th size keys. This takes approximately 3 months. We cannot rush this without risking quality.
+                  </p>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                    <strong className="text-foreground">2. Delivery Date (August 2026):</strong> We have built a 2-month buffer into our timeline to account for potential ocean freight delays or customs congestion.
+                  </p>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                    We promise 100% transparency. You will be updated every single month with photos from the factory floor until the DreamPlay One is in your living room.
+                  </p>
+                  <p className="font-sans text-sm text-muted-foreground leading-relaxed">
+                    We are working <strong className="text-foreground">overtime</strong> to make sure you get your <strong className="text-foreground">DreamPlay One</strong> within the estimated time frame. If we cannot hit the deadline, you have the option of getting your <strong className="text-foreground underline">100% of your money back</strong>, or <strong className="text-foreground">keeping your reservation spot</strong>.
+                  </p>
+                </div>
+
+                {/* Refund Policy */}
+                <div className="border border-border p-6 bg-neutral-50/50 text-center space-y-2">
+                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-foreground font-bold">Refund Policy</p>
+                  <p className="font-sans text-sm text-muted-foreground">
+                    Not sure if you will like it? We offer a <strong className="text-foreground">90-day, 100% full refund policy</strong> (with <strong className="text-foreground">return shipping covered</strong>).
+                  </p>
+                  <p className="font-sans text-sm text-muted-foreground">
+                    Every crowdfunding campaign comes with risks, but we've done our homework. We have a working prototype and have partnered with a reputable manufacturer.
+                  </p>
+                  <p className="font-sans text-sm text-muted-foreground">
+                    However, unforeseen delays can happen in manufacturing and shipping. We promise to keep you updated every step of the way.
+                  </p>
+                </div>
+              </div>
             </section>
           )}
 
