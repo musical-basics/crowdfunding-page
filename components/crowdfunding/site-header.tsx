@@ -51,10 +51,10 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                         </Link>
                         <div className="w-px h-4 bg-white/20" />
                         <Link
-                            href="https://dreamplaypianos.com/why-narrow"
+                            href="https://dreamplaypianos.com/better-practice"
                             className="px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-white/5"
                         >
-                            Why Narrow?
+                            The Benefits
                         </Link>
                         <div className="w-px h-4 bg-white/20" />
                         <Link
@@ -166,11 +166,11 @@ export function SiteHeader({ onTabChange }: SiteHeaderProps) {
                             DreamPlay One
                         </Link>
                         <Link
-                            href="https://dreamplaypianos.com/why-narrow"
+                            href="https://dreamplaypianos.com/better-practice"
                             className="block py-2 text-base font-medium text-muted-foreground hover:text-primary transition-colors"
                             onClick={() => setMobileMenuOpen(false)}
                         >
-                            Why Narrow?
+                            The Benefits
                         </Link>
                         <Link
                             href="https://dreamplaypianos.com/how-it-works"
