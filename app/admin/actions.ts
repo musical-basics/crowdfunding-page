@@ -725,12 +725,12 @@ export async function createManualPledge(formData: FormData) {
     // 1. Create/Find Customer
     // (Simplified: Just creates a placeholder if email doesn't exist)
     let customerId
-    const { data: existing } = await supabase.from("Customer").select("id").eq("email", email).single()
+    const { data: existing } = await supabase.from("customers").select("id").eq("email", email).single()
 
     if (existing) {
         customerId = existing.id
     } else {
-        const { data: newCustomer } = await supabase.from("Customer").insert({
+        const { data: newCustomer } = await supabase.from("customers").insert({
             id: crypto.randomUUID(),
             email,
             name
@@ -771,7 +771,7 @@ export async function getBackers() {
             shipping_address,
             shipping_location,
             reward_id,
-            Customer ( name, email ),
+            Customer:customers ( name, email ),
             cf_reward ( title )
         `)
         .order('created_at', { ascending: false })
@@ -894,12 +894,12 @@ export async function bulkImportPledges(rows: any[]) {
 
             // --- CUSTOMER LOOKUP/CREATE ---
             let customerId
-            const { data: existingUser } = await supabase.from("Customer").select("id").eq("email", row.email).single()
+            const { data: existingUser } = await supabase.from("customers").select("id").eq("email", row.email).single()
 
             if (existingUser) {
                 customerId = existingUser.id
             } else {
-                const { data: newUser, error: userError } = await supabase.from("Customer").insert({
+                const { data: newUser, error: userError } = await supabase.from("customers").insert({
                     id: crypto.randomUUID(),
                     email: row.email,
                     name: row.name || "Backer"

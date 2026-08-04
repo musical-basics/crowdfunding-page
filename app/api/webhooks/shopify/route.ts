@@ -28,12 +28,12 @@ export async function POST(req: Request) {
 
         // 3. Find Customer (or create)
         let customerId
-        const { data: existing } = await supabase.from("Customer").select("id").eq("email", email).single()
+        const { data: existing } = await supabase.from("customers").select("id").eq("email", email).single()
 
         if (existing) {
             customerId = existing.id
         } else {
-            const { data: newCustomer } = await supabase.from("Customer").insert({
+            const { data: newCustomer } = await supabase.from("customers").insert({
                 id: crypto.randomUUID(),
                 email,
                 name

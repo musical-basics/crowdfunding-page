@@ -20,7 +20,7 @@ export async function submitPledge(formData: FormData) {
     let customerId: string
 
     const { data: existingCustomer } = await supabase
-        .from("Customer")
+        .from("customers")
         .select("id")
         .eq("email", email)
         .single()
@@ -31,7 +31,7 @@ export async function submitPledge(formData: FormData) {
         // Create new customer
         const newId = crypto.randomUUID()
         const { error: createError } = await supabase
-            .from("Customer")
+            .from("customers")
             .insert({
                 id: newId,
                 email,
@@ -289,7 +289,7 @@ export async function getCommunityFeed() {
     // In a huge app, we'd do this differently, but for <10k backers this is instant.
     const { data: pledges } = await supabase
         .from("cf_pledge")
-        .select("customer_id, Customer(email)")
+        .select("customer_id, Customer:customers(email)")
         .eq("status", "succeeded")
 
     // Create a Set of verified emails for O(1) lookup
